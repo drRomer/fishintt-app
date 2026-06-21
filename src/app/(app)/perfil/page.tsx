@@ -18,7 +18,7 @@ interface UserProfile {
 
 const DEFAULT_PROFILE: UserProfile = {
   name: "Nombre",
-  email: "admin@admin.cl",
+  email: "",
   birthDate: "",
   phone: "",
 };
@@ -219,7 +219,7 @@ export default function PerfilPage() {
         <div className="bg-white rounded-2xl shadow-card overflow-hidden">
           {editing ? (
             <>
-              <EditableRow icon={User} label="Nombre" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="Tu nombre completo" />
+              <EditableRow icon={User} label="Nombre" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="Ej: Tomás Romero" />
               <EditableRow icon={Mail} label="Correo" value={draft.email} onChange={(v) => setDraft({ ...draft, email: v })} placeholder="tu@email.cl" type="email" disabled />
               <EditableRow icon={Calendar} label="Fecha de nacimiento" value={draft.birthDate} onChange={(v) => setDraft({ ...draft, birthDate: v })} type="date" />
               <EditableRow icon={Phone} label="Telefono" value={draft.phone} onChange={(v) => setDraft({ ...draft, phone: v })} placeholder="+56 9 1234 5678" type="tel" last />

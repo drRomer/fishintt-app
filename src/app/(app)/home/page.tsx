@@ -76,25 +76,6 @@ export default function HomePage() {
       {/* Menu dropdown (overlay) */}
       {showMenu && (
         <div className="absolute top-20 right-4 bg-white rounded-2xl shadow-card-hover w-64 py-2 z-50 border border-navy-100 max-h-[80vh] overflow-y-auto">
-          {/* Resumen de Protección en el menú */}
-          <div className="px-4 py-3 border-b border-navy-50">
-            <div className="text-xs font-semibold text-navy-500 uppercase tracking-wide mb-2">Resumen de Protección</div>
-            <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
-              <div>
-                <div className="font-bold text-navy-700">247</div>
-                <div className="text-navy-400 mt-0.5">Bloqueados</div>
-              </div>
-              <div className="border-x border-navy-50">
-                <div className="font-bold text-navy-700">12</div>
-                <div className="text-navy-400 mt-0.5">Reportes</div>
-              </div>
-              <div>
-                <div className="font-bold text-navy-700">1.4K</div>
-                <div className="text-navy-400 mt-0.5">Análisis</div>
-              </div>
-            </div>
-          </div>
-          
           <Link href="/perfil" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt text-navy-700">
             <Shield className="w-4 h-4" /> Mi Perfil
           </Link>
