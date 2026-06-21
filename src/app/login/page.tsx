@@ -163,6 +163,16 @@ export default function LoginPage() {
             >
               {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </button>
+
+            {/* Forgot Password Link */}
+            <div className="text-center mt-3">
+              <Link
+                href="/reset-password"
+                className="text-sm text-brand-500 hover:text-brand-600 font-medium"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </form>
 
           {/* Divider */}
