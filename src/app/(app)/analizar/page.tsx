@@ -77,13 +77,16 @@ function analyzeUrl(url: string): AnalysisResult {
 
   score = Math.max(0, Math.min(1000, score));
 
+  // Convertir a escala 1-7 (sin decimales)
+  const scoreScaled = Math.round((score / 1000) * 6) + 1;
+
   let riskLevel: RiskLevel;
   let recommendation: string;
 
-  if (score >= 700) {
+  if (scoreScaled >= 6) {
     riskLevel = "safe";
     recommendation = "Este enlace parece seguro. Aún así, verifica que sea el sitio correcto antes de ingresar datos.";
-  } else if (score >= 400) {
+  } else if (scoreScaled >= 3) {
     riskLevel = "suspicious";
     recommendation = "Este enlace presenta señales sospechosas. Verifica con la institución por un canal oficial antes de continuar.";
   } else {
@@ -91,7 +94,7 @@ function analyzeUrl(url: string): AnalysisResult {
     recommendation = "ALTO RIESGO. No ingreses datos en este sitio. Reporta y elimina el mensaje que lo contiene.";
   }
 
-  return { url, riskLevel, score, reasons, recommendation };
+  return { url, riskLevel, score: scoreScaled, reasons, recommendation };
 }
 
 export default function AnalizarPage() {
@@ -287,13 +290,13 @@ function RiskResult({ result }: { result: AnalysisResult }) {
         <div className="h-2 bg-white rounded-full overflow-hidden">
           <div
             className={`h-full ${config.barFill} transition-all duration-700`}
-            style={{ width: `${result.score / 10}%` }}
+            style={{ width: `${((result.score - 1) / 6) * 100}%` }}
           />
         </div>
         <div className="flex justify-between text-[10px] text-navy-400 mt-1 font-medium">
-          <span>0 PELIGRO</span>
-          <span>500</span>
-          <span>1000 SEGURO</span>
+          <span>1 PELIGRO</span>
+          <span>4</span>
+          <span>7 SEGURO</span>
         </div>
       </div>
 

@@ -38,7 +38,7 @@ export default function PerfilPage() {
         const u = JSON.parse(stored);
         const loaded: UserProfile = {
           name: u.name || DEFAULT_PROFILE.name,
-          email: u.email || DEFAULT_PROFILE.email,
+          email: u.email || DEFAULT_PROFILE.email, // Email viene del login, no se puede cambiar
           birthDate: u.birthDate || DEFAULT_PROFILE.birthDate,
           phone: u.phone || DEFAULT_PROFILE.phone,
         };
@@ -166,15 +166,15 @@ export default function PerfilPage() {
             </h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-2xl font-bold text-navy-700">247</div>
+                <div className="text-2xl font-bold text-navy-700">0</div>
                 <div className="text-[10px] text-navy-400 uppercase tracking-wide mt-1">Bloqueados</div>
               </div>
               <div className="border-x border-navy-50">
-                <div className="text-2xl font-bold text-navy-700">12</div>
+                <div className="text-2xl font-bold text-navy-700">0</div>
                 <div className="text-[10px] text-navy-400 uppercase tracking-wide mt-1">Reportes</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-navy-700">1.4K</div>
+                <div className="text-2xl font-bold text-navy-700">0</div>
                 <div className="text-[10px] text-navy-400 uppercase tracking-wide mt-1">Análisis</div>
               </div>
             </div>
@@ -190,9 +190,9 @@ export default function PerfilPage() {
             </h3>
             <div className="grid grid-cols-4 gap-3">
               {[
-                { icon: Shield, label: "Protector", earned: true, color: "bg-safe-50 text-safe-500" },
-                { icon: Award, label: "Reporter", earned: true, color: "bg-brand-50 text-brand-500" },
-                { icon: User, label: "Educador", earned: true, color: "bg-navy-50 text-navy-500" },
+                { icon: Shield, label: "Protector", earned: false, color: "bg-surface-alt text-navy-200" },
+                { icon: Award, label: "Reporter", earned: false, color: "bg-surface-alt text-navy-200" },
+                { icon: User, label: "Educador", earned: false, color: "bg-surface-alt text-navy-200" },
                 { icon: Award, label: "Elite", earned: false, color: "bg-surface-alt text-navy-200" },
               ].map((badge, i) => {
                 const Icon = badge.icon;
