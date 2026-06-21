@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
+  <rect width="400" height="320" fill="#F5F5F7"/>
+
+  <!-- Phone frame -->
+  <rect x="120" y="20" width="160" height="280" rx="24" fill="#1A1A1A"/>
+  <rect x="128" y="28" width="144" height="264" rx="18" fill="white"/>
+
+  <rect x="174" y="32" width="52" height="14" rx="7" fill="#1A1A1A"/>
+
+  <text x="140" y="64" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#1A1A1A">9:41</text>
+
+  <text x="200" y="84" font-family="Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">Mensajes</text>
+  <line x1="128" y1="92" x2="272" y2="92" stroke="#E5E5EA"/>
+
+  <!-- Sender -->
+  <circle cx="200" cy="108" r="14" fill="#0066CC"/>
+  <text x="200" y="113" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="white" text-anchor="middle">★</text>
+  <text x="200" y="134" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="#1A1A1A" text-anchor="middle">+56 9 4471 0382</text>
+  <text x="200" y="146" font-family="Arial, sans-serif" font-size="7" fill="#8E8E93" text-anchor="middle">Hoy 11:53</text>
+
+  <!-- Message -->
+  <rect x="135" y="155" width="130" height="125" rx="12" fill="#E6F0FA"/>
+  <text x="142" y="170" font-family="Arial, sans-serif" font-size="8" font-weight="700" fill="#0066CC">LATAM Pass</text>
+  <text x="142" y="184" font-family="Arial, sans-serif" font-size="7.5" fill="#1A1A1A">Estimado socio:</text>
+  <text x="142" y="198" font-family="Arial, sans-serif" font-size="7.5" fill="#1A1A1A">Tus puntos LATAM Pass</text>
+  <text x="142" y="210" font-family="Arial, sans-serif" font-size="7.5" fill="#1A1A1A">expiran MAÑANA:</text>
+  <text x="142" y="228" font-family="Arial, sans-serif" font-size="11" font-weight="800" fill="#0066CC">47.500 pts</text>
+  <text x="142" y="246" font-family="Arial, sans-serif" font-size="7.5" fill="#1A1A1A">Canjea ahora antes</text>
+  <text x="142" y="258" font-family="Arial, sans-serif" font-size="7.5" fill="#1A1A1A">del vencimiento:</text>
+  <text x="142" y="274" font-family="Arial, sans-serif" font-size="7.5" font-weight="600" fill="#0066CC" text-decoration="underline">lp-canje.cc/3xR9</text>
+</svg>

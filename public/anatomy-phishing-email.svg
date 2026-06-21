@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 580" fill="none" font-family="Arial, Helvetica, sans-serif">
+  <!-- Background -->
+  <rect width="800" height="580" fill="#FAFAFC"/>
+
+  <!-- ============================================================ -->
+  <!-- EMAIL MOCKUP (centered) -->
+  <!-- ============================================================ -->
+  <g transform="translate(220, 30)">
+    <!-- Shadow -->
+    <rect x="4" y="4" width="360" height="520" rx="12" fill="black" opacity="0.06"/>
+    <!-- Email card -->
+    <rect width="360" height="520" rx="12" fill="white" stroke="#E5E5EA"/>
+
+    <!-- Header bar -->
+    <rect width="360" height="36" rx="12" fill="#F2F2F7"/>
+    <rect y="24" width="360" height="12" fill="#F2F2F7"/>
+    <circle cx="18" cy="18" r="4.5" fill="#FF5F57"/>
+    <circle cx="34" cy="18" r="4.5" fill="#FEBC2E"/>
+    <circle cx="50" cy="18" r="4.5" fill="#28C840"/>
+    <text x="180" y="22" font-size="10" fill="#8E8E93" text-anchor="middle">Bandeja de entrada — 1 mensaje</text>
+
+    <!-- From line (sender address — RED FLAG 1) -->
+    <text x="20" y="60" font-size="10" fill="#8E8E93">De:</text>
+    <text x="46" y="60" font-size="10" font-weight="600" fill="#1A1A1A">BancoEsfado</text>
+    <text x="111" y="60" font-size="10" fill="#8E8E93">&lt;</text>
+    <text x="117" y="60" font-size="10" font-weight="600" fill="#1A1A1A">noreply@banc0-seguridad-cl.net</text>
+    <text x="288" y="60" font-size="10" fill="#8E8E93">&gt;</text>
+
+    <!-- Subject (RED FLAG 2 — urgency / threats) -->
+    <text x="20" y="80" font-size="10" fill="#8E8E93">Asunto:</text>
+    <text x="57" y="80" font-size="11" font-weight="700" fill="#1A1A1A">¡¡URGENTE!! Su cuenta sera bloqueado en 24 horas</text>
+
+    <!-- Date / metadata -->
+    <text x="20" y="96" font-size="9" fill="#C7C7CC">Para: tu@email.cl · 12 jun 2025 03:47 AM</text>
+
+    <line x1="20" y1="108" x2="340" y2="108" stroke="#E5E5EA"/>
+
+    <!-- Fake logo (RED FLAG 3 — pixelated/wrong logo) -->
+    <rect x="20" y="120" width="80" height="32" fill="#D42B2B" opacity="0.85"/>
+    <text x="60" y="141" font-size="13" font-weight="800" fill="white" text-anchor="middle">B.Estado</text>
+
+    <!-- Email body -->
+    <text x="20" y="180" font-size="11" fill="#1A1A1A">Estimado Cliente,</text>
+
+    <text x="20" y="205" font-size="10" fill="#1A1A1A">Hemos detectado actividad inusual en su cuenta y por</text>
+    <text x="20" y="220" font-size="10" fill="#1A1A1A">razones de Seguridad debemos verificar Inmediatamente</text>
+    <text x="20" y="235" font-size="10" fill="#1A1A1A">su identidad. Si no lo hace en las próximas 24 horas</text>
+    <text x="20" y="250" font-size="10" fill="#1A1A1A">su cuenta sera suspendido permanentemente y perdera</text>
+    <text x="20" y="265" font-size="10" fill="#1A1A1A">acceso a todo su dinero deposita-do.</text>
+
+    <text x="20" y="295" font-size="10" fill="#1A1A1A">Para evitar el bloqueo de su cuenta debe ingresar sus</text>
+    <text x="20" y="310" font-size="10" fill="#1A1A1A">credenciales bancarias en el siguiente enlase:</text>
+
+    <!-- Suspicious red button (RED FLAG 6) -->
+    <rect x="80" y="328" width="200" height="40" rx="6" fill="#D42B2B"/>
+    <text x="180" y="354" font-size="13" font-weight="700" fill="white" text-anchor="middle">VERIFICAR CUENTA AHORA</text>
+
+    <!-- Suspicious URL (RED FLAG 7) -->
+    <text x="180" y="386" font-size="9" font-weight="600" fill="#0066CC" text-anchor="middle" text-decoration="underline">bancoestado-verificacion-cl.net/login.php?id=xKj2</text>
+
+    <text x="20" y="416" font-size="10" fill="#1A1A1A">Si no realiza esta accion antes del plazo le sera apli-</text>
+    <text x="20" y="431" font-size="10" fill="#1A1A1A">cado una Multa por incumplimiento.</text>
+
+    <text x="20" y="461" font-size="10" fill="#1A1A1A">Atte.</text>
+    <text x="20" y="476" font-size="10" font-weight="600" fill="#1A1A1A">Departamento de Seguridad</text>
+    <text x="20" y="490" font-size="9" fill="#8E8E93">BancoEsfado Chile</text>
+
+    <text x="20" y="506" font-size="8" fill="#C7C7CC">© Banco Estado 2024 — Todos los derechos reservados.</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- TITLE -->
+  <!-- ============================================================ -->
+  <text x="40" y="40" font-size="20" font-weight="800" fill="#1A2657">Anatomía de un</text>
+  <text x="40" y="62" font-size="20" font-weight="800" fill="#D42B2B">correo de phishing</text>
+  <text x="40" y="82" font-size="11" fill="#585858">7 señales que delatan el fraude</text>
+
+  <!-- ============================================================ -->
+  <!-- ANNOTATIONS - LEFT SIDE -->
+  <!-- ============================================================ -->
+
+  <!-- 1. Remitente mal escrito -->
+  <g>
+    <circle cx="56" cy="135" r="14" fill="#D42B2B"/>
+    <text x="56" y="140" font-size="13" font-weight="800" fill="white" text-anchor="middle">1</text>
+    <text x="80" y="132" font-size="11" font-weight="700" fill="#1A2657">Remitente sospechoso</text>
+    <text x="80" y="148" font-size="10" fill="#585858">"BancoEs</text>
+    <text x="124" y="148" font-size="10" font-weight="700" fill="#D42B2B">f</text>
+    <text x="130" y="148" font-size="10" fill="#585858">ado" en vez de</text>
+    <text x="80" y="161" font-size="10" fill="#585858">"BancoEstado", dominio</text>
+    <text x="80" y="174" font-size="10" fill="#585858">banc</text>
+    <text x="103" y="174" font-size="10" font-weight="700" fill="#D42B2B">0</text>
+    <text x="110" y="174" font-size="10" fill="#585858">- (cero por o)</text>
+    <!-- Arrow to email "from" -->
+    <path d="M 175 145 Q 200 140 220 65" stroke="#D42B2B" stroke-width="1.5" fill="none" stroke-dasharray="3,3"/>
+    <polygon points="220,65 215,72 225,72" fill="#D42B2B"/>
+  </g>
+
+  <!-- 2. Asunto urgente con MAYUSCULAS -->
+  <g>
+    <circle cx="56" cy="215" r="14" fill="#D42B2B"/>
+    <text x="56" y="220" font-size="13" font-weight="800" fill="white" text-anchor="middle">2</text>
+    <text x="80" y="212" font-size="11" font-weight="700" fill="#1A2657">Urgencia artificial</text>
+    <text x="80" y="228" font-size="10" fill="#585858">"URGENTE", "24 horas",</text>
+    <text x="80" y="241" font-size="10" fill="#585858">amenazas de bloqueo.</text>
+    <text x="80" y="254" font-size="10" fill="#585858">Tu banco real nunca</text>
+    <text x="80" y="267" font-size="10" fill="#585858">apura así.</text>
+    <!-- Arrow to subject -->
+    <path d="M 175 220 Q 200 215 220 85" stroke="#D42B2B" stroke-width="1.5" fill="none" stroke-dasharray="3,3"/>
+    <polygon points="220,85 215,92 225,92" fill="#D42B2B"/>
+  </g>
+
+  <!-- 3. Logo de baja calidad -->
+  <g>
+    <circle cx="56" cy="310" r="14" fill="#D42B2B"/>
+    <text x="56" y="315" font-size="13" font-weight="800" fill="white" text-anchor="middle">3</text>
+    <text x="80" y="307" font-size="11" font-weight="700" fill="#1A2657">Logo pixelado</text>
+    <text x="80" y="323" font-size="10" fill="#585858">Las comunicaciones</text>
+    <text x="80" y="336" font-size="10" fill="#585858">oficiales usan el logo</text>
+    <text x="80" y="349" font-size="10" fill="#585858">vectorial real, no una</text>
+    <text x="80" y="362" font-size="10" fill="#585858">imagen casera.</text>
+    <!-- Arrow -->
+    <path d="M 175 320 Q 200 320 240 155" stroke="#D42B2B" stroke-width="1.5" fill="none" stroke-dasharray="3,3"/>
+    <polygon points="240,155 235,162 245,162" fill="#D42B2B"/>
+  </g>
+
+  <!-- 4. Saludo genérico -->
+  <g>
+    <circle cx="56" cy="405" r="14" fill="#D42B2B"/>
+    <text x="56" y="410" font-size="13" font-weight="800" fill="white" text-anchor="middle">4</text>
+    <text x="80" y="402" font-size="11" font-weight="700" fill="#1A2657">Saludo genérico</text>
+    <text x="80" y="418" font-size="10" fill="#585858">"Estimado Cliente" sin</text>
+    <text x="80" y="431" font-size="10" fill="#585858">tu nombre real. El banco</text>
+    <text x="80" y="444" font-size="10" fill="#585858">SIEMPRE usa tu nombre.</text>
+    <!-- Arrow -->
+    <path d="M 175 410 Q 195 405 240 185" stroke="#D42B2B" stroke-width="1.5" fill="none" stroke-dasharray="3,3"/>
+    <polygon points="240,185 235,192 245,192" fill="#D42B2B"/>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- ANNOTATIONS - RIGHT SIDE -->
+  <!-- ============================================================ -->
+
+  <!-- 5. Errores ortográficos -->
+  <g>
+    <circle cx="617" cy="195" r="14" fill="#D42B2B"/>
+    <text x="617" y="200" font-size="13" font-weight="800" fill="white" text-anchor="middle">5</text>
+    <text x="641" y="192" font-size="11" font-weight="700" fill="#1A2657">Errores de redacción</text>
+    <text x="641" y="208" font-size="10" fill="#585858">"sera bloqueado" (sin</text>
+    <text x="641" y="221" font-size="10" fill="#585858">tilde, mal género),</text>
+    <text x="641" y="234" font-size="10" fill="#585858">"deposita-do", "enlase",</text>
+    <text x="641" y="247" font-size="10" fill="#585858">"sera aplicado".</text>
+    <text x="641" y="263" font-size="10" font-weight="700" fill="#D42B2B">Múltiples errores =</text>
+    <text x="641" y="276" font-size="10" font-weight="700" fill="#D42B2B">señal clara de fraude.</text>
+    <!-- Arrow -->
+    <path d="M 603 220 Q 580 235 530 250" stroke="#D42B2B" stroke-width="1.5" fill="none" stroke-dasharray="3,3"/>
+    <polygon points="530,250 540,247 540,257" fill="#D42B2B"/>
+  </g>
+
+  <!-- 6. Botón rojo grande -->
+  <g>
+    <circle cx="617" cy="335" r="14" fill="#D42B2B"/>
+    <text x="617" y="340" font-size="13" font-weight="800" fill="white" text-anchor="middle">6</text>
+    <text x="641" y="332" font-size="11" font-weight="700" fill="#1A2657">Botón llamativo</text>
+    <text x="641" y="348" font-size="10" fill="#585858">"VERIFICAR AHORA"</text>
+    <text x="641" y="361" font-size="10" fill="#585858">en mayúsculas para</text>
+    <text x="641" y="374" font-size="10" fill="#585858">presionar tu click rápido.</text>
+    <!-- Arrow -->
+    <path d="M 603 350 Q 580 350 510 355" stroke="#D42B2B" stroke-width="1.5" fill="none" stroke-dasharray="3,3"/>
+    <polygon points="510,355 520,350 520,360" fill="#D42B2B"/>
+  </g>
+
+  <!-- 7. URL falsa -->
+  <g>
+    <circle cx="617" cy="420" r="14" fill="#D42B2B"/>
+    <text x="617" y="425" font-size="13" font-weight="800" fill="white" text-anchor="middle">7</text>
+    <text x="641" y="417" font-size="11" font-weight="700" fill="#1A2657">URL no oficial</text>
+    <text x="641" y="433" font-size="10" fill="#585858">El dominio real es</text>
+    <text x="641" y="446" font-size="10" font-weight="700" fill="#16A34A">bancoestado.cl</text>
+    <text x="641" y="462" font-size="10" fill="#585858">no</text>
+    <text x="660" y="462" font-size="10" font-weight="700" fill="#D42B2B">.cl.net</text>
+    <text x="641" y="475" font-size="10" fill="#585858">ni con guiones extras.</text>
+    <!-- Arrow -->
+    <path d="M 603 430 Q 580 425 510 415" stroke="#D42B2B" stroke-width="1.5" fill="none" stroke-dasharray="3,3"/>
+    <polygon points="510,415 520,410 520,420" fill="#D42B2B"/>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- FOOTER REMINDER -->
+  <!-- ============================================================ -->
+  <rect x="40" y="510" width="160" height="50" rx="10" fill="#FFF0F0" stroke="#FDA8A8"/>
+  <text x="120" y="530" font-size="10" font-weight="700" fill="#8C1B1B" text-anchor="middle">⚠ Recuerda</text>
+  <text x="120" y="546" font-size="9" fill="#3D0D0D" text-anchor="middle">Ningún banco te pide</text>
+  <text x="120" y="557" font-size="9" fill="#3D0D0D" text-anchor="middle">claves por email.</text>
+
+  <rect x="600" y="510" width="160" height="50" rx="10" fill="#F0FDF4" stroke="#86EFAC"/>
+  <text x="680" y="530" font-size="10" font-weight="700" fill="#14532D" text-anchor="middle">✓ Si dudas</text>
+  <text x="680" y="546" font-size="9" fill="#14532D" text-anchor="middle">Llama al teléfono oficial</text>
+  <text x="680" y="557" font-size="9" fill="#14532D" text-anchor="middle">impreso en tu tarjeta.</text>
+</svg>

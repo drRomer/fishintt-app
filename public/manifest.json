@@ -1,0 +1,21 @@
+{
+  "name": "Fishin't — Anti-phishing Chile",
+  "short_name": "Fishin't",
+  "description": "Tu escudo contra el phishing y las estafas en línea en Chile",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F5F7",
+  "theme_color": "#1A2657",
+  "lang": "es-CL",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["security", "education", "utilities"]
+}

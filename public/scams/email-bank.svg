@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
+  <!-- Background -->
+  <rect width="400" height="320" fill="#F5F5F7"/>
+
+  <!-- Email client window -->
+  <rect x="20" y="20" width="360" height="280" rx="12" fill="white" stroke="#E5E5EA" stroke-width="1"/>
+
+  <!-- Email header bar -->
+  <rect x="20" y="20" width="360" height="32" rx="12" fill="#F2F2F7"/>
+  <rect x="20" y="40" width="360" height="12" fill="#F2F2F7"/>
+  <circle cx="35" cy="36" r="4" fill="#FF5F57"/>
+  <circle cx="50" cy="36" r="4" fill="#FEBC2E"/>
+  <circle cx="65" cy="36" r="4" fill="#28C840"/>
+
+  <!-- From line -->
+  <text x="34" y="74" font-family="Arial, sans-serif" font-size="9" fill="#8E8E93">De:</text>
+  <text x="58" y="74" font-family="Arial, sans-serif" font-size="9" font-weight="600" fill="#1A1A1A">BancoEsfado &lt;noreply@banc0-seguridad.cl&gt;</text>
+
+  <!-- Subject -->
+  <text x="34" y="92" font-family="Arial, sans-serif" font-size="9" fill="#8E8E93">Asunto:</text>
+  <text x="71" y="92" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#1A1A1A">¡URGENTE! Su cuenta sera bloqueado en 24hr</text>
+
+  <line x1="20" y1="105" x2="380" y2="105" stroke="#E5E5EA"/>
+
+  <!-- Fake logo (pixelated) -->
+  <rect x="34" y="120" width="50" height="20" fill="#D42B2B" opacity="0.8"/>
+  <text x="59" y="134" font-family="Arial, sans-serif" font-size="10" font-weight="800" fill="white" text-anchor="middle">B.Estado</text>
+
+  <!-- Email body -->
+  <text x="34" y="160" font-family="Arial, sans-serif" font-size="10" fill="#1A1A1A">Estimado Cliente,</text>
+
+  <text x="34" y="180" font-family="Arial, sans-serif" font-size="9" fill="#1A1A1A">Hemos detectado actividad inusual en su cuenta.</text>
+  <text x="34" y="194" font-family="Arial, sans-serif" font-size="9" fill="#1A1A1A">Para evitar que su cuenta sea suspendida usted</text>
+  <text x="34" y="208" font-family="Arial, sans-serif" font-size="9" fill="#1A1A1A">debe Verificar sus datos en el siguiente enlase:</text>
+
+  <!-- Suspicious button -->
+  <rect x="120" y="222" width="160" height="32" rx="6" fill="#D42B2B"/>
+  <text x="200" y="242" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle">VERIFICAR AHORA</text>
+
+  <text x="34" y="272" font-family="Arial, sans-serif" font-size="8" fill="#8E8E93">bancoestado-verificacion-cl.net/login</text>
+
+  <text x="34" y="288" font-family="Arial, sans-serif" font-size="8" fill="#8E8E93">© BancoEstado 2024 — todos los derechos reservados</text>
+</svg>

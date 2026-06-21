@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+:root {
+  --color-navy: #1A2657;
+  --color-brand: #D42B2B;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: #F5F5F7;
+  color: #1A2657;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Phone-like container on desktop, full width on mobile */
+.app-shell {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 480px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: white;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 20px 50px rgba(0,0,0,0.06);
+}
+
+@media (max-width: 480px) {
+  .app-shell {
+    box-shadow: none;
+  }
+  body {
+    background-color: white;
+  }
+}
+
+/* Safe area for iOS notch */
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .safe-top {
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.3);
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Pulse animation for the analyzing state */
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(212, 43, 43, 0.4); }
+  70% { box-shadow: 0 0 0 20px rgba(212, 43, 43, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 43, 43, 0); }
+}
+.pulse-ring {
+  animation: pulseRing 2s infinite;
+}
