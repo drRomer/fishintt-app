@@ -19,7 +19,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 
 export default function HomePage() {
-  const [userName, setUserName] = useState("Juan Pérez");
+  const [userName, setUserName] = useState("Nombre");
   const [showMenu, setShowMenu] = useState(false);
   const { isDark, toggleTheme } = useTheme();
 

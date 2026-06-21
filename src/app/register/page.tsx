@@ -56,7 +56,16 @@ export default function RegisterPage() {
     const supabase = getSupabase();
 
     if (!supabase) {
-      sessionStorage.setItem("fishintt_user", JSON.stringify({ email, name }));
+      // Modo demo: guardar datos en sessionStorage
+      sessionStorage.setItem(
+        "fishintt_user",
+        JSON.stringify({
+          email,
+          name,
+          birthDate: "",
+          phone: "",
+        })
+      );
       router.push("/home");
       return;
     }
@@ -71,6 +80,16 @@ export default function RegisterPage() {
       setError(error.message);
       setLoading(false);
     } else {
+      // Guardar datos de registro en sesión
+      sessionStorage.setItem(
+        "fishintt_user",
+        JSON.stringify({
+          email,
+          name,
+          birthDate: "",
+          phone: "",
+        })
+      );
       router.push("/home");
     }
   }

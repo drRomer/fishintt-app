@@ -26,7 +26,17 @@ export default function LoginPage() {
     // Modo demo (sin Supabase configurado): admin@admin.cl / admin
     if (!supabase) {
       if (email === "admin@admin.cl" && password === "admin") {
-        sessionStorage.setItem("fishintt_user", JSON.stringify({ email, name: "Juan Pérez" }));
+        // Cargar datos previos si existen, sino crear defaults
+        const stored = sessionStorage.getItem("fishintt_user");
+        let userData: any = { email, name: "Nombre", birthDate: "", phone: "" };
+        
+        if (stored) {
+          try {
+            userData = JSON.parse(stored);
+          } catch {}
+        }
+
+        sessionStorage.setItem("fishintt_user", JSON.stringify({ ...userData, email }));
         router.push("/home");
         return;
       }
@@ -40,6 +50,17 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
+      // Cargar datos previos si existen
+      const stored = sessionStorage.getItem("fishintt_user");
+      let userData: any = { email, name: "Nombre", birthDate: "", phone: "" };
+      
+      if (stored) {
+        try {
+          userData = JSON.parse(stored);
+        } catch {}
+      }
+
+      sessionStorage.setItem("fishintt_user", JSON.stringify({ ...userData, email }));
       router.push("/home");
     }
   }

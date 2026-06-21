@@ -17,10 +17,10 @@ interface UserProfile {
 }
 
 const DEFAULT_PROFILE: UserProfile = {
-  name: "Juan Pérez",
+  name: "Nombre",
   email: "admin@admin.cl",
-  birthDate: "1990-01-15",
-  phone: "+56 9 1234 5678",
+  birthDate: "",
+  phone: "",
 };
 
 export default function PerfilPage() {
