@@ -72,9 +72,9 @@ export interface BadgeStatus {
 // Insignias y sus condiciones de obtención.
 export function computeBadges(a: Activity, reports: number): BadgeStatus[] {
   return [
-    { key: "protector", label: "Protector", earned: a.analyses >= 1, hint: "Analiza tu primer enlace" },
-    { key: "reporter", label: "Reporter", earned: reports >= 1, hint: "Reporta una amenaza" },
-    { key: "educador", label: "Educador", earned: a.educationViewed, hint: "Visita la sección Aprende" },
-    { key: "elite", label: "Elite", earned: a.blocked >= 5, hint: "Detecta 5 amenazas" },
+    { key: "protector", label: "Protector", earned: a.analyses >= 6, hint: "Analiza 6 enlaces" },
+    { key: "reporter", label: "Reporter", earned: reports >= 6, hint: "Reporta 6 amenazas" },
+    { key: "educador", label: "Educador", earned: a.educationViewed && a.analyses >= 5, hint: "Visita Aprende y analiza 5 enlaces" },
+    { key: "elite", label: "Elite", earned: a.blocked >= 10, hint: "Detecta 10 amenazas" },
   ];
 }

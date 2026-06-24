@@ -158,6 +158,15 @@ html.dark .shadow-card-hover {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
+/* Cajas blancas translúcidas (bg-white/70, /80, /90): en oscuro se vuelven
+   oscuras para que el texto claro se lea (antes quedaban blancas con texto
+   blanco e ilegibles). */
+html.dark .bg-white\/70,
+html.dark .bg-white\/80,
+html.dark .bg-white\/90 {
+  background-color: rgba(13, 17, 23, 0.55);
+}
+
 html.dark ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
 }
