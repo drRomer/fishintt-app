@@ -88,79 +88,79 @@ body {
   animation: pulseRing 2s infinite;
 }
 
-/* Dark Mode */
+/* =========================================================================
+   Dark Mode — jerarquía de superficies con contraste real
+   fondo (más oscuro) < app-shell < tarjetas < chips ; header navy aparte
+   ========================================================================= */
 html.dark {
   --color-navy: #ffffff;
   --color-brand: #FF6B6B;
 }
 
 html.dark body {
-  background-color: #0F1419;
+  background-color: #0E131B; /* fondo general, lo más oscuro */
   color: #E8EAED;
 }
 
 html.dark .app-shell {
-  background-color: #1A1D24;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 20px 50px rgba(0,0,0,0.3);
+  background-color: #151A22; /* lienzo de la app */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
+/* Tarjetas: claramente más claras que el lienzo + borde sutil para separarlas */
 html.dark .bg-white {
-  background-color: #2A2F3A;
+  background-color: #232A36;
   color: #E8EAED;
 }
 
-html.dark .text-white {
-  color: #E8EAED;
-}
-
-html.dark .text-navy-700 {
-  color: #E8EAED;
-}
-
-html.dark .text-navy-600 {
-  color: #D1D5DB;
-}
-
-html.dark .text-navy-500 {
-  color: #9CA3AF;
-}
-
-html.dark .text-navy-400 {
-  color: #6B7280;
-}
-
-html.dark .text-navy-300 {
-  color: #4B5563;
-}
-
+/* Header / acentos navy: se mantiene azulado y DISTINTO del gris de tarjetas */
 html.dark .bg-navy-700 {
-  background-color: #2A2F3A;
+  background-color: #1B2748;
+}
+html.dark .bg-navy-800 {
+  background-color: #233059;
+}
+html.dark .bg-navy-600 {
+  background-color: #233059;
 }
 
+/* Chips de iconos: un escalón más claro que la tarjeta para que se vean */
 html.dark .bg-navy-50 {
-  background-color: #1F2330;
+  background-color: #2E3744;
+}
+html.dark .bg-navy-100 {
+  background-color: #39434F;
 }
 
-html.dark .border-navy-50 {
-  border-color: #2A2F3A;
-}
-
-html.dark .border-navy-100 {
-  border-color: #3A3F4A;
-}
-
+/* Superficie alterna (inputs, fondos sutiles) */
 html.dark .bg-surface-alt {
-  background-color: #1F2330;
+  background-color: #1B212B;
 }
 
+/* Texto */
+html.dark .text-white { color: #F3F5F8; }
+html.dark .text-navy-700 { color: #F1F4F8; }
+html.dark .text-navy-600 { color: #D8DEE7; }
+html.dark .text-navy-500 { color: #AEB6C2; }
+html.dark .text-navy-400 { color: #8A93A1; }
+html.dark .text-navy-300 { color: #69727F; }
+html.dark .text-navy-200 { color: #69727F; }
+
+/* Bordes */
+html.dark .border-navy-50 { border-color: #2E3744; }
+html.dark .border-navy-100 { border-color: #3A4453; }
+
+/* Tarjetas con anillo sutil para definirlas sin desplazar el layout */
 html.dark .shadow-card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+html.dark .shadow-card-hover {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
-
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.3);
 }

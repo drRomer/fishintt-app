@@ -2,25 +2,31 @@
 
 import Link from "next/link";
 import {
-  ArrowLeft, User, Mail, Phone, Calendar, Camera, LogOut, Shield, Award,
-  Edit3, Save, X
+  ArrowLeft, User, Mail, Phone, Camera, LogOut, Shield, Award,
+  Edit3, Save, X, Flag, BookOpen
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
+import { getActivity, getReportsCount, computeBadges, type Activity } from "@/lib/activity";
 
 interface UserProfile {
   name: string;
   email: string;
-  birthDate: string;
   phone: string;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
   name: "Nombre",
   email: "",
-  birthDate: "",
   phone: "",
+};
+
+const BADGE_ICONS: Record<string, typeof Shield> = {
+  protector: Shield,
+  reporter: Flag,
+  educador: BookOpen,
+  elite: Award,
 };
 
 export default function PerfilPage() {
@@ -30,6 +36,8 @@ export default function PerfilPage() {
   const [draft, setDraft] = useState<UserProfile>(DEFAULT_PROFILE);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [activity, setActivity] = useState<Activity>({ analyses: 0, blocked: 0, educationViewed: false });
+  const [reportsCount, setReportsCount] = useState(0);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("fishintt_user");
@@ -39,13 +47,14 @@ export default function PerfilPage() {
         const loaded: UserProfile = {
           name: u.name || DEFAULT_PROFILE.name,
           email: u.email || DEFAULT_PROFILE.email, // Email viene del login, no se puede cambiar
-          birthDate: u.birthDate || DEFAULT_PROFILE.birthDate,
           phone: u.phone || DEFAULT_PROFILE.phone,
         };
         setProfile(loaded);
         setDraft(loaded);
       } catch {}
     }
+    setActivity(getActivity());
+    setReportsCount(getReportsCount());
   }, []);
 
   useEffect(() => {
@@ -53,6 +62,8 @@ export default function PerfilPage() {
     const t = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(t);
   }, [toast]);
+
+  const badges = computeBadges(activity, reportsCount);
 
   function startEdit() {
     setDraft(profile);
@@ -75,7 +86,6 @@ export default function PerfilPage() {
           await supabase.from("profiles").update({
             name: draft.name,
             phone: draft.phone,
-            birth_date: draft.birthDate || null,
           }).eq("id", user.id);
         }
       } catch (e) {
@@ -103,12 +113,6 @@ export default function PerfilPage() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
-
-  const birthDisplay = profile.birthDate
-    ? new Date(profile.birthDate + "T00:00:00").toLocaleDateString("es-CL", {
-        day: "2-digit", month: "2-digit", year: "numeric",
-      })
-    : "—";
 
   return (
     <div className="fade-in pb-4">
@@ -166,15 +170,15 @@ export default function PerfilPage() {
             </h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-2xl font-bold text-navy-700">0</div>
+                <div className="text-2xl font-bold text-brand-500">{activity.blocked}</div>
                 <div className="text-[10px] text-navy-400 uppercase tracking-wide mt-1">Bloqueados</div>
               </div>
               <div className="border-x border-navy-50">
-                <div className="text-2xl font-bold text-navy-700">0</div>
+                <div className="text-2xl font-bold text-navy-700">{reportsCount}</div>
                 <div className="text-[10px] text-navy-400 uppercase tracking-wide mt-1">Reportes</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-navy-700">0</div>
+                <div className="text-2xl font-bold text-navy-700">{activity.analyses}</div>
                 <div className="text-[10px] text-navy-400 uppercase tracking-wide mt-1">Análisis</div>
               </div>
             </div>
@@ -189,16 +193,17 @@ export default function PerfilPage() {
               Insignias obtenidas
             </h3>
             <div className="grid grid-cols-4 gap-3">
-              {[
-                { icon: Shield, label: "Protector", earned: false, color: "bg-surface-alt text-navy-200" },
-                { icon: Award, label: "Reporter", earned: false, color: "bg-surface-alt text-navy-200" },
-                { icon: User, label: "Educador", earned: false, color: "bg-surface-alt text-navy-200" },
-                { icon: Award, label: "Elite", earned: false, color: "bg-surface-alt text-navy-200" },
-              ].map((badge, i) => {
-                const Icon = badge.icon;
+              {badges.map((badge) => {
+                const Icon = BADGE_ICONS[badge.key] || Award;
                 return (
-                  <div key={i} className="flex flex-col items-center gap-1.5">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${badge.color}`}>
+                  <div key={badge.key} className="flex flex-col items-center gap-1.5" title={badge.hint}>
+                    <div
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                        badge.earned
+                          ? "bg-brand-500 text-white shadow-card"
+                          : "bg-surface-alt text-navy-300"
+                      }`}
+                    >
                       <Icon className="w-6 h-6" />
                     </div>
                     <div className={`text-[10px] font-medium text-center ${badge.earned ? "text-navy-700" : "text-navy-300"}`}>
@@ -208,6 +213,9 @@ export default function PerfilPage() {
                 );
               })}
             </div>
+            <p className="text-[11px] text-navy-400 mt-3 text-center">
+              {badges.filter((b) => b.earned).length} de {badges.length} insignias obtenidas
+            </p>
           </div>
         </div>
       )}
@@ -221,14 +229,12 @@ export default function PerfilPage() {
             <>
               <EditableRow icon={User} label="Nombre" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="Ej: Tomás Romero" />
               <EditableRow icon={Mail} label="Correo" value={draft.email} onChange={(v) => setDraft({ ...draft, email: v })} placeholder="tu@email.cl" type="email" disabled />
-              <EditableRow icon={Calendar} label="Fecha de nacimiento" value={draft.birthDate} onChange={(v) => setDraft({ ...draft, birthDate: v })} type="date" />
               <EditableRow icon={Phone} label="Telefono" value={draft.phone} onChange={(v) => setDraft({ ...draft, phone: v })} placeholder="+56 9 1234 5678" type="tel" last />
             </>
           ) : (
             <>
               <InfoRow icon={User} label="Nombre" value={profile.name} />
               <InfoRow icon={Mail} label="Correo" value={profile.email} />
-              <InfoRow icon={Calendar} label="Fecha de nacimiento" value={birthDisplay} />
               <InfoRow icon={Phone} label="Telefono" value={profile.phone} last />
             </>
           )}

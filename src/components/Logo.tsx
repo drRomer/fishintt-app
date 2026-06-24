@@ -8,8 +8,8 @@ interface LogoProps {
 export function Logo({ size = 64, className = "" }: LogoProps) {
   return (
     <div
-      className={`flex items-center justify-center rounded-full bg-white flex-shrink-0 ${className}`}
-      style={{ width: size, height: size }}
+      className={`flex items-center justify-center rounded-full overflow-hidden flex-shrink-0 ${className}`}
+      style={{ width: size, height: size, backgroundColor: "#ffffff" }}
     >
       <Image
         src="/logo.png"

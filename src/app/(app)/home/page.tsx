@@ -46,9 +46,7 @@ export default function HomePage() {
       <div className="bg-navy-700 text-white pt-6 pb-12 px-5 rounded-b-3xl">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0">
-              <Logo size={28} />
-            </div>
+            <Logo size={40} />
             <span className="text-xl font-bold">Fishin&apos;t</span>
           </div>
           <button

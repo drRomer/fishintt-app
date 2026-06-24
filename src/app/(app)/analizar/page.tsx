@@ -14,6 +14,7 @@ import {
   Microscope,
 } from "lucide-react";
 import { analyzeLocally, type AnalysisResult } from "@/lib/analysis";
+import { recordAnalysis } from "@/lib/activity";
 
 export default function AnalizarPage() {
   const [url, setUrl] = useState("");
@@ -35,9 +36,12 @@ export default function AnalizarPage() {
       if (!res.ok) throw new Error("API error");
       const data: AnalysisResult = await res.json();
       setResult(data);
+      recordAnalysis(data.riskLevel !== "safe");
     } catch {
       // Fallback: análisis determinista en el cliente (sin red/comunidad).
-      setResult(analyzeLocally(url));
+      const local = analyzeLocally(url);
+      setResult(local);
+      recordAnalysis(local.riskLevel !== "safe");
     } finally {
       setAnalyzing(false);
     }

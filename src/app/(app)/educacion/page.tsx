@@ -3,11 +3,16 @@
 import Link from "next/link";
 import { ArrowLeft, AlertCircle, ChevronDown, X } from "lucide-react";
 import { THREAT_TYPES, RED_FLAGS } from "@/lib/data/education";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { markEducationViewed } from "@/lib/activity";
 
 export default function EducacionPage() {
   const [expandedId, setExpandedId] = useState<string | null>(THREAT_TYPES[0].id);
   const [showAnatomyModal, setShowAnatomyModal] = useState(false);
+
+  useEffect(() => {
+    markEducationViewed();
+  }, []);
 
   return (
     <div className="fade-in">
