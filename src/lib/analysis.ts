@@ -71,6 +71,10 @@ export const SAFE_DOMAINS: string[] = [
   "metrogas.cl", "enel.cl", "aguasandinas.cl", "cge.cl", "entel.cl", "movistar.cl",
   "wom.cl", "claro.cl", "vtr.com", "autopistacentral.cl", "costaneranorte.cl",
   "tag.cl", "vespucio.cl", "google.com", "microsoft.com", "apple.com",
+  "youtube.com", "gmail.com", "outlook.com", "live.com", "office.com",
+  "github.com", "facebook.com", "instagram.com", "whatsapp.com", "linkedin.com",
+  "x.com", "twitter.com", "amazon.com", "netflix.com", "spotify.com",
+  "mercadolibre.cl", "wikipedia.org", "cloudflare.com", "openai.com", "anthropic.com",
 ];
 
 // Marcas frecuentemente suplantadas en estafas chilenas (para detectar imitación).
@@ -129,6 +133,14 @@ function looksRandom(segment: string): boolean {
   return classes >= 2;
 }
 
+// Coincidencia de marca: para needles largos basta el substring; para los cortos
+// (tag, bci, sii, bch, cmr, bono) exigimos límites para no marcar palabras como
+// "instagram" (contiene "tag") o "subcity" (contiene "bci").
+function matchesBrand(host: string, needle: string): boolean {
+  if (needle.length >= 5) return host.includes(needle);
+  return new RegExp(`(^|[^a-z0-9])${needle}([^a-z0-9]|$)`).test(host);
+}
+
 // -----------------------------------------------------------------------------
 // Anatomía del enlace (determinista)
 // -----------------------------------------------------------------------------
@@ -173,7 +185,7 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
   let brandImpersonated: string | null = null;
   if (!isOfficial) {
     for (const b of IMPERSONATED_BRANDS) {
-      if (b.needles.some((n) => host.includes(n))) {
+      if (b.needles.some((n) => matchesBrand(host, n))) {
         brandImpersonated = b.brand;
         break;
       }
@@ -271,9 +283,11 @@ export function scoreUrl(a: UrlAnatomy, community?: CommunityHit | null): Analys
       reasons.push("Parámetros de URL aleatorios/inusuales");
     }
     if (raw === 100) {
-      // Nada destacable: dominio desconocido => cautela, no "seguro pleno".
-      raw = 62;
-      reasons.push("Dominio no reconocido — verifica antes de ingresar datos");
+      // Sin señales de riesgo: tratar como seguro (pero no perfecto como un
+      // dominio oficial verificado). Esto evita marcar como sospechoso a
+      // cualquier sitio legítimo desconocido (youtube, github, etc.).
+      raw = 80;
+      reasons.push("Sin señales de riesgo detectadas");
     }
   }
 
