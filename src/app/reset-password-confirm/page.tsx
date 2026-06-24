@@ -35,6 +35,7 @@ function ResetPasswordConfirmContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
 
   const strength = getStrength(password);
   const passwordValid = PASSWORD_RULES.every((r) => r.test(password));
@@ -43,6 +44,42 @@ function ResetPasswordConfirmContent() {
 
   // En modo demo, mostrar mensaje de instrucciones
   const isDemo = !getSupabase();
+
+  // Establecer la sesión de recuperación a partir del enlace del correo.
+  // Supabase (flujo PKCE) llega con ?code=... que hay que canjear por sesión;
+  // el flujo implícito lo entrega en el hash y dispara PASSWORD_RECOVERY.
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) {
+      setSessionReady(true); // demo
+      return;
+    }
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || session) setSessionReady(true);
+    });
+
+    const errDesc = searchParams.get("error_description");
+    const code = searchParams.get("code");
+
+    if (errDesc) {
+      setError(errDesc);
+      setSessionReady(true);
+    } else if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) setError("Enlace de recuperación inválido o expirado");
+        setSessionReady(true);
+      });
+    } else {
+      // Quizás detectSessionInUrl ya procesó el hash; confirmar sesión.
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) setSessionReady(true);
+      });
+    }
+
+    return () => sub.subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
@@ -63,10 +100,10 @@ function ResetPasswordConfirmContent() {
         return;
       }
 
-      // Obtener el token de la URL
-      const token = searchParams.get("token");
-      if (!token) {
-        setError("Enlace de recuperación inválido o expirado");
+      // Verificar que hay una sesión de recuperación activa.
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        setError("Enlace de recuperación inválido o expirado. Solicita uno nuevo.");
         return;
       }
 
@@ -78,6 +115,8 @@ function ResetPasswordConfirmContent() {
       if (error) {
         setError(error.message);
       } else {
+        // Cerrar la sesión de recuperación y volver al login.
+        await supabase.auth.signOut();
         setSuccess(true);
         setTimeout(() => {
           router.push("/login");
@@ -225,10 +264,14 @@ function ResetPasswordConfirmContent() {
 
                 <button
                   type="submit"
-                  disabled={!formValid || loading}
+                  disabled={!formValid || loading || !sessionReady}
                   className="w-full bg-navy-700 hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors"
                 >
-                  {loading ? "Actualizando..." : "Actualizar Contraseña"}
+                  {loading
+                    ? "Actualizando..."
+                    : !sessionReady
+                    ? "Validando enlace..."
+                    : "Actualizar Contraseña"}
                 </button>
               </form>
             </>

@@ -36,6 +36,7 @@ export default function RegisterPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkEmail, setCheckEmail] = useState(false);
 
   const strength = getStrength(password);
   const passwordValid = PASSWORD_RULES.every((r) => r.test(password));
@@ -70,28 +71,37 @@ export default function RegisterPage() {
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: {
+        data: { name },
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
     });
 
     if (error) {
       setError(error.message);
       setLoading(false);
-    } else {
-      // Guardar datos de registro en sesión
-      sessionStorage.setItem(
-        "fishintt_user",
-        JSON.stringify({
-          email,
-          name,
-          birthDate: "",
-          phone: "",
-        })
-      );
-      router.push("/home");
+      return;
     }
+
+    // Guardar datos de registro para precargar el perfil tras el login
+    sessionStorage.setItem(
+      "fishintt_user",
+      JSON.stringify({ email, name, birthDate: "", phone: "" })
+    );
+
+    // Si Supabase devolvió una sesión activa (confirmación desactivada),
+    // el usuario ya está autenticado → directo a home.
+    if (data.session) {
+      router.push("/home");
+      return;
+    }
+
+    // Sin sesión → Supabase requiere confirmar el correo antes de entrar.
+    setCheckEmail(true);
+    setLoading(false);
   }
 
   return (
@@ -108,6 +118,33 @@ export default function RegisterPage() {
 
       <div className="flex-1 px-6 pb-8">
         <div className="bg-white rounded-3xl p-7 shadow-card">
+          {checkEmail ? (
+            <div className="text-center py-6">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 bg-safe-50 rounded-full flex items-center justify-center">
+                  <Mail className="w-8 h-8 text-safe-500" />
+                </div>
+              </div>
+              <h1 className="text-2xl font-bold text-navy-700 mb-2">
+                Revisa tu correo
+              </h1>
+              <p className="text-navy-400 text-sm mb-6">
+                Te enviamos un enlace de confirmación a <br />
+                <span className="font-semibold text-navy-600">{email}</span>
+              </p>
+              <p className="text-navy-400 text-sm mb-8">
+                Confirma tu cuenta desde ese correo (revisa también spam) y luego
+                inicia sesión.
+              </p>
+              <Link
+                href="/login"
+                className="inline-block bg-navy-700 hover:bg-navy-800 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+              >
+                Ir al login
+              </Link>
+            </div>
+          ) : (
+          <>
           <h1 className="text-3xl font-bold text-navy-700 mb-2 text-center">
             Crear cuenta
           </h1>
@@ -291,6 +328,8 @@ export default function RegisterPage() {
               Inicia sesión
             </Link>
           </p>
+          </>
+          )}
         </div>
       </div>
     </div>

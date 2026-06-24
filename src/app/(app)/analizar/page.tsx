@@ -2,115 +2,45 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Shield, AlertTriangle, AlertCircle, CheckCircle2, Loader2, Link as LinkIcon } from "lucide-react";
-
-type RiskLevel = "safe" | "suspicious" | "dangerous";
-
-interface AnalysisResult {
-  url: string;
-  riskLevel: RiskLevel;
-  score: number;
-  reasons: string[];
-  recommendation: string;
-}
-
-// Heurísticas simples para el MVP (luego se reemplazan con VirusTotal + Safe Browsing)
-function analyzeUrl(url: string): AnalysisResult {
-  let score = 1000;
-  const reasons: string[] = [];
-
-  try {
-    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
-    const host = parsed.hostname.toLowerCase();
-
-    // Dominios sospechosos comunes en estafas chilenas
-    const suspiciousPatterns = [
-      "bit.ly", "tinyurl", "t.co", "lp-canje", "bch-seguridad",
-      "santander-cl", "bancoestado-", "verificacion-", "pago-",
-      "tramites-", "cmr-anular", "pay-mg", "afp-tramite"
-    ];
-    const dangerousTLDs = [".tk", ".ml", ".ga", ".cf", ".gq", ".top", ".click"];
-
-    if (suspiciousPatterns.some((p) => host.includes(p))) {
-      score -= 600;
-      reasons.push("Dominio coincide con patrón de estafas conocidas en Chile");
-    }
-    if (dangerousTLDs.some((t) => host.endsWith(t))) {
-      score -= 400;
-      reasons.push("TLD frecuentemente usado en phishing (.tk, .ml, etc)");
-    }
-    if (!parsed.protocol.startsWith("https")) {
-      score -= 200;
-      reasons.push("Sitio sin HTTPS (conexión no cifrada)");
-    }
-    if (host.split(".").length > 4) {
-      score -= 150;
-      reasons.push("Múltiples subdominios sospechosos");
-    }
-    if (host.includes("-") && (host.includes("banco") || host.includes("estado"))) {
-      score -= 350;
-      reasons.push("Imita nombre de banco con guiones");
-    }
-    if (/\d{3,}/.test(host)) {
-      score -= 100;
-      reasons.push("Dominio contiene secuencias numéricas inusuales");
-    }
-
-    // Whitelist de dominios oficiales chilenos
-    const safeDomains = [
-      "bancoestado.cl", "bancochile.cl", "santander.cl", "bci.cl",
-      "scotiabank.cl", "itau.cl", "falabella.com", "ripley.cl",
-      "correoschile.cl", "sii.cl", "gob.cl", "afphabitat.cl",
-      "afpcuprum.cl", "afpprovida.cl", "metrogas.cl", "enel.cl",
-    ];
-    if (safeDomains.some((d) => host === d || host.endsWith("." + d))) {
-      score = 950;
-      reasons.length = 0;
-      reasons.push("Dominio oficial verificado");
-      reasons.push("Certificado SSL válido");
-      reasons.push("Sin reportes de amenazas");
-    }
-  } catch {
-    score = 100;
-    reasons.push("URL mal formada o inválida");
-  }
-
-  score = Math.max(0, Math.min(1000, score));
-
-  // Convertir a escala 1-7 (sin decimales)
-  const scoreScaled = Math.round((score / 1000) * 6) + 1;
-
-  let riskLevel: RiskLevel;
-  let recommendation: string;
-
-  if (scoreScaled >= 6) {
-    riskLevel = "safe";
-    recommendation = "Este enlace parece seguro. Aún así, verifica que sea el sitio correcto antes de ingresar datos.";
-  } else if (scoreScaled >= 3) {
-    riskLevel = "suspicious";
-    recommendation = "Este enlace presenta señales sospechosas. Verifica con la institución por un canal oficial antes de continuar.";
-  } else {
-    riskLevel = "dangerous";
-    recommendation = "ALTO RIESGO. No ingreses datos en este sitio. Reporta y elimina el mensaje que lo contiene.";
-  }
-
-  return { url, riskLevel, score: scoreScaled, reasons, recommendation };
-}
+import {
+  ArrowLeft,
+  Shield,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Link as LinkIcon,
+  Users,
+  Microscope,
+} from "lucide-react";
+import { analyzeLocally, type AnalysisResult } from "@/lib/analysis";
 
 export default function AnalizarPage() {
   const [url, setUrl] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
-  function handleAnalyze(e: React.FormEvent) {
+  async function handleAnalyze(e: React.FormEvent) {
     e.preventDefault();
     if (!url.trim()) return;
     setAnalyzing(true);
     setResult(null);
-    setTimeout(() => {
-      setResult(analyzeUrl(url));
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      if (!res.ok) throw new Error("API error");
+      const data: AnalysisResult = await res.json();
+      setResult(data);
+    } catch {
+      // Fallback: análisis determinista en el cliente (sin red/comunidad).
+      setResult(analyzeLocally(url));
+    } finally {
       setAnalyzing(false);
-    }, 2200);
+    }
   }
 
   function reset() {
@@ -164,10 +94,10 @@ export default function AnalizarPage() {
             <div className="bg-white rounded-2xl shadow-card p-5 mt-4">
               <h3 className="text-sm font-semibold text-navy-700 mb-3">¿Qué analizamos?</h3>
               <ul className="space-y-2 text-sm text-navy-600">
-                <li className="flex gap-2"><span className="text-safe-500">•</span> Bases globales de amenazas (VirusTotal, Google Safe Browsing)</li>
-                <li className="flex gap-2"><span className="text-safe-500">•</span> Antigüedad y reputación del dominio (WHOIS)</li>
+                <li className="flex gap-2"><span className="text-safe-500">•</span> Anatomía del enlace (acortadores, dominio, ruta, parámetros)</li>
+                <li className="flex gap-2"><span className="text-safe-500">•</span> Expansión del destino real de enlaces acortados</li>
+                <li className="flex gap-2"><span className="text-safe-500">•</span> Base de datos comunitaria de enlaces reportados</li>
                 <li className="flex gap-2"><span className="text-safe-500">•</span> Patrones de estafas conocidas en Chile</li>
-                <li className="flex gap-2"><span className="text-safe-500">•</span> Modelo de IA entrenado con casos reales</li>
               </ul>
             </div>
 
@@ -179,15 +109,15 @@ export default function AnalizarPage() {
               <div className="space-y-1.5">
                 {[
                   { url: "bancoestado.cl", label: "Sitio oficial (seguro)" },
-                  { url: "bch-seguridad.com/v", label: "Phishing Banco de Chile" },
-                  { url: "bit.ly/paq-cl", label: "Smishing Correos de Chile" },
+                  { url: "https://bit.ly/4vhSAdt?17l6", label: "Falso cobro TAG" },
+                  { url: "https://did.li/Qg3ZH", label: "Falso subsidio" },
                 ].map((ex) => (
                   <button
                     key={ex.url}
                     onClick={() => setUrl(ex.url)}
                     className="block w-full text-left text-xs bg-white hover:bg-surface-alt rounded-lg px-3 py-2 border border-navy-100"
                   >
-                    <span className="font-mono text-navy-700">{ex.url}</span>
+                    <span className="font-mono text-navy-700 break-all">{ex.url}</span>
                     <span className="text-navy-400 ml-2">— {ex.label}</span>
                   </button>
                 ))}
@@ -205,7 +135,7 @@ export default function AnalizarPage() {
               </div>
             </div>
             <p className="text-lg font-semibold text-navy-700">Analizando enlace...</p>
-            <p className="text-sm text-navy-400 mt-1">Cruzando bases de amenazas globales</p>
+            <p className="text-sm text-navy-400 mt-1">Expandiendo destino y cruzando reportes</p>
             <Loader2 className="w-5 h-5 text-navy-400 animate-spin mt-4" />
           </div>
         )}
@@ -241,35 +171,21 @@ export default function AnalizarPage() {
 function RiskResult({ result }: { result: AnalysisResult }) {
   const config = {
     safe: {
-      Icon: CheckCircle2,
-      label: "Seguro",
-      bg: "bg-safe-50",
-      border: "border-safe-200",
-      text: "text-safe-900",
-      score: "text-safe-500",
-      barFill: "bg-safe-500",
+      Icon: CheckCircle2, label: "Seguro", bg: "bg-safe-50", border: "border-safe-200",
+      text: "text-safe-900", score: "text-safe-500", barFill: "bg-safe-500",
     },
     suspicious: {
-      Icon: AlertCircle,
-      label: "Sospechoso",
-      bg: "bg-warn-50",
-      border: "border-warn-200",
-      text: "text-warn-900",
-      score: "text-warn-500",
-      barFill: "bg-warn-500",
+      Icon: AlertCircle, label: "Sospechoso", bg: "bg-warn-50", border: "border-warn-200",
+      text: "text-warn-900", score: "text-warn-500", barFill: "bg-warn-500",
     },
     dangerous: {
-      Icon: AlertTriangle,
-      label: "Peligroso",
-      bg: "bg-brand-50",
-      border: "border-brand-200",
-      text: "text-brand-900",
-      score: "text-brand-500",
-      barFill: "bg-brand-500",
+      Icon: AlertTriangle, label: "Peligroso", bg: "bg-brand-50", border: "border-brand-200",
+      text: "text-brand-900", score: "text-brand-500", barFill: "bg-brand-500",
     },
   }[result.riskLevel];
 
   const { Icon } = config;
+  const a = result.anatomy;
 
   return (
     <div className={`rounded-3xl border-2 ${config.border} ${config.bg} p-6`}>
@@ -300,11 +216,46 @@ function RiskResult({ result }: { result: AnalysisResult }) {
         </div>
       </div>
 
+      {/* Comunidad */}
+      {result.community?.matched && (
+        <div className="bg-white/80 backdrop-blur rounded-xl p-3 mb-4 flex items-center gap-2">
+          <Users className="w-4 h-4 text-brand-500 flex-shrink-0" />
+          <span className="text-xs font-medium text-navy-700">
+            {result.community.matchType === "exacto"
+              ? `Reportado por la comunidad ${result.community.reportCount} ${result.community.reportCount === 1 ? "vez" : "veces"}`
+              : "Coincide con enlaces ya reportados por la comunidad"}
+          </span>
+        </div>
+      )}
+
       <div className="bg-white/70 backdrop-blur rounded-xl p-3 mb-4">
         <div className="text-xs font-semibold text-navy-500 uppercase tracking-wide mb-1">
           URL analizada
         </div>
         <div className="font-mono text-sm text-navy-700 break-all">{result.url}</div>
+        {result.expandedUrl && (
+          <div className="mt-2 pt-2 border-t border-navy-100">
+            <div className="text-xs font-semibold text-navy-500 uppercase tracking-wide mb-1">
+              Destino real
+            </div>
+            <div className="font-mono text-xs text-brand-600 break-all">{result.expandedUrl}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Anatomía */}
+      <div className="bg-white/70 backdrop-blur rounded-xl p-3 mb-4">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-navy-500 uppercase tracking-wide mb-2">
+          <Microscope className="w-3.5 h-3.5" /> Anatomía del enlace
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          <Chip label={`Host: ${a.host || "—"}`} />
+          {a.isShortener && <Chip label={`Acortador: ${a.shortenerService}`} danger />}
+          <Chip label={a.hasHttps ? "HTTPS" : "Sin HTTPS"} danger={!a.hasHttps} />
+          <Chip label={`Ruta: ${a.pathPattern}`} danger={a.pathPattern === "aleatorio"} />
+          {a.brandImpersonated && <Chip label={`Imita: ${a.brandImpersonated}`} danger />}
+          {a.scamCategory && <Chip label={a.scamCategory} danger />}
+        </div>
       </div>
 
       <div className="mb-4">
@@ -324,5 +275,17 @@ function RiskResult({ result }: { result: AnalysisResult }) {
         {result.recommendation}
       </div>
     </div>
+  );
+}
+
+function Chip({ label, danger = false }: { label: string; danger?: boolean }) {
+  return (
+    <span
+      className={`text-[11px] font-medium px-2 py-1 rounded-lg ${
+        danger ? "bg-brand-100 text-brand-700" : "bg-navy-50 text-navy-600"
+      }`}
+    >
+      {label}
+    </span>
   );
 }

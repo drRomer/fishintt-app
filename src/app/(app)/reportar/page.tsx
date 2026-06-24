@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Flag, Link as LinkIcon, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Flag, Link as LinkIcon, CheckCircle2, ShieldAlert } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
+import { buildSignature, analyzeLocally, type AnalysisResult } from "@/lib/analysis";
 
 interface Report {
   url: string;
@@ -22,6 +23,7 @@ function ReportarContent() {
   const [sending, setSending] = useState(false);
   const [activeTab, setActiveTab] = useState<"formulario" | "historial">("formulario");
   const [reports, setReports] = useState<Report[]>([]);
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
 
   useEffect(() => {
     const urlParam = params.get("url");
@@ -41,6 +43,20 @@ function ReportarContent() {
     e.preventDefault();
     setSending(true);
 
+    // Analizar el enlace para obtener su anatomía y firma (IA opcional en el server).
+    let result: AnalysisResult;
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      result = res.ok ? await res.json() : analyzeLocally(url);
+    } catch {
+      result = analyzeLocally(url);
+    }
+    setAnalysis(result);
+
     const newReport: Report = {
       url,
       type,
@@ -55,15 +71,24 @@ function ReportarContent() {
     if (supabase) {
       try {
         await supabase.from("reports").insert({ url, type, description });
+        // Dar "peso" al reporte: registrar su firma en la base comunitaria, para
+        // que el analizador marque como sospechosos los enlaces similares.
+        await supabase.rpc("register_threat", {
+          p_url: url,
+          p_normalized: result.anatomy.normalizedUrl,
+          p_host: result.anatomy.host,
+          p_signature: buildSignature(result.anatomy),
+          p_risk_level: result.riskLevel,
+          p_score: result.score,
+          p_anatomy: result.anatomy,
+        });
       } catch (e) {
-        console.warn("Supabase no configurado, modo demo activo");
+        console.warn("Supabase no configurado o RLS, modo demo activo");
       }
     }
 
-    setTimeout(() => {
-      setSent(true);
-      setSending(false);
-    }, 1000);
+    setSent(true);
+    setSending(false);
   }
 
   if (sent) {
@@ -74,8 +99,39 @@ function ReportarContent() {
         </div>
         <h2 className="text-2xl font-bold text-navy-700 mb-2">Reporte enviado</h2>
         <p className="text-navy-500 max-w-xs mb-6">
-          Gracias por proteger a la comunidad. Analizaremos el enlace y alertaremos si confirmamos la amenaza.
+          Gracias por proteger a la comunidad. Tu reporte ya alimenta la base de datos: alertaremos a quien analice enlaces similares.
         </p>
+
+        {analysis && (
+          <div className="w-full max-w-xs bg-white rounded-2xl shadow-card p-4 mb-6 text-left">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldAlert className="w-4 h-4 text-brand-500" />
+              <span className="text-xs font-semibold text-navy-700 uppercase tracking-wide">
+                Anatomía detectada
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {analysis.anatomy.isShortener && (
+                <span className="text-[11px] font-medium px-2 py-1 rounded-lg bg-brand-100 text-brand-700">
+                  Acortador: {analysis.anatomy.shortenerService}
+                </span>
+              )}
+              {analysis.anatomy.brandImpersonated && (
+                <span className="text-[11px] font-medium px-2 py-1 rounded-lg bg-brand-100 text-brand-700">
+                  Imita: {analysis.anatomy.brandImpersonated}
+                </span>
+              )}
+              {analysis.anatomy.scamCategory && (
+                <span className="text-[11px] font-medium px-2 py-1 rounded-lg bg-brand-100 text-brand-700">
+                  {analysis.anatomy.scamCategory}
+                </span>
+              )}
+              <span className="text-[11px] font-medium px-2 py-1 rounded-lg bg-navy-50 text-navy-600">
+                Riesgo: {analysis.riskLevel === "dangerous" ? "Peligroso" : analysis.riskLevel === "suspicious" ? "Sospechoso" : "Seguro"}
+              </span>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col gap-3 w-full max-w-xs">
           <button
             onClick={() => {
