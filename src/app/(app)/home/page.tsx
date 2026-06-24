@@ -49,13 +49,22 @@ export default function HomePage() {
             <Logo size={40} />
             <span className="text-xl font-bold">Fishin&apos;t</span>
           </div>
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="w-10 h-10 -mr-2 flex items-center justify-center text-white/90 hover:text-white"
-            aria-label="Menú"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-1 -mr-2">
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 flex items-center justify-center text-white/90 hover:text-white"
+              aria-label={isDark ? "Modo claro" : "Modo oscuro"}
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="w-10 h-10 flex items-center justify-center text-white/90 hover:text-white"
+              aria-label="Menú"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -83,14 +92,6 @@ export default function HomePage() {
           <Link href="/operador" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt text-navy-700">
             <MessageCircle className="w-4 h-4" /> Ayuda y Soporte
           </Link>
-          <hr className="my-1 border-navy-100" />
-          <button
-            onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-alt text-navy-700 text-left"
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            {isDark ? "Modo Claro" : "Modo Oscuro"}
-          </button>
           <hr className="my-1 border-navy-100" />
           <Link href="/" className="flex items-center gap-3 px-4 py-3 hover:bg-brand-50 text-brand-600">
             Cerrar Sesión

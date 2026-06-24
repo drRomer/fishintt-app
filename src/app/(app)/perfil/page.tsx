@@ -3,12 +3,13 @@
 import Link from "next/link";
 import {
   ArrowLeft, User, Mail, Phone, Camera, LogOut, Shield, Award,
-  Edit3, Save, X, Flag, BookOpen
+  Edit3, Save, X, Flag, BookOpen, Moon, Sun
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import { getActivity, getReportsCount, computeBadges, type Activity } from "@/lib/activity";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface UserProfile {
   name: string;
@@ -38,6 +39,7 @@ export default function PerfilPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [activity, setActivity] = useState<Activity>({ analyses: 0, blocked: 0, educationViewed: false });
   const [reportsCount, setReportsCount] = useState(0);
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     const stored = sessionStorage.getItem("fishintt_user");
@@ -127,15 +129,24 @@ export default function PerfilPage() {
           <Link href="/home" className="inline-flex items-center gap-2 text-white/80 hover:text-white text-sm">
             <ArrowLeft className="w-4 h-4" /> Volver
           </Link>
-          {!editing && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={startEdit}
-              className="inline-flex items-center gap-1.5 text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur px-3 py-1.5 rounded-full transition-colors"
-              aria-label="Editar perfil"
+              onClick={toggleTheme}
+              className="w-9 h-9 flex items-center justify-center bg-white/15 hover:bg-white/25 backdrop-blur rounded-full transition-colors"
+              aria-label={isDark ? "Modo claro" : "Modo oscuro"}
             >
-              <Edit3 className="w-3.5 h-3.5" /> Editar
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-          )}
+            {!editing && (
+              <button
+                onClick={startEdit}
+                className="inline-flex items-center gap-1.5 text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur px-3 py-1.5 rounded-full transition-colors"
+                aria-label="Editar perfil"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Editar
+              </button>
+            )}
+          </div>
         </div>
         <h1 className="text-2xl font-bold">Mi Perfil</h1>
       </div>

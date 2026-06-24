@@ -167,6 +167,24 @@ html.dark .bg-white\/90 {
   background-color: rgba(13, 17, 23, 0.55);
 }
 
+/* Fondos "semáforo" claros (rojo/verde/ámbar): en oscuro se tiñen oscuros y el
+   texto fuerte se aclara, para que el contenido se lea bien. Afecta tarjetas de
+   resultado del análisis, cajas de "Aprende", insignias y chips. */
+html.dark .bg-brand-50 { background-color: rgba(212, 43, 43, 0.16); }
+html.dark .bg-brand-100 { background-color: rgba(212, 43, 43, 0.24); }
+html.dark .bg-safe-50 { background-color: rgba(22, 163, 74, 0.16); }
+html.dark .bg-warn-50 { background-color: rgba(217, 119, 6, 0.16); }
+
+html.dark .text-brand-900 { color: #FCA5A5; }
+html.dark .text-brand-700 { color: #FF9090; }
+html.dark .text-safe-900 { color: #86EFAC; }
+html.dark .text-warn-900 { color: #FCD34D; }
+
+html.dark .border-brand-100 { border-color: rgba(212, 43, 43, 0.30); }
+html.dark .border-brand-200 { border-color: rgba(212, 43, 43, 0.40); }
+html.dark .border-safe-200 { border-color: rgba(22, 163, 74, 0.40); }
+html.dark .border-warn-200 { border-color: rgba(217, 119, 6, 0.40); }
+
 html.dark ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
 }

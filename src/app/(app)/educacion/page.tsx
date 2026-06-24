@@ -168,7 +168,7 @@ export default function EducacionPage() {
         })}
 
         {/* Red flags general */}
-        <div className="bg-gradient-to-br from-brand-50 to-brand-100/30 border border-brand-100 rounded-2xl p-5 mt-6">
+        <div className="bg-brand-50 border border-brand-100 rounded-2xl p-5 mt-6">
           <div className="flex items-center gap-2 mb-4">
             <AlertCircle className="w-5 h-5 text-brand-500" />
             <h2 className="font-bold text-navy-700">Señales generales de alerta</h2>
