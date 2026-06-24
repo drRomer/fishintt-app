@@ -195,24 +195,7 @@ function RiskResult({ result }: { result: AnalysisResult }) {
           <div className={`text-xs font-semibold uppercase tracking-wide ${config.text}`}>
             Resultado
           </div>
-          <div className={`text-2xl font-bold ${config.text}`}>{config.label}</div>
-        </div>
-        <div className={`text-5xl font-extrabold ${config.score} leading-none`}>
-          {result.score}
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <div className="h-2 bg-white rounded-full overflow-hidden">
-          <div
-            className={`h-full ${config.barFill} transition-all duration-700`}
-            style={{ width: `${((result.score - 1) / 6) * 100}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-[10px] text-navy-400 mt-1 font-medium">
-          <span>1 PELIGRO</span>
-          <span>4</span>
-          <span>7 SEGURO</span>
+          <div className={`text-3xl font-bold ${config.text}`}>{config.label}</div>
         </div>
       </div>
 
