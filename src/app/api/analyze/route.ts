@@ -122,6 +122,116 @@ Devuelve: {"scamCategory": "<categoría breve de estafa o 'ninguna'>", "brandImp
 }
 
 // -----------------------------------------------------------------------------
+// Inteligencia de amenazas externa (Google Safe Browsing y VirusTotal)
+// Best-effort, detrás de sus API keys. Si una URL aparece marcada por estos
+// servicios, es señal autoritativa: el resultado se fuerza a "peligroso".
+// -----------------------------------------------------------------------------
+interface ThreatIntelHit {
+  flagged: boolean;
+  label?: string;
+  detections?: number;
+}
+
+async function checkSafeBrowsing(url: string): Promise<ThreatIntelHit | null> {
+  const key = process.env.GOOGLE_SAFE_BROWSING_KEY;
+  if (!key) return null;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(
+      `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${key}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client: { clientId: "fishintt", clientVersion: "1.0" },
+          threatInfo: {
+            threatTypes: [
+              "MALWARE",
+              "SOCIAL_ENGINEERING",
+              "UNWANTED_SOFTWARE",
+              "POTENTIALLY_HARMFUL_APPLICATION",
+            ],
+            platformTypes: ["ANY_PLATFORM"],
+            threatEntryTypes: ["URL"],
+            threatEntries: [{ url }],
+          },
+        }),
+        signal: controller.signal,
+      }
+    ).finally(() => clearTimeout(timer));
+    if (!res.ok) return null;
+    const json = await res.json();
+    const match = json?.matches?.[0];
+    if (!match) return { flagged: false };
+    const t = String(match.threatType || "").toLowerCase();
+    const label = t.includes("social")
+      ? "phishing / ingeniería social"
+      : t.includes("malware")
+      ? "distribución de malware"
+      : "amenaza";
+    return { flagged: true, label };
+  } catch {
+    return null;
+  }
+}
+
+async function checkVirusTotal(url: string): Promise<ThreatIntelHit | null> {
+  const key = process.env.VIRUSTOTAL_API_KEY;
+  if (!key) return null;
+  try {
+    // Identificador VT v3 = base64url del enlace, sin relleno "=".
+    const id = Buffer.from(url).toString("base64url").replace(/=+$/, "");
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(`https://www.virustotal.com/api/v3/urls/${id}`, {
+      headers: { "x-apikey": key },
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timer));
+    if (!res.ok) return null; // 404 = enlace no analizado previamente por VT
+    const json = await res.json();
+    const stats = json?.data?.attributes?.last_analysis_stats;
+    const detections = (stats?.malicious || 0) + (stats?.suspicious || 0);
+    return { flagged: detections > 0, detections };
+  } catch {
+    return null;
+  }
+}
+
+// Aplica el veredicto de la inteligencia externa sobre el resultado heurístico.
+function applyThreatIntel(
+  result: AnalysisResult,
+  sb: ThreatIntelHit | null,
+  vt: ThreatIntelHit | null
+): AnalysisResult {
+  const reasons = [...result.reasons];
+  let raw = result.rawScore;
+  let hit = false;
+  if (sb?.flagged) {
+    hit = true;
+    raw = Math.min(raw, 8);
+    reasons.unshift(`⚠ Google Safe Browsing lo clasifica como ${sb.label}`);
+  }
+  if (vt?.flagged) {
+    hit = true;
+    raw = Math.min(raw, 10);
+    reasons.unshift(
+      `⚠ VirusTotal: ${vt.detections} motor(es) de seguridad lo detectan como malicioso`
+    );
+  }
+  if (!hit) return result;
+  return {
+    ...result,
+    rawScore: raw,
+    score: Math.round((raw / 100) * 6) + 1,
+    riskLevel: "dangerous",
+    recommendation:
+      "ALTO RIESGO. No ingreses datos en este sitio. Reporta y elimina el mensaje que lo contiene.",
+    reasons,
+  };
+}
+
+// -----------------------------------------------------------------------------
 // POST /api/analyze
 // -----------------------------------------------------------------------------
 export async function POST(req: NextRequest) {
@@ -133,11 +243,13 @@ export async function POST(req: NextRequest) {
 
     const anatomy = buildAnatomy(url);
 
-    // En paralelo: expansión, comunidad e IA.
-    const [expanded, community, ai] = await Promise.all([
+    // En paralelo: expansión, comunidad, IA e inteligencia de amenazas externa.
+    const [expanded, community, ai, safeBrowsing, virusTotal] = await Promise.all([
       anatomy.host ? expandUrl(anatomy.normalizedUrl) : Promise.resolve(null),
       matchCommunity(anatomy),
       enrichWithAI(anatomy),
+      anatomy.host ? checkSafeBrowsing(anatomy.normalizedUrl) : Promise.resolve(null),
+      anatomy.host ? checkVirusTotal(anatomy.normalizedUrl) : Promise.resolve(null),
     ]);
 
     // Combinar enriquecimiento de IA en la anatomía.
@@ -161,6 +273,9 @@ export async function POST(req: NextRequest) {
     } else {
       result.expandedUrl = null;
     }
+
+    // Veredicto autoritativo de Safe Browsing / VirusTotal (si hay API keys).
+    result = applyThreatIntel(result, safeBrowsing, virusTotal);
 
     if (anatomy.aiSummary) {
       result.reasons.push(`IA: ${anatomy.aiSummary}`);

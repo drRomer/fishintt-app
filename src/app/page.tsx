@@ -19,23 +19,28 @@ export default function LandingPage() {
         </p>
 
         <div className="w-full max-w-xs space-y-3">
+          {/* Entrada libre: la app es gratuita y sin cuenta obligatoria */}
           <Link
-            href="/login"
-            className="block w-full bg-navy-700 hover:bg-navy-800 active:bg-navy-900 text-white font-semibold py-4 rounded-2xl text-center transition-colors"
+            href="/home"
+            className="flex items-center justify-center gap-2 w-full bg-navy-700 hover:bg-navy-800 active:bg-navy-900 text-white font-semibold py-4 rounded-2xl text-center transition-colors"
           >
-            Iniciar Sesión
+            Entrar gratis
+            <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link
-            href="/register"
-            className="block w-full border-2 border-navy-700 text-navy-700 hover:bg-navy-50 font-semibold py-3.5 rounded-2xl text-center transition-colors"
-          >
-            Crear Cuenta
-          </Link>
+          <p className="text-center text-xs text-navy-400 px-2">
+            Sin registro. Analiza, aprende y reporta al instante.
+          </p>
         </div>
       </div>
 
-      {/* Footer link */}
-      <div className="pb-8 px-8 text-center safe-bottom">
+      {/* Footer: cuenta opcional + educación */}
+      <div className="pb-8 px-8 text-center safe-bottom space-y-3">
+        <p className="text-sm text-navy-500">
+          ¿Quieres soporte y guardar tu progreso?{" "}
+          <Link href="/login" className="text-navy-700 font-semibold hover:underline">
+            Inicia sesión
+          </Link>
+        </p>
         <Link
           href="/educacion"
           className="inline-flex items-center gap-1.5 text-sm text-navy-500 hover:text-navy-700"

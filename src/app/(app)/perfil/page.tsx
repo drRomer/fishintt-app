@@ -8,7 +8,8 @@ import {
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
-import { getActivity, getReportsCount, computeBadges, type Activity } from "@/lib/activity";
+import { getActivity, getReportsCount, computeBadges, computeCrd, type Activity } from "@/lib/activity";
+import { isLoggedIn } from "@/lib/session";
 import { useTheme } from "@/components/ThemeProvider";
 
 interface UserProfile {
@@ -30,6 +31,20 @@ const BADGE_ICONS: Record<string, typeof Shield> = {
   elite: Award,
 };
 
+// Colores semáforo para el Coeficiente de Resiliencia Digital (CRD).
+const CRD_CHIP: Record<string, string> = {
+  danger: "bg-brand-50 text-brand-700",
+  warn: "bg-warn-50 text-warn-900",
+  safe: "bg-safe-50 text-safe-900",
+  navy: "bg-navy-100 text-navy-700",
+};
+const CRD_BAR: Record<string, string> = {
+  danger: "bg-brand-500",
+  warn: "bg-warn-500",
+  safe: "bg-safe-500",
+  navy: "bg-navy-700",
+};
+
 export default function PerfilPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
@@ -39,6 +54,7 @@ export default function PerfilPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [activity, setActivity] = useState<Activity>({ analyses: 0, blocked: 0, educationViewed: false });
   const [reportsCount, setReportsCount] = useState(0);
+  const [logged, setLogged] = useState(false);
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -54,9 +70,15 @@ export default function PerfilPage() {
         setProfile(loaded);
         setDraft(loaded);
       } catch {}
+    } else {
+      // Invitado (entrada libre, sin cuenta)
+      const guest = { ...DEFAULT_PROFILE, name: "Invitado" };
+      setProfile(guest);
+      setDraft(guest);
     }
     setActivity(getActivity());
     setReportsCount(getReportsCount());
+    setLogged(isLoggedIn());
   }, []);
 
   useEffect(() => {
@@ -66,6 +88,7 @@ export default function PerfilPage() {
   }, [toast]);
 
   const badges = computeBadges(activity, reportsCount);
+  const crd = computeCrd(activity, reportsCount);
 
   function startEdit() {
     setDraft(profile);
@@ -176,6 +199,32 @@ export default function PerfilPage() {
       {!editing && (
         <div className="px-5 mt-4">
           <div className="bg-white rounded-2xl shadow-card p-5">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-semibold text-navy-700 uppercase tracking-wide">
+                Resiliencia Digital (CRD)
+              </h3>
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${CRD_CHIP[crd.tone]}`}>
+                {crd.level}
+              </span>
+            </div>
+            <div className="flex items-end gap-1.5 mt-2">
+              <span className="text-4xl font-bold text-navy-700 leading-none">{crd.score}</span>
+              <span className="text-sm text-navy-400 mb-0.5">/ 1000</span>
+            </div>
+            <div className="mt-3 h-2.5 w-full bg-surface-alt rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${CRD_BAR[crd.tone]}`}
+                style={{ width: `${(crd.score / 1000) * 100}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-navy-400 mt-2">{crd.hint}</p>
+          </div>
+        </div>
+      )}
+
+      {!editing && (
+        <div className="px-5 mt-4">
+          <div className="bg-white rounded-2xl shadow-card p-5">
             <h3 className="text-sm font-semibold text-navy-700 mb-3 uppercase tracking-wide">
               Tu actividad
             </h3>
@@ -270,7 +319,7 @@ export default function PerfilPage() {
             {saving ? "Guardando..." : "Guardar"}
           </button>
         </div>
-      ) : (
+      ) : logged ? (
         <div className="px-5 mt-4">
           <button
             onClick={handleLogout}
@@ -278,6 +327,30 @@ export default function PerfilPage() {
           >
             <LogOut className="w-4 h-4" /> Cerrar Sesion
           </button>
+        </div>
+      ) : (
+        <div className="px-5 mt-4">
+          <div className="bg-navy-700 text-white rounded-2xl p-5">
+            <div className="font-bold text-lg">Crea una cuenta gratis</div>
+            <p className="text-sm text-white/80 mt-1 mb-4">
+              Estás usando Fishin&apos;t como invitado. Con una cuenta guardas tu progreso
+              y accedes al soporte con un operador.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <Link
+                href="/register"
+                className="bg-white text-navy-700 font-semibold py-3 rounded-xl text-center hover:bg-white/95 transition-colors"
+              >
+                Crear cuenta
+              </Link>
+              <Link
+                href="/login"
+                className="border-2 border-white/40 text-white font-semibold py-3 rounded-xl text-center hover:bg-white/10 transition-colors"
+              >
+                Iniciar sesión
+              </Link>
+            </div>
+          </div>
         </div>
       )}
     </div>

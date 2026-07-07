@@ -55,7 +55,7 @@ function ResetPasswordConfirmContent() {
       return;
     }
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event: string, session: unknown) => {
       if (event === "PASSWORD_RECOVERY" || session) setSessionReady(true);
     });
 
@@ -66,13 +66,13 @@ function ResetPasswordConfirmContent() {
       setError(errDesc);
       setSessionReady(true);
     } else if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }: { error: unknown }) => {
         if (error) setError("Enlace de recuperación inválido o expirado");
         setSessionReady(true);
       });
     } else {
       // Quizás detectSessionInUrl ya procesó el hash; confirmar sesión.
-      supabase.auth.getSession().then(({ data }) => {
+      supabase.auth.getSession().then(({ data }: { data: { session: unknown } }) => {
         if (data.session) setSessionReady(true);
       });
     }

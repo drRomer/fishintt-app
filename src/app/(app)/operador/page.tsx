@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, MessageCircle, Headphones, ChevronDown, Phone, Clock } from "lucide-react";
+import { ArrowLeft, MessageCircle, Headphones, ChevronDown, Phone, Clock, Lock } from "lucide-react";
 import { FAQS } from "@/lib/data/education";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { isLoggedIn } from "@/lib/session";
 
 export default function OperadorPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [logged, setLogged] = useState(false);
+
+  useEffect(() => setLogged(isLoggedIn()), []);
 
   return (
     <div className="fade-in">
@@ -59,9 +63,23 @@ export default function OperadorPage() {
               </div>
             </div>
           </div>
-          <button className="w-full border-2 border-navy-700 text-navy-700 hover:bg-navy-50 font-semibold py-2.5 rounded-xl mt-2 flex items-center justify-center gap-2">
-            <Phone className="w-4 h-4" /> Solicitar llamada
-          </button>
+          {logged ? (
+            <button className="w-full border-2 border-navy-700 text-navy-700 hover:bg-navy-50 font-semibold py-2.5 rounded-xl mt-2 flex items-center justify-center gap-2">
+              <Phone className="w-4 h-4" /> Solicitar llamada
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="w-full border-2 border-navy-200 text-navy-500 hover:bg-surface-alt font-semibold py-2.5 rounded-xl mt-2 flex items-center justify-center gap-2"
+            >
+              <Lock className="w-4 h-4" /> Inicia sesión para solicitar llamada
+            </Link>
+          )}
+          {!logged && (
+            <p className="text-[11px] text-navy-400 mt-2 text-center">
+              La atención con un operador requiere una cuenta gratuita.
+            </p>
+          )}
         </div>
 
         {/* Emergencia */}

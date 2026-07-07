@@ -62,6 +62,56 @@ export function markEducationViewed(): Activity {
   return a;
 }
 
+// -----------------------------------------------------------------------------
+// Coeficiente de Resiliencia Digital (CRD)
+// -----------------------------------------------------------------------------
+// Métrica cuantitativa (0..1000) que la tesis define como indicador del avance
+// del usuario en ciberseguridad (§2.4.1.c, §3.1.2.c). Se calcula de forma
+// determinista a partir de la actividad local: mientras más analiza, detecta,
+// reporta y aprende, más sube su resiliencia. El esquema Supabase ya reserva la
+// columna `crd_score` (profiles) para persistirlo por usuario en el futuro.
+
+export interface CrdStatus {
+  score: number; // 0..1000
+  level: "Vulnerable" | "En formación" | "Resiliente" | "Experto";
+  tone: "danger" | "warn" | "safe" | "navy"; // color semáforo para la UI
+  hint: string;
+}
+
+export function computeCrd(a: Activity, reports: number): CrdStatus {
+  // Base neutral 350 (un usuario nuevo parte "en riesgo" y crece con el uso).
+  const raw =
+    350 +
+    a.analyses * 12 + // usar el analizador
+    a.blocked * 8 + // aprender a detectar amenazas
+    reports * 25 + // contribuir a la comunidad
+    (a.educationViewed ? 150 : 0); // completar la formación
+
+  const score = Math.max(0, Math.min(1000, Math.round(raw)));
+
+  let level: CrdStatus["level"];
+  let tone: CrdStatus["tone"];
+  let hint: string;
+  if (score < 400) {
+    level = "Vulnerable";
+    tone = "danger";
+    hint = "Analiza enlaces y visita Aprende para subir tu resiliencia.";
+  } else if (score < 600) {
+    level = "En formación";
+    tone = "warn";
+    hint = "Vas bien. Reporta amenazas y sigue aprendiendo.";
+  } else if (score < 800) {
+    level = "Resiliente";
+    tone = "safe";
+    hint = "Sabes identificar fraudes. Mantén el hábito de verificar.";
+  } else {
+    level = "Experto";
+    tone = "navy";
+    hint = "Dominas la detección de phishing. ¡Ayuda a tu círculo!";
+  }
+  return { score, level, tone, hint };
+}
+
 export interface BadgeStatus {
   key: string;
   label: string;
