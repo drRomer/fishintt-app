@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Moon,
   Sun,
+  Users,
 } from "lucide-react";
 import { GLOBAL_STATS } from "@/lib/data/scams";
 import { useState, useEffect } from "react";
@@ -97,6 +98,9 @@ export default function HomePage() {
           <Link href="/reportar" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt text-navy-700">
             <Flag className="w-4 h-4" /> Historial de Reportes
           </Link>
+          <Link href="/red" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt text-navy-700">
+            <Users className="w-4 h-4" /> Red Protegida
+          </Link>
           <Link href="/operador" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt text-navy-700">
             <MessageCircle className="w-4 h-4" /> Ayuda y Soporte
           </Link>
@@ -152,6 +156,14 @@ export default function HomePage() {
             iconBg="bg-warn-50"
             title="Estafas Más Comunes en Chile"
             description="BancoEstado, Correos de Chile, AFP y más"
+          />
+          <ActionCard
+            href="/red"
+            icon={Users}
+            iconColor="text-navy-500"
+            iconBg="bg-navy-50"
+            title="Red Empresa Protegida"
+            description="Protege a tu equipo o familia y recibe alertas"
           />
           <ActionCard
             href="/operador"

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { analyzeLocally, type AnalysisResult } from "@/lib/analysis";
 import { recordAnalysis } from "@/lib/activity";
+import { recordAlert } from "@/lib/network";
 
 export default function AnalizarPage() {
   const [url, setUrl] = useState("");
@@ -37,11 +38,14 @@ export default function AnalizarPage() {
       const data: AnalysisResult = await res.json();
       setResult(data);
       recordAnalysis(data.riskLevel !== "safe");
+      // Si el usuario es protegido de una red, avisa al admin (best-effort).
+      if (data.riskLevel !== "safe") void recordAlert(url, data.riskLevel);
     } catch {
       // Fallback: análisis determinista en el cliente (sin red/comunidad).
       const local = analyzeLocally(url);
       setResult(local);
       recordAnalysis(local.riskLevel !== "safe");
+      if (local.riskLevel !== "safe") void recordAlert(url, local.riskLevel);
     } finally {
       setAnalyzing(false);
     }
