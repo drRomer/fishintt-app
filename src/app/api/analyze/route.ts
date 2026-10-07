@@ -234,8 +234,10 @@ function clasificar(raw: number): Pick<AnalysisResult, "riskLevel" | "recommenda
     return {
       riskLevel: "safe",
       score,
+      // Esta rama solo se alcanza tras aplicar una penalización, así que nunca
+      // corresponde el mensaje de "sitio oficial verificado".
       recommendation:
-        "Este enlace parece seguro. Aún así, verifica que sea el sitio correcto antes de ingresar datos.",
+        "No encontramos señales de fraude, pero eso no garantiza que el sitio sea legítimo. Si te llegó sin que lo pidieras, verifica por un canal oficial antes de ingresar datos.",
     };
   }
   if (raw >= 34) {

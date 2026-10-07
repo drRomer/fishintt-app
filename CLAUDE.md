@@ -65,6 +65,16 @@ Ruta `/evaluacion`: aplica los 12 ítems del instrumento de §3.2.3 (4 básicos,
 
 En el pre-test `U = 0` por definición del instrumento. **Defecto conocido del criterio de §3.2.4, comprobado empíricamente:** como ΔCRD puede crecer +350 solo por el componente de uso, un usuario con C=100 en ambas aplicaciones (cero aprendizaje) "cumple" el umbral de 150. Por eso `compararAplicaciones()` expone también `deltaC`, que es la ganancia de conocimiento aislada y la medida que sí evidencia aprendizaje.
 
+### Validación: dos conjuntos y por qué importa la diferencia
+
+Hay **dos** conjuntos y no son intercambiables:
+- `benchmark/dataset.ts` (`npm run benchmark`) — 77 enlaces. Es el conjunto con el que se **afinaron** los indicadores, así que su cifra es optimista por construcción.
+- `benchmark/holdout.ts` (`npm run validar`) — 45 enlaces derivados de las campañas de `scams.ts` e instituciones chilenas ausentes del primero, con vectores **evasivos** (hosting gratuito, WordPress comprometido, dominios limpios). Compara ambos y desglosa por dificultad.
+
+Historia de la medición, que conviene no perder: la primera medición held-out dio **72,7 %** frente al 94,7 % del conjunto de afinamiento — una brecha de 22 puntos que confirmó que la cifra alta era optimista. Toda la falla estaba en la categoría evasiva (1/7). Tras agregar detección de **marca en la ruta** y **hosting gratuito**, subió a 86,4 % sin costar ni un falso positivo.
+
+**El 86,4 % ya no es held-out limpio**: esas mejoras se diseñaron mirando esos fallos. Para una cifra defendible hace falta una muestra de un repositorio público verificado (OpenPhish / PhishTank), como pide §3.1.2.b. Y el benchmark corre **offline**: dos de los fallos restantes sí los detecta la antigüedad de dominio en el pipeline real.
+
 ### El banco de pruebas del motor (`benchmark/`)
 
 `npm run benchmark` corre el motor **determinista** (sin red, sin API keys) contra 77 enlaces etiquetados, ponderados a Chile (69 nacionales / 8 internacionales), y reporta precisión, exhaustividad y falsos positivos contra las metas de §3.2.4 (recall ≥85 %, FPR ≤10 %). Estado actual: **94,7 % recall / 0 % FP**. Corre con `node --experimental-strip-types`, por eso los imports llevan extensión `.ts` y `benchmark/` está excluido del `tsconfig.json`.
@@ -105,6 +115,7 @@ La app es de **entrada libre / free**: la landing (`/`) entra directo a `/home` 
 
 
 - **`next.config.mjs` NO debe llevar `output: 'export'`** — desactiva las API routes; la app corre como serverless en Vercel.
+- **El veredicto "seguro" tiene dos formas y no se deben mezclar**: con un dominio de la whitelist (`isOfficialDomain`) la UI dice **"Sitio oficial"** porque efectivamente lo sabemos; en cualquier otro caso dice **"Sin señales de riesgo"**, porque el motor solo sabe que no halló nada y no detecta el 100 %. Un check verde que diga "Seguro" sobre un enlace no verificado le fabrica a la víctima la confianza que el estafador necesita.
 - **El logo** (`components/Logo.tsx`) usa `logo.png` envuelto en círculo blanco inline con `overflow-hidden`. No reemplazar el PNG por SVG ni quitar el fondo blanco inline (se vuelve gris en dark mode).
 - Colores marca: navy `#1A2657` (primario), rojo `#D42B2B` (peligro/logo). El rojo (`brand-*` en Tailwind) es solo para marca/peligro, no para acentos generales — el primario es `navy-*`.
 - Datos duros de contenido (estafas reales, material educativo) viven en `src/lib/data/` (`scams.ts`, `education.ts`), no en las páginas.

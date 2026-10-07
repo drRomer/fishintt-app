@@ -10,6 +10,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  Search,
   Link as LinkIcon,
   Users,
   Microscope,
@@ -208,9 +209,17 @@ function AnalizarContent() {
 }
 
 function RiskResult({ result }: { result: AnalysisResult }) {
+  const a = result.anatomy;
   const config = {
     safe: {
-      Icon: CheckCircle2, label: "Seguro", bg: "bg-safe-50", border: "border-safe-200",
+      // El motor NO detecta el 100% de los casos: un check verde que diga
+      // "Seguro" sobre un enlace que solo no activó señales le fabrica al
+      // usuario la confianza que el estafador necesita. Cuando el dominio está
+      // en la whitelist sí lo sabemos; en el resto, solo sabemos que no hallamos
+      // nada, y la etiqueta lo dice tal cual.
+      Icon: a.isOfficialDomain ? CheckCircle2 : Search,
+      label: a.isOfficialDomain ? "Sitio oficial" : "Sin señales de riesgo",
+      bg: "bg-safe-50", border: "border-safe-200",
       text: "text-safe-900", score: "text-safe-500", barFill: "bg-safe-500",
     },
     suspicious: {
@@ -224,7 +233,6 @@ function RiskResult({ result }: { result: AnalysisResult }) {
   }[result.riskLevel];
 
   const { Icon } = config;
-  const a = result.anatomy;
 
   return (
     <div className={`rounded-3xl border-2 ${config.border} ${config.bg} p-6`}>
@@ -234,7 +242,7 @@ function RiskResult({ result }: { result: AnalysisResult }) {
           <div className={`text-xs font-semibold uppercase tracking-wide ${config.text}`}>
             Resultado
           </div>
-          <div className={`text-3xl font-bold ${config.text}`}>{config.label}</div>
+          <div className={`text-2xl sm:text-3xl font-bold leading-tight ${config.text}`}>{config.label}</div>
         </div>
       </div>
 

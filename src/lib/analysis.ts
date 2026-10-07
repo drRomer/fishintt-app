@@ -29,6 +29,12 @@ export interface UrlAnatomy {
   typosquatOf: string | null;
   /** La terminación del dominio está entre las más abusadas en phishing. */
   hasDangerousTld: boolean;
+  /** El dominio está en la whitelist oficial: aquí SÍ sabemos que es legítimo. */
+  isOfficialDomain: boolean;
+  /** Alojado en una plataforma de hosting gratuito (subdominio de terceros). */
+  freeHostingService: string | null;
+  /** Marca suplantada que aparece en la RUTA, no en el dominio. */
+  brandInPath: string | null;
   redFlags: string[];
   // Campos que el servidor enriquece (no disponibles en el análisis local):
   /** Días desde el registro del dominio (RDAP/WHOIS). null = no se pudo saber. */
@@ -104,6 +110,21 @@ const IMPERSONATED_BRANDS: { brand: string; needles: string[] }[] = [
   { brand: "Falabella", needles: ["falabella", "cmr"] },
   { brand: "MercadoPago", needles: ["mercadopago", "mercado-pago"] },
 ];
+
+// Plataformas de hosting gratuito: el dominio padre es legítimo, pero cualquiera
+// puede crear un subdominio. Vector habitual para alojar páginas de captura sin
+// tener que registrar un dominio propio.
+const HOSTING_GRATUITO = [
+  "web.app", "firebaseapp.com", "pages.dev", "workers.dev", "netlify.app",
+  "vercel.app", "github.io", "glitch.me", "repl.co", "replit.app",
+  "000webhostapp.com", "wixsite.com", "weebly.com", "blogspot.com",
+  "herokuapp.com", "onrender.com", "surge.sh", "r2.dev", "neocities.org",
+];
+
+// Señales de que la ruta corresponde a una captura de credenciales, o a un sitio
+// legítimo comprometido (los CMS hackeados cuelgan la página falsa de wp-*).
+const RUTA_CREDENCIALES =
+  /(login|ingreso|acceso|signin|clave|password|verificar|verificacion|validar|cuenta|account|formulario|actualizar|seguridad|wp-content|wp-includes|wp-admin)/i;
 
 // TLDs frecuentemente abusados en phishing.
 const DANGEROUS_TLDS = [
@@ -227,6 +248,7 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
   let subdomainCount = 0;
   let pathPattern: UrlAnatomy["pathPattern"] = "vacío";
   let hasRandomQuery = false;
+  let rutaCompleta = "";
 
   try {
     const u = new URL(normalizedUrl);
@@ -235,6 +257,7 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
     hasHttps = u.protocol === "https:";
     subdomainCount = Math.max(0, host.split(".").length - 2);
 
+    rutaCompleta = u.pathname + u.search;
     const firstSeg = u.pathname.split("/").filter(Boolean)[0] || "";
     pathPattern = !firstSeg ? "vacío" : looksRandom(firstSeg) ? "aleatorio" : "normal";
 
@@ -270,7 +293,30 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
   const isPunycode = isPunycodeHost(host);
   const typosquatOf = !isOfficial && !isIpLiteral ? findTyposquat(host) : null;
   const hasDangerousTld = DANGEROUS_TLDS.some((t) => host.endsWith(t));
+  const isOfficialDomain = isOfficial;
 
+  // Hosting gratuito: el host cuelga de la plataforma, no ES la plataforma.
+  const freeHostingService =
+    HOSTING_GRATUITO.find((p) => host.endsWith("." + p)) || null;
+
+  // Marca en la RUTA. Solo cuenta si además la ruta parece un flujo de
+  // credenciales o de CMS comprometido: un medio de prensa puede nombrar
+  // legítimamente a un banco en la URL de una noticia.
+  let brandInPath: string | null = null;
+  if (!isOfficial && rutaCompleta && RUTA_CREDENCIALES.test(rutaCompleta)) {
+    const ruta = rutaCompleta.toLowerCase();
+    for (const b of IMPERSONATED_BRANDS) {
+      if (b.needles.some((n) => n.length >= 5 && ruta.includes(n))) {
+        brandInPath = b.brand;
+        break;
+      }
+    }
+  }
+
+  if (freeHostingService)
+    redFlags.push(`Alojado en hosting gratuito (${freeHostingService})`);
+  if (brandInPath)
+    redFlags.push(`Menciona a ${brandInPath} en la ruta, pero el dominio no le pertenece`);
   if (isIpLiteral) redFlags.push("El enlace apunta a una dirección IP, no a un dominio");
   if (isPunycode) redFlags.push("Dominio con caracteres especiales (posible homóglifo)");
   if (typosquatOf) redFlags.push(`Se parece al dominio oficial ${typosquatOf} pero no lo es`);
@@ -298,6 +344,9 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
     isPunycode,
     typosquatOf,
     hasDangerousTld,
+    isOfficialDomain,
+    freeHostingService,
+    brandInPath,
     redFlags,
     domainAgeDays: null,
     certChainValid: null,
@@ -362,6 +411,18 @@ export function scoreUrl(a: UrlAnatomy, community?: CommunityHit | null): Analys
       raw -= 45;
       reasons.push(`Imita el nombre de ${a.brandImpersonated} sin ser su dominio oficial`);
     }
+    if (a.brandInPath) {
+      raw -= 40;
+      reasons.push(
+        `La dirección nombra a ${a.brandInPath} en la ruta, pero el dominio (${a.host}) no le pertenece: puede ser un sitio ajeno vulnerado`
+      );
+    }
+    if (a.freeHostingService) {
+      raw -= 35;
+      reasons.push(
+        `Alojado en ${a.freeHostingService}, una plataforma gratuita donde cualquiera puede publicar`
+      );
+    }
     if (a.isIpLiteral) {
       raw -= 50;
       reasons.push(
@@ -421,8 +482,12 @@ export function scoreUrl(a: UrlAnatomy, community?: CommunityHit | null): Analys
   let recommendation: string;
   if (raw >= 67) {
     riskLevel = "safe";
-    recommendation =
-      "Este enlace parece seguro. Aún así, verifica que sea el sitio correcto antes de ingresar datos.";
+    // Honestidad del veredicto: solo con un dominio de la whitelist sabemos que
+    // el sitio es legítimo. En el resto únicamente sabemos que NO hallamos
+    // señales, que no es lo mismo, y el motor no detecta el 100% de los casos.
+    recommendation = isOfficial
+      ? "Es el sitio oficial. Aun así, nunca ingreses tus claves si llegaste desde un enlace que no pediste."
+      : "No encontramos señales de fraude, pero eso no garantiza que el sitio sea legítimo. Si te llegó sin que lo pidieras, verifica por un canal oficial antes de ingresar datos.";
   } else if (raw >= 34) {
     riskLevel = "suspicious";
     recommendation =
