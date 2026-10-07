@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Shield,
@@ -18,14 +19,35 @@ import { recordAnalysis } from "@/lib/activity";
 import { recordAlert } from "@/lib/network";
 import { Microcapsula } from "@/components/Microcapsula";
 
-export default function AnalizarPage() {
+// Extrae el primer enlace de un texto. Al compartir desde Android, la URL suele
+// venir incrustada en el campo "text" junto a otras palabras, no en "url".
+function extraerUrl(texto: string): string {
+  const m = texto.match(/https?:\/\/[^\s]+/i);
+  if (m) return m[0];
+  // Sin esquema: algo con forma de dominio.
+  const d = texto.match(/[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(\/[^\s]*)?/i);
+  return d ? d[0] : texto.trim();
+}
+
+function AnalizarContent() {
+  const params = useSearchParams();
   const [url, setUrl] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
-  async function handleAnalyze(e: React.FormEvent) {
-    e.preventDefault();
-    if (!url.trim()) return;
+  // Entrada desde "Compartir con Fishin't" del sistema operativo (§2.4.1.a),
+  // declarada como share_target en public/manifest.json.
+  useEffect(() => {
+    const compartido = params.get("url") || params.get("text") || "";
+    if (!compartido.trim()) return;
+    const limpio = extraerUrl(compartido);
+    setUrl(limpio);
+    void analizar(limpio);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
+
+  async function analizar(valor: string) {
+    if (!valor.trim()) return;
     setAnalyzing(true);
     setResult(null);
 
@@ -33,23 +55,28 @@ export default function AnalizarPage() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: valor }),
       });
       if (!res.ok) throw new Error("API error");
       const data: AnalysisResult = await res.json();
       setResult(data);
       recordAnalysis(data.riskLevel !== "safe");
       // Si el usuario es protegido de una red, avisa al admin (best-effort).
-      if (data.riskLevel !== "safe") void recordAlert(url, data.riskLevel);
+      if (data.riskLevel !== "safe") void recordAlert(valor, data.riskLevel);
     } catch {
       // Fallback: análisis determinista en el cliente (sin red/comunidad).
-      const local = analyzeLocally(url);
+      const local = analyzeLocally(valor);
       setResult(local);
       recordAnalysis(local.riskLevel !== "safe");
-      if (local.riskLevel !== "safe") void recordAlert(url, local.riskLevel);
+      if (local.riskLevel !== "safe") void recordAlert(valor, local.riskLevel);
     } finally {
       setAnalyzing(false);
     }
+  }
+
+  async function handleAnalyze(e: React.FormEvent) {
+    e.preventDefault();
+    await analizar(url);
   }
 
   function reset() {
@@ -282,5 +309,13 @@ function Chip({ label, danger = false }: { label: string; danger?: boolean }) {
     >
       {label}
     </span>
+  );
+}
+
+export default function AnalizarPage() {
+  return (
+    <Suspense fallback={null}>
+      <AnalizarContent />
+    </Suspense>
   );
 }

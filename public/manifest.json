@@ -17,5 +17,18 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["security", "education", "utilities"]
+  "categories": [
+    "security",
+    "education",
+    "utilities"
+  ],
+  "share_target": {
+    "action": "/analizar",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }

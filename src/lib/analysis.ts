@@ -33,6 +33,8 @@ export interface UrlAnatomy {
   // Campos que el servidor enriquece (no disponibles en el análisis local):
   /** Días desde el registro del dominio (RDAP/WHOIS). null = no se pudo saber. */
   domainAgeDays?: number | null;
+  /** ¿Valida la cadena de confianza TLS? null = no se pudo comprobar. */
+  certChainValid?: boolean | null;
   // Campos que la IA (Gemini) puede enriquecer:
   scamCategory?: string | null;
   aiSummary?: string | null;
@@ -298,6 +300,7 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
     hasDangerousTld,
     redFlags,
     domainAgeDays: null,
+    certChainValid: null,
     scamCategory: null,
     aiSummary: null,
   };

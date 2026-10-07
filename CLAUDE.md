@@ -42,7 +42,8 @@ Detalle no obvio: las marcas suplantadas cortas (`tag`, `bci`, `sii`, `bch`, `cm
 5. **Antigüedad del dominio** — `getDomainAgeDays` penaliza proporcionalmente: ≤30d −45, ≤90d −30, ≤180d −15; si no hay dato, no penaliza. Dos vías según el TLD, ambas verificadas contra los registros reales:
    - **gTLD** → RDAP sobre `rdap.org`. **El User-Agent es obligatorio** (sin él, 403).
    - **`.cl`** → NO tiene RDAP (ni en el bootstrap de IANA ni en NIC Chile), pero `whois.nic.cl:43` sí entrega `Creation date`. Se consulta por TCP con `node:net`. De esa respuesta se extrae **solo la fecha**: incluye el nombre del titular y no se registra ni almacena (§5.1, Ley 19.628).
-6. **IA opcional (Gemini)** — solo si existe `GEMINI_API_KEY`; enriquece categoría/resumen. Sin la key, la app funciona igual con pura heurística.
+6. **Cadena de confianza TLS** — `validarCadenaTlsConReintento` abre un handshake con `rejectUnauthorized: true` y penaliza (−40) solo si falla la **validación** (vencido, autofirmado, emitido para otro dominio). Un host que no resuelve no dice nada → null. **Ojo:** `normalizeUrl` quita el `www.`, pero muchos dominios resuelven solo con él (`bancoestado.cl` da ENOTFOUND), por eso se usa el host original y se reintenta con `www.`. No se usa la antigüedad del certificado: Let's Encrypt renueva cada 90 días, sería ruido.
+7. **IA opcional (Gemini)** — solo si existe `GEMINI_API_KEY`; enriquece categoría/resumen. Sin la key, la app funciona igual con pura heurística.
 
 ### El ciclo comunitario (reportar → detectar)
 
@@ -98,6 +99,10 @@ La app es de **entrada libre / free**: la landing (`/`) entra directo a `/home` 
 - Tema claro/oscuro gestionado por `components/ThemeProvider.tsx` (`localStorage` `fishintt_theme`, clase `dark` en `<html>`). El modo oscuro vive en `globals.css` con jerarquía de superficies.
 
 ## Gotchas
+
+- **No corras `npm run build` con el dev server levantado**: el build sobrescribe `.next` y el server dev queda roto con `Cannot find module './NNN.js'`. Hay que detenerlo, borrar `.next` y reiniciar.
+- **Compartir con Fishin't**: `public/manifest.json` declara `share_target` apuntando a `/analizar`. Android suele mandar la URL dentro de `text` junto a otras palabras, por eso `extraerUrl()` la rescata con regex. `analizar/` usa `useSearchParams`, así que va envuelto en `<Suspense>`.
+
 
 - **`next.config.mjs` NO debe llevar `output: 'export'`** — desactiva las API routes; la app corre como serverless en Vercel.
 - **El logo** (`components/Logo.tsx`) usa `logo.png` envuelto en círculo blanco inline con `overflow-hidden`. No reemplazar el PNG por SVG ni quitar el fondo blanco inline (se vuelve gris en dark mode).

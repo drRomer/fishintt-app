@@ -1,4 +1,5 @@
 import net from "node:net";
+import tls from "node:tls";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -275,6 +276,104 @@ function applyDomainAge(result: AnalysisResult, ageDays: number | null): Analysi
 }
 
 // -----------------------------------------------------------------------------
+// Validación de la cadena de confianza TLS (§4.2.3 a)
+// -----------------------------------------------------------------------------
+// Verificar que el sitio "use HTTPS" NO es lo mismo que validar su certificado:
+// cualquiera obtiene un certificado gratis, pero uno vencido, autofirmado o
+// emitido para otro dominio sí es una señal fuerte.
+//
+// Se abre un handshake TLS con rejectUnauthorized: true y se mira únicamente si
+// la cadena valida. No se envía ningún dato ni se ejecuta nada del sitio, y no
+// agrega exposición: expandUrl ya hace un HEAD contra ese mismo host. Conforme a
+// §4.2.3, la consulta sale del servidor y no del dispositivo del usuario.
+//
+// Deliberadamente NO se usa la antigüedad del certificado como señal: Let's
+// Encrypt renueva cada 90 días, así que los sitios legítimos tienen certificados
+// recién emitidos todo el tiempo. Sería ruido, no evidencia.
+// -----------------------------------------------------------------------------
+
+interface CadenaTls {
+  valido: boolean;
+  motivo: string;
+}
+
+// Solo estos errores indican un problema de CONFIANZA. Que un host no resuelva o
+// rechace la conexión no dice nada sobre su legitimidad.
+const ERRORES_CADENA: Record<string, string> = {
+  CERT_HAS_EXPIRED: "el certificado está vencido",
+  CERT_NOT_YET_VALID: "el certificado aún no es válido",
+  DEPTH_ZERO_SELF_SIGNED_CERT: "el certificado es autofirmado",
+  SELF_SIGNED_CERT_IN_CHAIN: "la cadena incluye un certificado autofirmado",
+  UNABLE_TO_VERIFY_LEAF_SIGNATURE: "no se pudo verificar quién emitió el certificado",
+  ERR_TLS_CERT_ALTNAME_INVALID: "el certificado fue emitido para otro dominio",
+};
+
+// OJO: normalizeUrl() quita el "www.", pero muchos dominios resuelven SOLO con
+// www (bancoestado.cl por sí solo da ENOTFOUND). Para el handshake hay que usar
+// el host tal como venía, y si el DNS falla se reintenta con "www." delante.
+function hostParaTls(inputUrl: string, respaldo: string): string {
+  try {
+    const u = inputUrl.match(/^https?:\/\//i) ? inputUrl : "https://" + inputUrl;
+    return new URL(u).hostname.toLowerCase() || respaldo;
+  } catch {
+    return respaldo;
+  }
+}
+
+async function validarCadenaTlsConReintento(
+  inputUrl: string,
+  hostNormalizado: string
+): Promise<CadenaTls | null> {
+  const host = hostParaTls(inputUrl, hostNormalizado);
+  const primero = await conectarTls(host);
+  if (primero !== null) return primero;
+  // Falló por DNS u otra causa no relacionada con la cadena: probar con www.
+  if (!host.startsWith("www.")) return conectarTls("www." + host);
+  return null;
+}
+
+function conectarTls(host: string): Promise<CadenaTls | null> {
+  return new Promise((resolve) => {
+    let listo = false;
+    const terminar = (v: CadenaTls | null) => {
+      if (listo) return;
+      listo = true;
+      try {
+        socket.destroy();
+      } catch {
+        /* ya cerrado */
+      }
+      resolve(v);
+    };
+    const socket = tls.connect({
+      host,
+      port: 443,
+      servername: host,
+      rejectUnauthorized: true,
+    });
+    socket.setTimeout(5000);
+    socket.on("secureConnect", () => terminar({ valido: true, motivo: "" }));
+    socket.on("timeout", () => terminar(null));
+    socket.on("error", (err: NodeJS.ErrnoException) => {
+      const motivo = ERRORES_CADENA[String(err.code ?? "")];
+      terminar(motivo ? { valido: false, motivo } : null);
+    });
+  });
+}
+
+function applyCertChain(result: AnalysisResult, cadena: CadenaTls | null): AnalysisResult {
+  if (!cadena || cadena.valido) return result;
+  const raw = Math.max(0, Math.min(100, result.rawScore - 40));
+  const previas = result.reasons.filter((r) => !r.startsWith("Sin señales de riesgo"));
+  return {
+    ...result,
+    rawScore: raw,
+    ...clasificar(raw),
+    reasons: [`Problema con el certificado de seguridad: ${cadena.motivo}`, ...previas],
+  };
+}
+
+// -----------------------------------------------------------------------------
 // Inteligencia de amenazas externa (Google Safe Browsing y VirusTotal)
 // Best-effort, detrás de sus API keys. Si una URL aparece marcada por estos
 // servicios, es señal autoritativa: el resultado se fuerza a "peligroso".
@@ -397,7 +496,7 @@ export async function POST(req: NextRequest) {
     const anatomy = buildAnatomy(url);
 
     // En paralelo: expansión, comunidad, IA, inteligencia externa y antigüedad.
-    const [expanded, community, ai, safeBrowsing, virusTotal, domainAgeDays] =
+    const [expanded, community, ai, safeBrowsing, virusTotal, domainAgeDays, cadenaTls] =
       await Promise.all([
         anatomy.host ? expandUrl(anatomy.normalizedUrl) : Promise.resolve(null),
         matchCommunity(anatomy),
@@ -405,9 +504,13 @@ export async function POST(req: NextRequest) {
         anatomy.host ? checkSafeBrowsing(anatomy.normalizedUrl) : Promise.resolve(null),
         anatomy.host ? checkVirusTotal(anatomy.normalizedUrl) : Promise.resolve(null),
         anatomy.host ? getDomainAgeDays(anatomy.host) : Promise.resolve(null),
+        anatomy.host && anatomy.hasHttps && !anatomy.isIpLiteral
+          ? validarCadenaTlsConReintento(anatomy.inputUrl, anatomy.host)
+          : Promise.resolve(null),
       ]);
 
     anatomy.domainAgeDays = domainAgeDays;
+    anatomy.certChainValid = cadenaTls ? cadenaTls.valido : null;
 
     // Combinar enriquecimiento de IA en la anatomía.
     if (ai) {
@@ -433,6 +536,9 @@ export async function POST(req: NextRequest) {
 
     // Antigüedad del dominio (no penaliza si no se pudo averiguar).
     result = applyDomainAge(result, domainAgeDays);
+
+    // Cadena de confianza del certificado (solo penaliza si falló la validación).
+    result = applyCertChain(result, cadenaTls);
 
     // Veredicto autoritativo de Safe Browsing / VirusTotal (si hay API keys).
     result = applyThreatIntel(result, safeBrowsing, virusTotal);

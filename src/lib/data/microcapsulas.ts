@@ -26,6 +26,7 @@ export type IndicadorId =
   | "typosquat"
   | "homoglifo"
   | "ip"
+  | "certificado"
   | "marca"
   | "dominioNuevo"
   | "acortador"
@@ -143,6 +144,24 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
       explicacion:
         "Nunca. Una institución seria publica sus servicios bajo su dominio, no bajo una dirección numérica.",
       nivel: "basico",
+    },
+  },
+
+  certificado: {
+    id: "certificado",
+    titulo: "El certificado de seguridad tiene problemas",
+    explicacion:
+      "El candado de HTTPS solo sirve si el certificado detrás es válido. Este sitio presenta un certificado vencido, autofirmado o emitido para otro dominio, lo que significa que nadie confiable respalda que el sitio sea quien dice ser.",
+    queHacer:
+      "No continúes. Un sitio serio jamás deja vencer su certificado ni usa uno emitido para otro dominio.",
+    evidencia: (r) => [{ etiqueta: "Dominio", valor: r.anatomy.host, peligroso: true }],
+    pregunta: {
+      enunciado: "¿Qué garantiza realmente el candado de HTTPS?",
+      opciones: ["Que el sitio es confiable", "Que la conexión va cifrada"],
+      correcta: 1,
+      explicacion:
+        "Solo que la conexión va cifrada. Quién está al otro lado lo respalda el certificado, y por eso importa que sea válido y esté emitido para ese dominio.",
+      nivel: "avanzado",
     },
   },
 
@@ -309,6 +328,7 @@ export function seleccionarMicrocapsula(r: AnalysisResult): Microcapsula | null 
   if (a.typosquatOf) return MICROCAPSULAS.typosquat;
   if (a.isPunycode) return MICROCAPSULAS.homoglifo;
   if (a.isIpLiteral) return MICROCAPSULAS.ip;
+  if (a.certChainValid === false) return MICROCAPSULAS.certificado;
   if (a.brandImpersonated) return MICROCAPSULAS.marca;
   if (typeof a.domainAgeDays === "number" && a.domainAgeDays <= 90)
     return MICROCAPSULAS.dominioNuevo;
