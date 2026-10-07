@@ -41,6 +41,8 @@ export interface UrlAnatomy {
   domainAgeDays?: number | null;
   /** ¿Valida la cadena de confianza TLS? null = no se pudo comprobar. */
   certChainValid?: boolean | null;
+  /** Dominio consolidado que este imita tipográficamente, hallado sin lista. */
+  lookalikeOf?: string | null;
   // Campos que la IA (Gemini) puede enriquecer:
   scamCategory?: string | null;
   aiSummary?: string | null;
@@ -350,6 +352,7 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
     redFlags,
     domainAgeDays: null,
     certChainValid: null,
+    lookalikeOf: null,
     scamCategory: null,
     aiSummary: null,
   };

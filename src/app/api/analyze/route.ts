@@ -1,7 +1,7 @@
-import net from "node:net";
 import tls from "node:tls";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getDomainAgeDays, detectarLookalike } from "@/lib/server/dominio";
 import {
   buildAnatomy,
   buildSignature,
@@ -118,110 +118,6 @@ Devuelve: {"scamCategory": "<categoría breve de estafa o 'ninguna'>", "brandImp
       brandImpersonated: parsed.brandImpersonated || a.brandImpersonated,
       aiSummary: parsed.summary || null,
     };
-  } catch {
-    return null;
-  }
-}
-
-// -----------------------------------------------------------------------------
-// Antigüedad del dominio vía RDAP (§4.2.3 a: "antigüedad del registro del dominio")
-// -----------------------------------------------------------------------------
-// RDAP es el sucesor de WHOIS: responde HTTP/JSON, sin librerías ni credenciales.
-// Los dominios de phishing son efímeros (días o semanas), mientras que los de las
-// instituciones reales tienen años. Si el dato no está disponible devolvemos null
-// y NO se penaliza: solo se castiga lo que se sabe, nunca lo que se ignora.
-//
-// COBERTURA POR TLD (verificada contra los registros reales):
-//   - gTLD (.com, .net, .org, .xyz, .top, .online…): vía RDAP sobre rdap.org.
-//     El User-Agent es obligatorio: sin él rdap.org responde 403.
-//   - .cl: NO está en el bootstrap RDAP de IANA ni NIC Chile expone RDAP, pero
-//     SÍ mantiene WHOIS clásico en whois.nic.cl:43, que entrega "Creation date".
-//     Se consulta por ahí, porque los dominios .cl son el foco del producto.
-//
-// PRIVACIDAD (§5.1 minimización de datos, Ley 19.628): la respuesta WHOIS de
-// NIC Chile incluye el nombre del titular. Se extrae ÚNICAMENTE la fecha de
-// creación y el resto se descarta; nada de esa respuesta se registra ni almacena.
-// -----------------------------------------------------------------------------
-
-// Dominio registrable (eTLD+1 aproximado): RDAP se consulta sobre el dominio
-// registrado, no sobre el host completo con subdominios.
-function registrableDomain(host: string): string {
-  const p = host.split(".");
-  if (p.length <= 2) return host;
-  const sld = p[p.length - 2];
-  if (["gob", "co", "com", "net", "org", "edu"].includes(sld)) {
-    return p.slice(-3).join(".");
-  }
-  return p.slice(-2).join(".");
-}
-
-// WHOIS clásico (puerto 43) para dominios .cl, que no tienen RDAP.
-// Devuelve solo la fecha de creación; el resto de la respuesta se descarta.
-function fechaCreacionNicCl(dominio: string): Promise<string | null> {
-  return new Promise((resolve) => {
-    let respuesta = "";
-    let listo = false;
-    const terminar = (valor: string | null) => {
-      if (listo) return;
-      listo = true;
-      socket.destroy();
-      resolve(valor);
-    };
-    const socket = net.createConnection(43, "whois.nic.cl");
-    socket.setTimeout(5000);
-    socket.on("connect", () => socket.write(dominio + "\r\n"));
-    socket.on("data", (d) => {
-      respuesta += d.toString("utf8");
-      // Corte temprano: una vez vista la fecha no necesitamos el resto.
-      if (respuesta.length > 8000) terminar(extraerFecha(respuesta));
-    });
-    socket.on("end", () => terminar(extraerFecha(respuesta)));
-    socket.on("timeout", () => terminar(null));
-    socket.on("error", () => terminar(null));
-  });
-}
-
-function extraerFecha(respuesta: string): string | null {
-  const m = respuesta.match(/Creation date:\s*(\d{4}-\d{2}-\d{2})/i);
-  return m ? m[1] : null;
-}
-
-function diasDesde(fechaIso: string): number | null {
-  const ms = Date.now() - new Date(fechaIso).getTime();
-  if (!isFinite(ms) || ms < 0) return null;
-  return Math.floor(ms / 86_400_000);
-}
-
-async function getDomainAgeDays(host: string): Promise<number | null> {
-  if (!host || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null; // IP: no aplica
-  const dominio = registrableDomain(host);
-
-  // Los .cl no tienen RDAP: se consultan por WHOIS de NIC Chile.
-  if (dominio.endsWith(".cl")) {
-    const fecha = await fechaCreacionNicCl(dominio);
-    return fecha ? diasDesde(fecha) : null;
-  }
-
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
-    const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(dominio)}`, {
-      headers: {
-        Accept: "application/rdap+json",
-        // Sin User-Agent, rdap.org responde 403.
-        "User-Agent": "Mozilla/5.0 (compatible; FishintBot/1.0)",
-      },
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timer));
-    if (!res.ok) return null; // 404 = no registrado o ccTLD sin RDAP (ej. .cl)
-    const json = await res.json();
-    const evento = json?.events?.find(
-      (e: any) => e?.eventAction === "registration"
-    );
-    if (!evento?.eventDate) return null;
-    const ms = Date.now() - new Date(evento.eventDate).getTime();
-    if (!isFinite(ms) || ms < 0) return null;
-    return Math.floor(ms / 86_400_000);
   } catch {
     return null;
   }
@@ -548,6 +444,14 @@ export async function POST(req: NextRequest) {
     anatomy.domainAgeDays = domainAgeDays;
     anatomy.certChainValid = cadenaTls ? cadenaTls.valido : null;
 
+    // Imitación tipográfica sin lista de referencia. Necesita la edad del
+    // dominio, por eso va después del bloque paralelo y no dentro de él.
+    const lookalike =
+      anatomy.host && !anatomy.isOfficialDomain && !anatomy.isIpLiteral && !anatomy.typosquatOf
+        ? await detectarLookalike(anatomy.host, domainAgeDays)
+        : null;
+    anatomy.lookalikeOf = lookalike ? lookalike.dominio : null;
+
     // Combinar enriquecimiento de IA en la anatomía.
     if (ai) {
       anatomy.scamCategory = ai.scamCategory ?? anatomy.scamCategory;
@@ -568,6 +472,21 @@ export async function POST(req: NextRequest) {
       result.expandedUrl = expanded;
     } else {
       result.expandedUrl = null;
+    }
+
+    // Imitación de un dominio consolidado: señal fuerte y explicable.
+    if (lookalike) {
+      const raw = Math.max(0, Math.min(100, result.rawScore - 50));
+      const anios = Math.floor(lookalike.edadDias / 365);
+      result = {
+        ...result,
+        rawScore: raw,
+        ...clasificar(raw),
+        reasons: [
+          `Se parece al dominio ${lookalike.dominio}, que existe hace ${anios} ${anios === 1 ? "año" : "años"}: este cambia una letra para imitarlo`,
+          ...result.reasons.filter((r) => !r.startsWith("Sin señales de riesgo")),
+        ],
+      };
     }
 
     // Antigüedad del dominio (no penaliza si no se pudo averiguar).

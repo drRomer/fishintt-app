@@ -91,12 +91,16 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
     id: "typosquat",
     titulo: "Este dominio imita a uno real",
     explicacion:
-      "Los estafadores registran dominios que cambian, agregan o quitan una sola letra respecto del original. En la pantalla de un celular la diferencia es casi imposible de notar, y por eso funciona tan bien.",
+      "Los estafadores registran dominios que cambian, agregan o quitan una sola letra respecto del original. En la pantalla de un celular la diferencia es casi imposible de notar, y por eso funciona tan bien. No pasa solo con los bancos: también con hospitales, municipalidades y servicios públicos.",
     queHacer:
       "Nunca entres desde el enlace. Escribe tú mismo la dirección oficial en el navegador, o usa la app de la institución.",
     evidencia: (r) => [
       { etiqueta: "El que recibiste", valor: r.anatomy.host, peligroso: true },
-      { etiqueta: "El oficial", valor: r.anatomy.typosquatOf ?? "—", peligroso: false },
+      {
+        etiqueta: "El real",
+        valor: r.anatomy.typosquatOf ?? r.anatomy.lookalikeOf ?? "—",
+        peligroso: false,
+      },
     ],
     pregunta: {
       enunciado: "¿Cuál de estas dos direcciones es la verdadera?",
@@ -325,7 +329,7 @@ export function seleccionarMicrocapsula(r: AnalysisResult): Microcapsula | null 
   const a = r.anatomy;
 
   if (r.community?.matched) return MICROCAPSULAS.comunidad;
-  if (a.typosquatOf) return MICROCAPSULAS.typosquat;
+  if (a.typosquatOf || a.lookalikeOf) return MICROCAPSULAS.typosquat;
   if (a.isPunycode) return MICROCAPSULAS.homoglifo;
   if (a.isIpLiteral) return MICROCAPSULAS.ip;
   if (a.certChainValid === false) return MICROCAPSULAS.certificado;
