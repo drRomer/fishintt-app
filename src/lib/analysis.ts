@@ -21,6 +21,12 @@ export interface UrlAnatomy {
   pathPattern: "vacío" | "normal" | "aleatorio";
   hasRandomQuery: boolean;
   brandImpersonated: string | null;
+  /** El host es una IP literal (ej. http://45.33.32.156/...). */
+  isIpLiteral: boolean;
+  /** Dominio internacionalizado (xn--): vector de homóglifos. */
+  isPunycode: boolean;
+  /** Dominio oficial que este enlace imita por tipografía (santandor ≈ santander). */
+  typosquatOf: string | null;
   redFlags: string[];
   // Campos que la IA (Gemini) puede enriquecer:
   scamCategory?: string | null;
@@ -141,6 +147,65 @@ function matchesBrand(host: string, needle: string): boolean {
   return new RegExp(`(^|[^a-z0-9])${needle}([^a-z0-9]|$)`).test(host);
 }
 
+// Host que es una IP literal. Las instituciones legítimas nunca publican así
+// sus servicios de cara al público.
+const IP_LITERAL = /^\d{1,3}(\.\d{1,3}){3}$/;
+
+// Dominio internacionalizado (punycode). El estándar URL convierte a "xn--"
+// cualquier host con caracteres no-ASCII, que es justamente el vector de
+// homóglifos (p. ej. "bancoestado.cl" escrito con 'о' cirílica). Ningún sitio
+// chileno legítimo de los que nos interesan lo usa.
+function isPunycodeHost(host: string): boolean {
+  return host.split(".").some((label) => label.startsWith("xn--"));
+}
+
+// Distancia de edición, para detectar imitaciones tipográficas (typosquatting).
+function levenshtein(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev: number[] = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur: number[] = [i];
+    for (let j = 1; j <= n; j++) {
+      cur[j] = Math.min(
+        prev[j] + 1,
+        cur[j - 1] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+
+// Etiqueta registrable del host: "santandor" de "www.santandor.cl",
+// "chileatiende" de "chileatiende.gob.cl".
+function registrableLabel(host: string): string {
+  const parts = host.split(".");
+  if (parts.length >= 3 && ["gob", "co", "com"].includes(parts[parts.length - 2])) {
+    return parts[parts.length - 3] || "";
+  }
+  return parts.length >= 2 ? parts[parts.length - 2] : host;
+}
+
+// ¿El dominio imita tipográficamente a uno oficial? Se exige etiqueta de al
+// menos 5 caracteres y distancia muy baja, para no generar falsos positivos.
+function findTyposquat(host: string): string | null {
+  const label = registrableLabel(host);
+  if (label.length < 5) return null;
+  const umbral = label.length >= 8 ? 2 : 1;
+  for (const safe of SAFE_DOMAINS) {
+    const safeLabel = registrableLabel(safe);
+    if (safeLabel.length < 5) continue;
+    if (label === safeLabel) return null; // es el dominio real, no una imitación
+    const d = levenshtein(label, safeLabel);
+    if (d > 0 && d <= umbral) return safe;
+  }
+  return null;
+}
+
 // -----------------------------------------------------------------------------
 // Anatomía del enlace (determinista)
 // -----------------------------------------------------------------------------
@@ -192,6 +257,15 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
     }
   }
 
+  // Indicadores estructurales adicionales (§2.4.1.a: hay que poder decirle al
+  // usuario QUÉ indicador se activó, no solo el veredicto).
+  const isIpLiteral = IP_LITERAL.test(host);
+  const isPunycode = isPunycodeHost(host);
+  const typosquatOf = !isOfficial && !isIpLiteral ? findTyposquat(host) : null;
+
+  if (isIpLiteral) redFlags.push("El enlace apunta a una dirección IP, no a un dominio");
+  if (isPunycode) redFlags.push("Dominio con caracteres especiales (posible homóglifo)");
+  if (typosquatOf) redFlags.push(`Se parece al dominio oficial ${typosquatOf} pero no lo es`);
   if (isShortener) redFlags.push(`Enlace acortado (${shortenerService})`);
   if (DANGEROUS_TLDS.some((t) => host.endsWith(t))) redFlags.push(`TLD de alto riesgo (${tld})`);
   if (!hasHttps) redFlags.push("Sin HTTPS (conexión no cifrada)");
@@ -212,6 +286,9 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
     pathPattern,
     hasRandomQuery,
     brandImpersonated,
+    isIpLiteral,
+    isPunycode,
+    typosquatOf,
     redFlags,
     scamCategory: null,
     aiSummary: null,
@@ -273,6 +350,24 @@ export function scoreUrl(a: UrlAnatomy, community?: CommunityHit | null): Analys
     if (a.brandImpersonated) {
       raw -= 45;
       reasons.push(`Imita el nombre de ${a.brandImpersonated} sin ser su dominio oficial`);
+    }
+    if (a.isIpLiteral) {
+      raw -= 50;
+      reasons.push(
+        "Apunta a una dirección IP en vez de un dominio: los servicios legítimos nunca lo hacen"
+      );
+    }
+    if (a.typosquatOf) {
+      raw -= 50;
+      reasons.push(
+        `Imita tipográficamente al dominio oficial ${a.typosquatOf} (cambia o quita letras)`
+      );
+    }
+    if (a.isPunycode) {
+      raw -= 35;
+      reasons.push(
+        "El dominio usa caracteres de otro alfabeto para parecerse a uno real (homóglifos)"
+      );
     }
     if (a.pathPattern === "aleatorio") {
       raw -= 12;
