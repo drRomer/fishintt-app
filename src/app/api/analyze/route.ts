@@ -1,3 +1,4 @@
+import net from "node:net";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -129,15 +130,16 @@ Devuelve: {"scamCategory": "<categoría breve de estafa o 'ninguna'>", "brandImp
 // instituciones reales tienen años. Si el dato no está disponible devolvemos null
 // y NO se penaliza: solo se castiga lo que se sabe, nunca lo que se ignora.
 //
-// LIMITACIÓN VERIFICADA (importante para el informe): el TLD .cl NO figura en el
-// bootstrap RDAP de IANA y NIC Chile no expone un servicio RDAP, por lo que la
-// antigüedad NO se puede obtener para dominios .cl. La cobertura real es:
-//   - gTLD (.com, .net, .org, .xyz, .top, .online…): sí  <- la mayoría del
-//     phishing chileno usa estos TLD baratos, que es donde más vale la señal.
-//   - .cl: no. La suplantación bajo .cl se cubre con el detector de
-//     typosquatting y homóglifos de analysis.ts, que no depende de la red.
+// COBERTURA POR TLD (verificada contra los registros reales):
+//   - gTLD (.com, .net, .org, .xyz, .top, .online…): vía RDAP sobre rdap.org.
+//     El User-Agent es obligatorio: sin él rdap.org responde 403.
+//   - .cl: NO está en el bootstrap RDAP de IANA ni NIC Chile expone RDAP, pero
+//     SÍ mantiene WHOIS clásico en whois.nic.cl:43, que entrega "Creation date".
+//     Se consulta por ahí, porque los dominios .cl son el foco del producto.
 //
-// El User-Agent es obligatorio: sin él rdap.org responde 403.
+// PRIVACIDAD (§5.1 minimización de datos, Ley 19.628): la respuesta WHOIS de
+// NIC Chile incluye el nombre del titular. Se extrae ÚNICAMENTE la fecha de
+// creación y el resto se descarta; nada de esa respuesta se registra ni almacena.
 // -----------------------------------------------------------------------------
 
 // Dominio registrable (eTLD+1 aproximado): RDAP se consulta sobre el dominio
@@ -152,9 +154,53 @@ function registrableDomain(host: string): string {
   return p.slice(-2).join(".");
 }
 
+// WHOIS clásico (puerto 43) para dominios .cl, que no tienen RDAP.
+// Devuelve solo la fecha de creación; el resto de la respuesta se descarta.
+function fechaCreacionNicCl(dominio: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    let respuesta = "";
+    let listo = false;
+    const terminar = (valor: string | null) => {
+      if (listo) return;
+      listo = true;
+      socket.destroy();
+      resolve(valor);
+    };
+    const socket = net.createConnection(43, "whois.nic.cl");
+    socket.setTimeout(5000);
+    socket.on("connect", () => socket.write(dominio + "\r\n"));
+    socket.on("data", (d) => {
+      respuesta += d.toString("utf8");
+      // Corte temprano: una vez vista la fecha no necesitamos el resto.
+      if (respuesta.length > 8000) terminar(extraerFecha(respuesta));
+    });
+    socket.on("end", () => terminar(extraerFecha(respuesta)));
+    socket.on("timeout", () => terminar(null));
+    socket.on("error", () => terminar(null));
+  });
+}
+
+function extraerFecha(respuesta: string): string | null {
+  const m = respuesta.match(/Creation date:\s*(\d{4}-\d{2}-\d{2})/i);
+  return m ? m[1] : null;
+}
+
+function diasDesde(fechaIso: string): number | null {
+  const ms = Date.now() - new Date(fechaIso).getTime();
+  if (!isFinite(ms) || ms < 0) return null;
+  return Math.floor(ms / 86_400_000);
+}
+
 async function getDomainAgeDays(host: string): Promise<number | null> {
   if (!host || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null; // IP: no aplica
   const dominio = registrableDomain(host);
+
+  // Los .cl no tienen RDAP: se consultan por WHOIS de NIC Chile.
+  if (dominio.endsWith(".cl")) {
+    const fecha = await fechaCreacionNicCl(dominio);
+    return fecha ? diasDesde(fecha) : null;
+  }
+
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 4000);
@@ -222,7 +268,10 @@ function applyDomainAge(result: AnalysisResult, ageDays: number | null): Analysi
     motivo = `Dominio registrado hace menos de 6 meses (${ageDays} días)`;
   }
   const raw = Math.max(0, Math.min(100, result.rawScore - penalizacion));
-  return { ...result, rawScore: raw, ...clasificar(raw), reasons: [motivo, ...result.reasons] };
+  // Si el motor local no había encontrado nada, esa frase ya no es cierta:
+  // la antigüedad ES una señal. Se quita para no mostrar razones contradictorias.
+  const previas = result.reasons.filter((r) => !r.startsWith("Sin señales de riesgo"));
+  return { ...result, rawScore: raw, ...clasificar(raw), reasons: [motivo, ...previas] };
 }
 
 // -----------------------------------------------------------------------------

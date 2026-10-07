@@ -39,7 +39,9 @@ Detalle no obvio: las marcas suplantadas cortas (`tag`, `bci`, `sii`, `bch`, `cm
 2. **Expansión** best-effort del acortador — sigue redirects reales con `fetch` HEAD manual (5 hops, timeout 4s) y toma el **peor** puntaje entre origen y destino (`mergeWorst`).
 3. **Base comunitaria** — RPC `match_threats` (coincidencia `exacto` o `similar`).
 4. **Inteligencia de amenazas externa** — `checkSafeBrowsing` (Google Safe Browsing v4) y `checkVirusTotal` (VT v3), cada una detrás de su API key. Si marcan la URL, `applyThreatIntel` fuerza el resultado a `dangerous` (señal autoritativa). Sin keys, no-op.
-5. **Antigüedad del dominio (RDAP)** — `getDomainAgeDays` consulta `rdap.org` (sucesor de WHOIS: HTTP/JSON, sin librerías). Penaliza proporcionalmente: ≤30d −45, ≤90d −30, ≤180d −15. **El User-Agent es obligatorio** (sin él, 403). Si no hay dato, no penaliza.
+5. **Antigüedad del dominio** — `getDomainAgeDays` penaliza proporcionalmente: ≤30d −45, ≤90d −30, ≤180d −15; si no hay dato, no penaliza. Dos vías según el TLD, ambas verificadas contra los registros reales:
+   - **gTLD** → RDAP sobre `rdap.org`. **El User-Agent es obligatorio** (sin él, 403).
+   - **`.cl`** → NO tiene RDAP (ni en el bootstrap de IANA ni en NIC Chile), pero `whois.nic.cl:43` sí entrega `Creation date`. Se consulta por TCP con `node:net`. De esa respuesta se extrae **solo la fecha**: incluye el nombre del titular y no se registra ni almacena (§5.1, Ley 19.628).
 6. **IA opcional (Gemini)** — solo si existe `GEMINI_API_KEY`; enriquece categoría/resumen. Sin la key, la app funciona igual con pura heurística.
 
 ### El ciclo comunitario (reportar → detectar)
