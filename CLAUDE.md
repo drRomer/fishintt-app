@@ -11,6 +11,7 @@ npm install
 npm run dev      # desarrollo en http://localhost:3000
 npm run build    # verificar compilación ANTES de commitear (no hay tests)
 npm run lint     # eslint-config-next
+npm run benchmark # mide el motor de detección contra el banco etiquetado
 ```
 
 No hay suite de tests. La verificación previa a un commit es `npm run build`. El deploy es automático en Vercel al hacer `git push origin main`.
@@ -38,7 +39,8 @@ Detalle no obvio: las marcas suplantadas cortas (`tag`, `bci`, `sii`, `bch`, `cm
 2. **Expansión** best-effort del acortador — sigue redirects reales con `fetch` HEAD manual (5 hops, timeout 4s) y toma el **peor** puntaje entre origen y destino (`mergeWorst`).
 3. **Base comunitaria** — RPC `match_threats` (coincidencia `exacto` o `similar`).
 4. **Inteligencia de amenazas externa** — `checkSafeBrowsing` (Google Safe Browsing v4) y `checkVirusTotal` (VT v3), cada una detrás de su API key. Si marcan la URL, `applyThreatIntel` fuerza el resultado a `dangerous` (señal autoritativa). Sin keys, no-op.
-5. **IA opcional (Gemini)** — solo si existe `GEMINI_API_KEY`; enriquece categoría/resumen. Sin la key, la app funciona igual con pura heurística.
+5. **Antigüedad del dominio (RDAP)** — `getDomainAgeDays` consulta `rdap.org` (sucesor de WHOIS: HTTP/JSON, sin librerías). Penaliza proporcionalmente: ≤30d −45, ≤90d −30, ≤180d −15. **El User-Agent es obligatorio** (sin él, 403). Si no hay dato, no penaliza.
+6. **IA opcional (Gemini)** — solo si existe `GEMINI_API_KEY`; enriquece categoría/resumen. Sin la key, la app funciona igual con pura heurística.
 
 ### El ciclo comunitario (reportar → detectar)
 
@@ -47,6 +49,18 @@ Al reportar en `src/app/(app)/reportar/page.tsx`, se llama la RPC `register_thre
 ### La Red Empresa Protegida (seguridad delegada) — requiere cuenta
 
 Módulo `red/` (§2.4.1.b de la tesis). Un **admin** crea una red y comparte un **código de invitación** (6 chars); los **protegidos** se unen con ese código. Cuando un protegido analiza en `analizar/` un enlace `suspicious`/`dangerous`, se registra una **alerta** (`recordAlert` en `src/lib/network.ts`) que el admin ve en su panel para intervenir a tiempo. Esquema y RPCs (`create_protected_network`, `join_protected_network`, `get_my_network`, `get_network_members`, `get_network_alerts`, `record_member_alert`, `resolve_member_alert`) en `supabase/protected_networks.sql`. Patrón clave: RLS activo **sin políticas de SELECT directas** — todo el acceso pasa por funciones `SECURITY DEFINER` con chequeo interno de `auth.uid()`, para evitar la recursión de políticas cruzadas. `src/lib/network.ts` degrada a no-op si `getSupabase()` es `null` (modo demo).
+
+### Microcápsulas: la intervención en el momento crítico
+
+Cuando el analizador marca un enlace (`riskLevel !== "safe"`), `analizar/` renderiza `<Microcapsula>` con la microcápsula **del indicador dominante de ESE enlace** (paso 6 del flujo, §5.1). El contenido vive en `src/lib/data/microcapsulas.ts` (11 indicadores) y `seleccionarMicrocapsula()` fija la prioridad: comunidad > typosquat > homóglifo > IP > marca > dominio nuevo > acortador > TLD > subdominios > aleatorio > sin HTTPS.
+
+Formato deliberado: **texto + evidencia del propio enlace + una pregunta, nunca video** — la fuente que cita §5.2 (Kumaraguru et al., 2007) validó intervenciones breves y estáticas, y el público objetivo opera en móvil. Cada pregunta alimenta el componente C del CRD.
+
+### El banco de pruebas del motor (`benchmark/`)
+
+`npm run benchmark` corre el motor **determinista** (sin red, sin API keys) contra 77 enlaces etiquetados, ponderados a Chile (69 nacionales / 8 internacionales), y reporta precisión, exhaustividad y falsos positivos contra las metas de §3.2.4 (recall ≥85 %, FPR ≤10 %). Estado actual: **94,7 % recall / 0 % FP**. Corre con `node --experimental-strip-types`, por eso los imports llevan extensión `.ts` y `benchmark/` está excluido del `tsconfig.json`.
+
+Dos advertencias que deben acompañar cualquier cita de estas cifras: los indicadores se afinaron sobre el mismo conjunto que se mide (falta un set de validación held-out), y los enlaces de phishing son curados a partir de campañas chilenas documentadas, no capturas de un feed en vivo.
 
 ### Entrada libre — la cuenta es OPCIONAL
 
@@ -68,7 +82,7 @@ La app es de **entrada libre / free**: la landing (`/`) entra directo a `/home` 
 
 ### Actividad e insignias
 
-`src/lib/activity.ts` cuenta en `localStorage` (`fishintt_activity`); los reportes se cuentan desde `fishintt_reports`. `computeBadges()` define los umbrales de las 4 insignias (Protector/Reporter/Educador/Elite). `computeCrd()` calcula el **Coeficiente de Resiliencia Digital (CRD)** 0–1000 (métrica nombrada en la tesis) a partir de la actividad, con nivel cualitativo semáforo (Vulnerable/En formación/Resiliente/Experto); se muestra en `perfil/`. La columna `profiles.crd_score` está reservada para persistirlo por usuario. Se incrementa en `analizar/` (cada análisis) y `educacion/` (marca "visto").
+`src/lib/activity.ts` cuenta en `localStorage` (`fishintt_activity`); los reportes se cuentan desde `fishintt_reports`. `computeBadges()` define los umbrales de las 4 insignias (Protector/Reporter/Educador/Elite). `computeCrd()` implementa el **CRD** con la fórmula operacional de la tesis (§3.2.1): `CRD = 10·(0,65·C + 0,35·U)`, donde `U` sale de la actividad (`computeU`) y `C` del conocimiento demostrado en ejercicios (`computeC` en `src/lib/ejercicios.ts`, ponderado básico=1/intermedio=2/avanzado=3, conservando **solo el primer intento** por ítem). Escala: Vulnerable <400, En formación <600, Resiliente <800, Experto ≥800. Se muestra en `perfil/`. `profiles.crd_score` está reservada para persistirlo. Se incrementa en `analizar/` (cada análisis) y `educacion/` (marca "visto").
 
 ### Rutas y tema
 
