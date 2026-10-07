@@ -43,6 +43,8 @@ export interface UrlAnatomy {
   certChainValid?: boolean | null;
   /** Dominio consolidado que este imita tipográficamente, hallado sin lista. */
   lookalikeOf?: string | null;
+  /** ¿El dominio apunta a algún servidor? false = no existe. null = no se supo. */
+  domainResolves?: boolean | null;
   // Campos que la IA (Gemini) puede enriquecer:
   scamCategory?: string | null;
   aiSummary?: string | null;
@@ -353,6 +355,7 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
     domainAgeDays: null,
     certChainValid: null,
     lookalikeOf: null,
+    domainResolves: null,
     scamCategory: null,
     aiSummary: null,
   };

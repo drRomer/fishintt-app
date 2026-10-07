@@ -1,7 +1,7 @@
 import tls from "node:tls";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { getDomainAgeDays, detectarLookalike } from "@/lib/server/dominio";
+import { getDomainAgeDays, detectarLookalike, dominioResuelve } from "@/lib/server/dominio";
 import {
   buildAnatomy,
   buildSignature,
@@ -428,7 +428,7 @@ export async function POST(req: NextRequest) {
     const urlExterna = urlParaServicioExterno(anatomy.inputUrl, anatomy.normalizedUrl);
 
     // En paralelo: expansión, comunidad, IA, inteligencia externa y antigüedad.
-    const [expanded, community, ai, safeBrowsing, virusTotal, domainAgeDays, cadenaTls] =
+    const [expanded, community, ai, safeBrowsing, virusTotal, domainAgeDays, cadenaTls, resuelveDns] =
       await Promise.all([
         anatomy.host ? expandUrl(anatomy.normalizedUrl) : Promise.resolve(null),
         matchCommunity(anatomy),
@@ -439,10 +439,14 @@ export async function POST(req: NextRequest) {
         anatomy.host && anatomy.hasHttps && !anatomy.isIpLiteral
           ? validarCadenaTlsConReintento(anatomy.inputUrl, anatomy.host)
           : Promise.resolve(null),
+        anatomy.host
+          ? dominioResuelve(hostParaTls(anatomy.inputUrl, anatomy.host))
+          : Promise.resolve(null),
       ]);
 
     anatomy.domainAgeDays = domainAgeDays;
     anatomy.certChainValid = cadenaTls ? cadenaTls.valido : null;
+    anatomy.domainResolves = resuelveDns;
 
     // Imitación tipográfica sin lista de referencia. Necesita la edad del
     // dominio, por eso va después del bloque paralelo y no dentro de él.
@@ -484,6 +488,22 @@ export async function POST(req: NextRequest) {
         ...clasificar(raw),
         reasons: [
           `Se parece al dominio ${lookalike.dominio}, que existe hace ${anios} ${anios === 1 ? "año" : "años"}: este cambia una letra para imitarlo`,
+          ...result.reasons.filter((r) => !r.startsWith("Sin señales de riesgo")),
+        ],
+      };
+    }
+
+    // Un dominio que no apunta a ningún servidor NO es un sitio seguro: no es un
+    // sitio. Nunca puede quedar como "sin señales de riesgo". No se le sube el
+    // riesgo si ya venía peor por otras razones.
+    if (resuelveDns === false) {
+      const raw = Math.min(result.rawScore, 55);
+      result = {
+        ...result,
+        rawScore: raw,
+        ...clasificar(raw),
+        reasons: [
+          "Este sitio no existe: el dominio no apunta a ningún servidor. Puede ser una campaña ya dada de baja, un dominio sin uso o un error de tipeo",
           ...result.reasons.filter((r) => !r.startsWith("Sin señales de riesgo")),
         ],
       };

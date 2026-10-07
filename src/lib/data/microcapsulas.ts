@@ -23,6 +23,7 @@ import type { NivelEjercicio } from "@/lib/ejercicios";
 
 export type IndicadorId =
   | "comunidad"
+  | "noExiste"
   | "typosquat"
   | "homoglifo"
   | "ip"
@@ -84,6 +85,24 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
       explicacion:
         "No hay forma segura de «comprobar» una estafa abriéndola. Con solo cargar la página ya entregas información, y si ingresas datos el daño es inmediato.",
       nivel: "basico",
+    },
+  },
+
+  noExiste: {
+    id: "noExiste",
+    titulo: "Este sitio no existe",
+    explicacion:
+      "El dominio no apunta a ningún servidor, así que no hay página que visitar. Suele pasar por tres motivos: la campaña de estafa ya fue dada de baja (duran días), el dominio está registrado pero sin uso, o hay un error de tipeo en el enlace. En ningún caso significa que el enlace sea confiable.",
+    queHacer:
+      "Si te lo enviaron como si fuera un banco o un servicio, trata el mensaje como fraude: el remitente es el problema, no el sitio. Si esperabas llegar a una página real, escribe tú la dirección en el navegador.",
+    evidencia: (r) => [{ etiqueta: "Dominio que no responde", valor: r.anatomy.host, peligroso: true }],
+    pregunta: {
+      enunciado: "Un enlace lleva a un sitio que no existe. ¿Qué conviene concluir?",
+      opciones: ["Que es inofensivo, porque no hay nada", "Que no se puede verificar y el mensaje sigue siendo sospechoso"],
+      correcta: 1,
+      explicacion:
+        "Que no cargue no lo vuelve confiable. Muchas páginas de estafa se dan de baja a los pocos días; que hoy no exista no cambia que alguien te la envió.",
+      nivel: "intermedio",
     },
   },
 
@@ -329,6 +348,7 @@ export function seleccionarMicrocapsula(r: AnalysisResult): Microcapsula | null 
   const a = r.anatomy;
 
   if (r.community?.matched) return MICROCAPSULAS.comunidad;
+  if (a.domainResolves === false) return MICROCAPSULAS.noExiste;
   if (a.typosquatOf || a.lookalikeOf) return MICROCAPSULAS.typosquat;
   if (a.isPunycode) return MICROCAPSULAS.homoglifo;
   if (a.isIpLiteral) return MICROCAPSULAS.ip;

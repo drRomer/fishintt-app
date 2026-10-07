@@ -218,3 +218,54 @@ export async function detectarLookalike(
   }
   return null;
 }
+
+// -----------------------------------------------------------------------------
+// ¿El dominio apunta realmente a algún servidor?
+// -----------------------------------------------------------------------------
+// Un dominio que no resuelve no es un sitio seguro: no es un sitio. Puede ser
+// una campaña de phishing ya dada de baja (duran días), un registro defensivo
+// sin uso, o un error de tipeo. En ningún caso corresponde decirle al usuario
+// "sin señales de riesgo".
+//
+// Solo cuenta la inexistencia DEFINITIVA (ENOTFOUND / NXDOMAIN). Un timeout o un
+// fallo del resolutor son problemas nuestros, no del dominio: ahí se devuelve
+// null y no se penaliza.
+export async function dominioResuelve(host: string): Promise<boolean | null> {
+  if (!host) return null;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return true; // una IP es su propio destino
+
+  const primero = await resuelveHost(host);
+  if (primero !== false) return primero;
+
+  // OJO: normalizeUrl() quita el "www.", y muchos dominios solo resuelven con él
+  // (bancoestado.cl a secas no tiene registro A). Antes de declarar que un sitio
+  // no existe hay que probar la otra forma, o marcaríamos como inexistentes a
+  // sitios legítimos que solo publican bajo www.
+  const alterno = host.startsWith("www.") ? host.slice(4) : "www." + host;
+  const segundo = await resuelveHost(alterno);
+  return segundo === true ? true : false;
+}
+
+async function resuelveHost(host: string): Promise<boolean | null> {
+  try {
+    const r = await dns.resolve4(host);
+    return r.length > 0;
+  } catch (e: any) {
+    const code = String(e?.code ?? "");
+    if (code !== "ENOTFOUND" && code !== "NOTFOUND" && code !== "ENODATA") return null;
+    // Sin registro A: puede tener solo IPv6 o solo registros MX/CNAME.
+    try {
+      const r6 = await dns.resolve6(host);
+      if (r6.length > 0) return true;
+    } catch {
+      /* sigue sin resolver */
+    }
+    try {
+      const cn = await dns.resolveCname(host);
+      if (cn.length > 0) return true;
+    } catch {
+      /* sigue sin resolver */
+    }
+    return code === "ENOTFOUND" || code === "NOTFOUND" ? false : null;
+  }
+}
