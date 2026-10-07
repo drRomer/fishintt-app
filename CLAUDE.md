@@ -58,6 +58,12 @@ Cuando el analizador marca un enlace (`riskLevel !== "safe"`), `analizar/` rende
 
 Formato deliberado: **texto + evidencia del propio enlace + una pregunta, nunca video** — la fuente que cita §5.2 (Kumaraguru et al., 2007) validó intervenciones breves y estáticas, y el público objetivo opera en móvil. Cada pregunta alimenta el componente C del CRD.
 
+### El instrumento de medición del CRD (`evaluacion/`)
+
+Ruta `/evaluacion`: aplica los 12 ítems del instrumento de §3.2.3 (4 básicos, 4 intermedios, 4 avanzados), en dos aplicaciones con ítems distintos — `PRE_TEST` y `POST_TEST` en `src/lib/data/evaluacion.ts`. Incluye comunicaciones **legítimas** de las mismas instituciones como distractores: si todos los ítems fueran fraude, el instrumento mediría desconfianza, no discernimiento. No hay retroalimentación por ítem (contaminaría una medición diagnóstica); las explicaciones van todas al final.
+
+En el pre-test `U = 0` por definición del instrumento. **Defecto conocido del criterio de §3.2.4, comprobado empíricamente:** como ΔCRD puede crecer +350 solo por el componente de uso, un usuario con C=100 en ambas aplicaciones (cero aprendizaje) "cumple" el umbral de 150. Por eso `compararAplicaciones()` expone también `deltaC`, que es la ganancia de conocimiento aislada y la medida que sí evidencia aprendizaje.
+
 ### El banco de pruebas del motor (`benchmark/`)
 
 `npm run benchmark` corre el motor **determinista** (sin red, sin API keys) contra 77 enlaces etiquetados, ponderados a Chile (69 nacionales / 8 internacionales), y reporta precisión, exhaustividad y falsos positivos contra las metas de §3.2.4 (recall ≥85 %, FPR ≤10 %). Estado actual: **94,7 % recall / 0 % FP**. Corre con `node --experimental-strip-types`, por eso los imports llevan extensión `.ts` y `benchmark/` está excluido del `tsconfig.json`.
