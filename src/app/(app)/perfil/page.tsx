@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import { getActivity, getReportsCount, computeBadges, computeCrd, type Activity } from "@/lib/activity";
+import { computeC } from "@/lib/ejercicios";
 import { isLoggedIn } from "@/lib/session";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -55,6 +56,7 @@ export default function PerfilPage() {
   const [activity, setActivity] = useState<Activity>({ analyses: 0, blocked: 0, educationViewed: false });
   const [reportsCount, setReportsCount] = useState(0);
   const [logged, setLogged] = useState(false);
+  const [conocimiento, setConocimiento] = useState(0);
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -79,6 +81,7 @@ export default function PerfilPage() {
     setActivity(getActivity());
     setReportsCount(getReportsCount());
     setLogged(isLoggedIn());
+    setConocimiento(computeC());
   }, []);
 
   useEffect(() => {
@@ -88,7 +91,8 @@ export default function PerfilPage() {
   }, [toast]);
 
   const badges = computeBadges(activity, reportsCount);
-  const crd = computeCrd(activity, reportsCount);
+  // El componente C viene de los ejercicios de clasificación respondidos (§3.2.1).
+  const crd = computeCrd(activity, reportsCount, conocimiento);
 
   function startEdit() {
     setDraft(profile);

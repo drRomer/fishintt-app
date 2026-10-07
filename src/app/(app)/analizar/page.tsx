@@ -16,6 +16,7 @@ import {
 import { analyzeLocally, type AnalysisResult } from "@/lib/analysis";
 import { recordAnalysis } from "@/lib/activity";
 import { recordAlert } from "@/lib/network";
+import { Microcapsula } from "@/components/Microcapsula";
 
 export default function AnalizarPage() {
   const [url, setUrl] = useState("");
@@ -152,6 +153,9 @@ export default function AnalizarPage() {
         {result && !analyzing && (
           <div className="fade-in">
             <RiskResult result={result} />
+
+            {/* Paso 6 del flujo (§5.1): intervención formativa en el momento crítico */}
+            <Microcapsula result={result} />
 
             <div className="mt-4 space-y-3">
               <button

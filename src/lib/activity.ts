@@ -65,11 +65,15 @@ export function markEducationViewed(): Activity {
 // -----------------------------------------------------------------------------
 // Coeficiente de Resiliencia Digital (CRD)
 // -----------------------------------------------------------------------------
-// Métrica cuantitativa (0..1000) que la tesis define como indicador del avance
-// del usuario en ciberseguridad (§2.4.1.c, §3.1.2.c). Se calcula de forma
-// determinista a partir de la actividad local: mientras más analiza, detecta,
-// reporta y aprende, más sube su resiliencia. El esquema Supabase ya reserva la
-// columna `crd_score` (profiles) para persistirlo por usuario en el futuro.
+// Métrica compuesta (0..1000) definida operacionalmente en la tesis (§3.2.1).
+// Combina DOS dimensiones, no solo el uso:
+//   C = conocimiento demostrado en los ejercicios de clasificación (0..100),
+//       ponderado por dificultad — lo entrega computeC() de ./ejercicios.
+//   U = adopción de conductas preventivas en la plataforma (0..100).
+//   CRD = 10 · (0,65·C + 0,35·U)
+// La ponderación 65/35 es del documento: la resiliencia se sostiene en la
+// competencia de la persona, no en cuánto usa la herramienta.
+// El esquema Supabase reserva `profiles.crd_score` para persistirlo por usuario.
 
 export interface CrdStatus {
   score: number; // 0..1000
@@ -78,16 +82,29 @@ export interface CrdStatus {
   hint: string;
 }
 
-export function computeCrd(a: Activity, reports: number): CrdStatus {
-  // Base neutral 350 (un usuario nuevo parte "en riesgo" y crece con el uso).
-  const raw =
-    350 +
-    a.analyses * 12 + // usar el analizador
-    a.blocked * 8 + // aprender a detectar amenazas
-    reports * 25 + // contribuir a la comunidad
-    (a.educationViewed ? 150 : 0); // completar la formación
+/**
+ * Componente de Uso (0..100) según §3.2.1:
+ *   U = mín(100; 40·mín(A,15)/15 + 30·mín(R,8)/8 + 30·mín(D,10)/10)
+ * A = enlaces analizados, R = amenazas reportadas, D = amenazas detectadas.
+ * Los topes evitan que la repetición mecánica infle el indicador.
+ */
+export function computeU(a: Activity, reports: number): number {
+  const A = Math.min(a.analyses, 15);
+  const R = Math.min(reports, 8);
+  const D = Math.min(a.blocked, 10);
+  return Math.min(100, (40 * A) / 15 + (30 * R) / 8 + (30 * D) / 10);
+}
 
-  const score = Math.max(0, Math.min(1000, Math.round(raw)));
+/**
+ * CRD = 10 · (0,65·C + 0,35·U)   — §3.2.1
+ * `c` es el componente de Conocimiento (0..100) que entrega computeC() de
+ * src/lib/ejercicios.ts. Sin ejercicios respondidos C = 0, de modo que el
+ * puntaje refleja solo conducta de uso, tal como describe el instrumento.
+ */
+export function computeCrd(a: Activity, reports: number, c: number = 0): CrdStatus {
+  const C = Math.max(0, Math.min(100, c));
+  const U = computeU(a, reports);
+  const score = Math.max(0, Math.min(1000, Math.round(10 * (0.65 * C + 0.35 * U))));
 
   let level: CrdStatus["level"];
   let tone: CrdStatus["tone"];

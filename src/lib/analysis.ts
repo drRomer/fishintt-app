@@ -27,6 +27,8 @@ export interface UrlAnatomy {
   isPunycode: boolean;
   /** Dominio oficial que este enlace imita por tipografía (santandor ≈ santander). */
   typosquatOf: string | null;
+  /** La terminación del dominio está entre las más abusadas en phishing. */
+  hasDangerousTld: boolean;
   redFlags: string[];
   // Campos que la IA (Gemini) puede enriquecer:
   scamCategory?: string | null;
@@ -262,12 +264,13 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
   const isIpLiteral = IP_LITERAL.test(host);
   const isPunycode = isPunycodeHost(host);
   const typosquatOf = !isOfficial && !isIpLiteral ? findTyposquat(host) : null;
+  const hasDangerousTld = DANGEROUS_TLDS.some((t) => host.endsWith(t));
 
   if (isIpLiteral) redFlags.push("El enlace apunta a una dirección IP, no a un dominio");
   if (isPunycode) redFlags.push("Dominio con caracteres especiales (posible homóglifo)");
   if (typosquatOf) redFlags.push(`Se parece al dominio oficial ${typosquatOf} pero no lo es`);
   if (isShortener) redFlags.push(`Enlace acortado (${shortenerService})`);
-  if (DANGEROUS_TLDS.some((t) => host.endsWith(t))) redFlags.push(`TLD de alto riesgo (${tld})`);
+  if (hasDangerousTld) redFlags.push(`TLD de alto riesgo (${tld})`);
   if (!hasHttps) redFlags.push("Sin HTTPS (conexión no cifrada)");
   if (subdomainCount > 2) redFlags.push("Demasiados subdominios");
   if (pathPattern === "aleatorio") redFlags.push("Ruta con apariencia aleatoria");
@@ -289,6 +292,7 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
     isIpLiteral,
     isPunycode,
     typosquatOf,
+    hasDangerousTld,
     redFlags,
     scamCategory: null,
     aiSummary: null,
@@ -335,7 +339,7 @@ export function scoreUrl(a: UrlAnatomy, community?: CommunityHit | null): Analys
       raw -= 65;
       reasons.push(`Enlace acortado (${a.shortenerService}) — oculta el destino real`);
     }
-    if (DANGEROUS_TLDS.some((t) => a.host.endsWith(t))) {
+    if (a.hasDangerousTld) {
       raw -= 40;
       reasons.push(`TLD frecuentemente usado en phishing (${a.tld})`);
     }
