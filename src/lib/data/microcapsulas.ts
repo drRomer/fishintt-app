@@ -190,9 +190,9 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
     id: "dominioNuevo",
     titulo: "El dominio se creó hace muy poco",
     explicacion:
-      "Los sitios de estafa duran días: se crean, se usan en una campaña y se abandonan antes de que alcancen a bloquearlos. Por eso la antigüedad del dominio es una de las señales más potentes. El sitio de un banco o de un organismo público lleva años registrado.",
+      "Los sitios de estafa duran días: se crean, se usan en una campaña y se abandonan antes de que alcancen a bloquearlos. Por eso la antigüedad es una señal útil. Pero ojo con el otro lado: un emprendimiento o una empresa nueva también estrena su dominio, así que esto por sí solo no prueba que sea fraude. Lo que sí es raro es que una institución con décadas de existencia te escriba desde un dominio recién creado.",
     queHacer:
-      "Si recibiste este enlace sin haberlo pedido, desconfía. Un dominio nuevo que te pide datos personales o de pago casi nunca es legítimo.",
+      "Fíjate en quién dice ser. Si se presenta como tu banco, el SII o una empresa conocida, un dominio nuevo es contradictorio y debes desconfiar. Si es un negocio pequeño que podría ser nuevo de verdad, verifícalo por otro canal antes de entregar datos o pagar.",
     evidencia: (r) => {
       const dias = r.anatomy.domainAgeDays;
       return [

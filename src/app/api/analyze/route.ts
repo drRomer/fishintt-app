@@ -256,19 +256,40 @@ function clasificar(raw: number): Pick<AnalysisResult, "riskLevel" | "recommenda
   };
 }
 
+// La antigüedad es una señal CORROBORANTE, no acusatoria por sí sola.
+//
+// Antes se penalizaba igual con o sin otras señales, y eso producía un falso
+// positivo sistemático: un dominio legítimo limpio parte en 80, de modo que
+// incluso la penalización más suave (-15) lo dejaba en 65, bajo el umbral de 67.
+// Resultado: TODA PyME chilena con menos de 6 meses salía "sospechosa", y las
+// microempresas son parte del público objetivo del producto (§2.2.2).
+//
+// Ahora: si el motor ya encontró otras señales, la edad las amplifica con fuerza.
+// Si el enlace está limpio y lo único llamativo es la edad, solo un dominio
+// realmente fresco (≤30 días) justifica una advertencia, y con otro lenguaje.
 function applyDomainAge(result: AnalysisResult, ageDays: number | null): AnalysisResult {
   if (ageDays === null || ageDays > 180) return result; // sin dato o dominio establecido
+
+  // rawScore ≥ 80 significa que no se aplicó ninguna otra penalización.
+  const soloEdad = result.rawScore >= 80;
+  const dias = `${ageDays} ${ageDays === 1 ? "día" : "días"}`;
+
   let penalizacion: number;
   let motivo: string;
-  if (ageDays <= 30) {
+
+  if (soloEdad) {
+    if (ageDays > 90) return result; // nuevo pero sin nada más: no se marca
+    penalizacion = ageDays <= 30 ? 25 : 12;
+    motivo = `El dominio se creó hace ${dias}. Por sí solo no indica fraude (los sitios legítimos también empiezan nuevos), pero si el enlace te llegó sin que lo pidieras, verifícalo antes de entregar datos`;
+  } else if (ageDays <= 30) {
     penalizacion = 45;
-    motivo = `Dominio registrado hace ${ageDays} ${ageDays === 1 ? "día" : "días"}: las campañas de phishing usan dominios recién creados`;
+    motivo = `Dominio registrado hace ${dias}: las campañas de phishing usan dominios recién creados`;
   } else if (ageDays <= 90) {
     penalizacion = 30;
-    motivo = `Dominio muy reciente (${ageDays} días), mientras que los sitios de instituciones reales tienen años`;
+    motivo = `Dominio muy reciente (${dias}), mientras que los sitios de instituciones reales tienen años`;
   } else {
     penalizacion = 15;
-    motivo = `Dominio registrado hace menos de 6 meses (${ageDays} días)`;
+    motivo = `Dominio registrado hace menos de 6 meses (${dias})`;
   }
   const raw = Math.max(0, Math.min(100, result.rawScore - penalizacion));
   // Si el motor local no había encontrado nada, esa frase ya no es cierta:
