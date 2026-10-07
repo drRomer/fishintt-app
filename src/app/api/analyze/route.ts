@@ -122,6 +122,110 @@ Devuelve: {"scamCategory": "<categoría breve de estafa o 'ninguna'>", "brandImp
 }
 
 // -----------------------------------------------------------------------------
+// Antigüedad del dominio vía RDAP (§4.2.3 a: "antigüedad del registro del dominio")
+// -----------------------------------------------------------------------------
+// RDAP es el sucesor de WHOIS: responde HTTP/JSON, sin librerías ni credenciales.
+// Los dominios de phishing son efímeros (días o semanas), mientras que los de las
+// instituciones reales tienen años. Si el dato no está disponible devolvemos null
+// y NO se penaliza: solo se castiga lo que se sabe, nunca lo que se ignora.
+//
+// LIMITACIÓN VERIFICADA (importante para el informe): el TLD .cl NO figura en el
+// bootstrap RDAP de IANA y NIC Chile no expone un servicio RDAP, por lo que la
+// antigüedad NO se puede obtener para dominios .cl. La cobertura real es:
+//   - gTLD (.com, .net, .org, .xyz, .top, .online…): sí  <- la mayoría del
+//     phishing chileno usa estos TLD baratos, que es donde más vale la señal.
+//   - .cl: no. La suplantación bajo .cl se cubre con el detector de
+//     typosquatting y homóglifos de analysis.ts, que no depende de la red.
+//
+// El User-Agent es obligatorio: sin él rdap.org responde 403.
+// -----------------------------------------------------------------------------
+
+// Dominio registrable (eTLD+1 aproximado): RDAP se consulta sobre el dominio
+// registrado, no sobre el host completo con subdominios.
+function registrableDomain(host: string): string {
+  const p = host.split(".");
+  if (p.length <= 2) return host;
+  const sld = p[p.length - 2];
+  if (["gob", "co", "com", "net", "org", "edu"].includes(sld)) {
+    return p.slice(-3).join(".");
+  }
+  return p.slice(-2).join(".");
+}
+
+async function getDomainAgeDays(host: string): Promise<number | null> {
+  if (!host || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null; // IP: no aplica
+  const dominio = registrableDomain(host);
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(dominio)}`, {
+      headers: {
+        Accept: "application/rdap+json",
+        // Sin User-Agent, rdap.org responde 403.
+        "User-Agent": "Mozilla/5.0 (compatible; FishintBot/1.0)",
+      },
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timer));
+    if (!res.ok) return null; // 404 = no registrado o ccTLD sin RDAP (ej. .cl)
+    const json = await res.json();
+    const evento = json?.events?.find(
+      (e: any) => e?.eventAction === "registration"
+    );
+    if (!evento?.eventDate) return null;
+    const ms = Date.now() - new Date(evento.eventDate).getTime();
+    if (!isFinite(ms) || ms < 0) return null;
+    return Math.floor(ms / 86_400_000);
+  } catch {
+    return null;
+  }
+}
+
+// Reclasifica un puntaje 0..100 al veredicto cualitativo.
+function clasificar(raw: number): Pick<AnalysisResult, "riskLevel" | "recommendation" | "score"> {
+  const score = Math.round((raw / 100) * 6) + 1;
+  if (raw >= 67) {
+    return {
+      riskLevel: "safe",
+      score,
+      recommendation:
+        "Este enlace parece seguro. Aún así, verifica que sea el sitio correcto antes de ingresar datos.",
+    };
+  }
+  if (raw >= 34) {
+    return {
+      riskLevel: "suspicious",
+      score,
+      recommendation:
+        "Este enlace presenta señales sospechosas. Verifica con la institución por un canal oficial antes de continuar.",
+    };
+  }
+  return {
+    riskLevel: "dangerous",
+    score,
+    recommendation:
+      "ALTO RIESGO. No ingreses datos en este sitio. Reporta y elimina el mensaje que lo contiene.",
+  };
+}
+
+function applyDomainAge(result: AnalysisResult, ageDays: number | null): AnalysisResult {
+  if (ageDays === null || ageDays > 180) return result; // sin dato o dominio establecido
+  let penalizacion: number;
+  let motivo: string;
+  if (ageDays <= 30) {
+    penalizacion = 45;
+    motivo = `Dominio registrado hace ${ageDays} ${ageDays === 1 ? "día" : "días"}: las campañas de phishing usan dominios recién creados`;
+  } else if (ageDays <= 90) {
+    penalizacion = 30;
+    motivo = `Dominio muy reciente (${ageDays} días), mientras que los sitios de instituciones reales tienen años`;
+  } else {
+    penalizacion = 15;
+    motivo = `Dominio registrado hace menos de 6 meses (${ageDays} días)`;
+  }
+  const raw = Math.max(0, Math.min(100, result.rawScore - penalizacion));
+  return { ...result, rawScore: raw, ...clasificar(raw), reasons: [motivo, ...result.reasons] };
+}
+
+// -----------------------------------------------------------------------------
 // Inteligencia de amenazas externa (Google Safe Browsing y VirusTotal)
 // Best-effort, detrás de sus API keys. Si una URL aparece marcada por estos
 // servicios, es señal autoritativa: el resultado se fuerza a "peligroso".
@@ -243,14 +347,18 @@ export async function POST(req: NextRequest) {
 
     const anatomy = buildAnatomy(url);
 
-    // En paralelo: expansión, comunidad, IA e inteligencia de amenazas externa.
-    const [expanded, community, ai, safeBrowsing, virusTotal] = await Promise.all([
-      anatomy.host ? expandUrl(anatomy.normalizedUrl) : Promise.resolve(null),
-      matchCommunity(anatomy),
-      enrichWithAI(anatomy),
-      anatomy.host ? checkSafeBrowsing(anatomy.normalizedUrl) : Promise.resolve(null),
-      anatomy.host ? checkVirusTotal(anatomy.normalizedUrl) : Promise.resolve(null),
-    ]);
+    // En paralelo: expansión, comunidad, IA, inteligencia externa y antigüedad.
+    const [expanded, community, ai, safeBrowsing, virusTotal, domainAgeDays] =
+      await Promise.all([
+        anatomy.host ? expandUrl(anatomy.normalizedUrl) : Promise.resolve(null),
+        matchCommunity(anatomy),
+        enrichWithAI(anatomy),
+        anatomy.host ? checkSafeBrowsing(anatomy.normalizedUrl) : Promise.resolve(null),
+        anatomy.host ? checkVirusTotal(anatomy.normalizedUrl) : Promise.resolve(null),
+        anatomy.host ? getDomainAgeDays(anatomy.host) : Promise.resolve(null),
+      ]);
+
+    anatomy.domainAgeDays = domainAgeDays;
 
     // Combinar enriquecimiento de IA en la anatomía.
     if (ai) {
@@ -273,6 +381,9 @@ export async function POST(req: NextRequest) {
     } else {
       result.expandedUrl = null;
     }
+
+    // Antigüedad del dominio (no penaliza si no se pudo averiguar).
+    result = applyDomainAge(result, domainAgeDays);
 
     // Veredicto autoritativo de Safe Browsing / VirusTotal (si hay API keys).
     result = applyThreatIntel(result, safeBrowsing, virusTotal);

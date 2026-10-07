@@ -30,6 +30,9 @@ export interface UrlAnatomy {
   /** La terminación del dominio está entre las más abusadas en phishing. */
   hasDangerousTld: boolean;
   redFlags: string[];
+  // Campos que el servidor enriquece (no disponibles en el análisis local):
+  /** Días desde el registro del dominio (RDAP/WHOIS). null = no se pudo saber. */
+  domainAgeDays?: number | null;
   // Campos que la IA (Gemini) puede enriquecer:
   scamCategory?: string | null;
   aiSummary?: string | null;
@@ -294,6 +297,7 @@ export function buildAnatomy(inputUrl: string): UrlAnatomy {
     typosquatOf,
     hasDangerousTld,
     redFlags,
+    domainAgeDays: null,
     scamCategory: null,
     aiSummary: null,
   };

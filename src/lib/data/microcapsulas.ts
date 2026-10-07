@@ -27,6 +27,7 @@ export type IndicadorId =
   | "homoglifo"
   | "ip"
   | "marca"
+  | "dominioNuevo"
   | "acortador"
   | "tld"
   | "subdominios"
@@ -166,6 +167,35 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
     },
   },
 
+  dominioNuevo: {
+    id: "dominioNuevo",
+    titulo: "El dominio se creó hace muy poco",
+    explicacion:
+      "Los sitios de estafa duran días: se crean, se usan en una campaña y se abandonan antes de que alcancen a bloquearlos. Por eso la antigüedad del dominio es una de las señales más potentes. El sitio de un banco o de un organismo público lleva años registrado.",
+    queHacer:
+      "Si recibiste este enlace sin haberlo pedido, desconfía. Un dominio nuevo que te pide datos personales o de pago casi nunca es legítimo.",
+    evidencia: (r) => {
+      const dias = r.anatomy.domainAgeDays;
+      return [
+        { etiqueta: "Dominio", valor: r.anatomy.host, peligroso: true },
+        {
+          etiqueta: "Antigüedad del registro",
+          valor: dias === null || dias === undefined ? "—" : `${dias} días`,
+          peligroso: true,
+        },
+      ];
+    },
+    pregunta: {
+      enunciado:
+        "El sitio de un banco con décadas de existencia, ¿qué antigüedad de dominio esperarías?",
+      opciones: ["Pocas semanas", "Varios años"],
+      correcta: 1,
+      explicacion:
+        "Años. Un dominio recién creado que dice representar a una institución antigua es una contradicción, y una de las señales más confiables de fraude.",
+      nivel: "avanzado",
+    },
+  },
+
   acortador: {
     id: "acortador",
     titulo: "Es un enlace acortado: oculta su destino",
@@ -280,6 +310,8 @@ export function seleccionarMicrocapsula(r: AnalysisResult): Microcapsula | null 
   if (a.isPunycode) return MICROCAPSULAS.homoglifo;
   if (a.isIpLiteral) return MICROCAPSULAS.ip;
   if (a.brandImpersonated) return MICROCAPSULAS.marca;
+  if (typeof a.domainAgeDays === "number" && a.domainAgeDays <= 90)
+    return MICROCAPSULAS.dominioNuevo;
   if (a.isShortener) return MICROCAPSULAS.acortador;
   if (a.hasDangerousTld) return MICROCAPSULAS.tld;
   if (a.subdomainCount > 2) return MICROCAPSULAS.subdominios;
