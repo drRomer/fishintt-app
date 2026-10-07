@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "benchmark": "node --experimental-strip-types benchmark/run.ts",
-    "validar": "node --experimental-strip-types benchmark/validacion.ts"
+    "validar": "node --experimental-strip-types benchmark/validacion.ts",
+    "verificar-keys": "node scripts/verificar-keys.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.5.2",

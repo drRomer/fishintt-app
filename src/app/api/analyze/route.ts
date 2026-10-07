@@ -386,6 +386,17 @@ interface ThreatIntelHit {
   detections?: number;
 }
 
+// Los servicios externos hacen su propia canonicalización y necesitan la URL tal
+// como llegó. normalizeUrl() le quita la barra final, y eso ROMPE la coincidencia
+// exacta de Safe Browsing: comprobado, la URL de prueba de Google da MATCH con
+// barra y "sin coincidencia" sin ella. Por eso a estos servicios se les manda el
+// enlace original (solo se le agrega el esquema si falta).
+function urlParaServicioExterno(inputUrl: string, respaldo: string): string {
+  const t = inputUrl.trim();
+  if (!t) return respaldo;
+  return /^https?:\/\//i.test(t) ? t : "https://" + t;
+}
+
 async function checkSafeBrowsing(url: string): Promise<ThreatIntelHit | null> {
   const key = process.env.GOOGLE_SAFE_BROWSING_KEY;
   if (!key) return null;
@@ -497,14 +508,16 @@ export async function POST(req: NextRequest) {
 
     const anatomy = buildAnatomy(url);
 
+    const urlExterna = urlParaServicioExterno(anatomy.inputUrl, anatomy.normalizedUrl);
+
     // En paralelo: expansión, comunidad, IA, inteligencia externa y antigüedad.
     const [expanded, community, ai, safeBrowsing, virusTotal, domainAgeDays, cadenaTls] =
       await Promise.all([
         anatomy.host ? expandUrl(anatomy.normalizedUrl) : Promise.resolve(null),
         matchCommunity(anatomy),
         enrichWithAI(anatomy),
-        anatomy.host ? checkSafeBrowsing(anatomy.normalizedUrl) : Promise.resolve(null),
-        anatomy.host ? checkVirusTotal(anatomy.normalizedUrl) : Promise.resolve(null),
+        anatomy.host ? checkSafeBrowsing(urlExterna) : Promise.resolve(null),
+        anatomy.host ? checkVirusTotal(urlExterna) : Promise.resolve(null),
         anatomy.host ? getDomainAgeDays(anatomy.host) : Promise.resolve(null),
         anatomy.host && anatomy.hasHttps && !anatomy.isIpLiteral
           ? validarCadenaTlsConReintento(anatomy.inputUrl, anatomy.host)
