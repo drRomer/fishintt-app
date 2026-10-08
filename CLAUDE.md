@@ -55,9 +55,18 @@ Módulo `red/` (§2.4.1.b de la tesis). Un **admin** crea una red y comparte un 
 
 ### Microcápsulas: la intervención en el momento crítico
 
-Cuando el analizador marca un enlace (`riskLevel !== "safe"`), `analizar/` renderiza `<Microcapsula>` con la microcápsula **del indicador dominante de ESE enlace** (paso 6 del flujo, §5.1). El contenido vive en `src/lib/data/microcapsulas.ts` (11 indicadores) y `seleccionarMicrocapsula()` fija la prioridad: comunidad > typosquat > homóglifo > IP > marca > dominio nuevo > acortador > TLD > subdominios > aleatorio > sin HTTPS.
+Cuando el analizador marca un enlace (`riskLevel !== "safe"`), `analizar/` renderiza `<Microcapsula>` con la microcápsula **del indicador dominante de ESE enlace** (paso 6 del flujo, §5.1). El contenido vive en `src/lib/data/microcapsulas.ts` (13 indicadores) y `seleccionarMicrocapsula()` fija la prioridad: comunidad > no existe > typosquat > homóglifo > IP > certificado > marca > dominio nuevo > acortador > TLD > subdominios > aleatorio > sin HTTPS.
 
 Formato deliberado: **texto + evidencia del propio enlace + una pregunta, nunca video** — la fuente que cita §5.2 (Kumaraguru et al., 2007) validó intervenciones breves y estáticas, y el público objetivo opera en móvil. Cada pregunta alimenta el componente C del CRD.
+
+### La Cyber-Academy (`academia/`): las mismas cápsulas, por decisión propia
+
+Las 13 microcápsulas tienen **dos puertas de entrada y un solo contenido**: el analizador (reactiva, cuando ya te llegó la estafa) y `/academia`, que las recorre ordenadas en **tres niveles**. La presentación está en `components/Capsula.tsx` (`<CapsulaFormativa>`), compartida por ambas; `components/Microcapsula.tsx` quedó como el envoltorio que elige el indicador dominante del enlace real.
+
+- **Estructura** (`src/lib/data/academia.ts`): N1 *Señales a simple vista* (ip, tld, acortador, comunidad) → N2 *Leer el dominio* (marca, typosquat, aleatorio, sinHttps, noExiste) → N3 *Engaños que no se ven* (subdominios, homóglifo, certificado, dominioNuevo). El reparto **coincide con el `nivel` que ya tenía la pregunta de cada cápsula**, así que los pesos del componente C (básico=1/intermedio=2/avanzado=3) valen lo mismo se responda donde se responda.
+- **Evidencia sin enlace real**: cada cápsula trae un `ejemplo` (enlace + contexto) que se pasa por `analyzeLocally()`, el mismo motor determinista. La evidencia que ve el usuario la produce el motor, no un texto escrito a mano; `ejemplo.servidor` solo rellena lo que el motor offline no puede saber (edad del dominio, cadena TLS, DNS, reportes). **Los enlaces de ejemplo están verificados contra el motor**: si cambias uno, comprueba que siga activando su indicador.
+- **Progreso** (`src/lib/academia.ts`): la fuente de verdad de "cápsula hecha" es `fishintt_ejercicios`, el mismo almacén del CRD — por eso responder en el analizador la deja hecha en la Academy y al revés. Lo único propio es `fishintt_academia`, que guarda las pruebas de cierre.
+- **Pruebas de cierre y desbloqueo**: cada nivel termina con una prueba (4/5/4 ítems, `aciertosParaAprobar` = 75 %) **sin retroalimentación por ítem**, por la misma razón que el instrumento de §3.2.3. Un nivel se completa con todas sus cápsulas respondidas **y** la prueba aprobada; el siguiente se abre ahí. La prueba se puede repetir y se guarda el **mejor** resultado (reintentar no debe cerrar lo ya abierto), pero para el CRD sigue contando **solo el primer intento**: por eso el mejor histórico y el resultado del intento actual son dos cosas distintas en la pantalla de resultado.
 
 ### El instrumento de medición del CRD (`evaluacion/`)
 
@@ -101,11 +110,12 @@ La app es de **entrada libre / free**: la landing (`/`) entra directo a `/home` 
 
 ### Actividad e insignias
 
-`src/lib/activity.ts` cuenta en `localStorage` (`fishintt_activity`); los reportes se cuentan desde `fishintt_reports`. `computeBadges()` define los umbrales de las 4 insignias (Protector/Reporter/Educador/Elite). `computeCrd()` implementa el **CRD** con la fórmula operacional de la tesis (§3.2.1): `CRD = 10·(0,65·C + 0,35·U)`, donde `U` sale de la actividad (`computeU`) y `C` del conocimiento demostrado en ejercicios (`computeC` en `src/lib/ejercicios.ts`, ponderado básico=1/intermedio=2/avanzado=3, conservando **solo el primer intento** por ítem). Escala: Vulnerable <400, En formación <600, Resiliente <800, Experto ≥800. Se muestra en `perfil/`. `profiles.crd_score` está reservada para persistirlo. Se incrementa en `analizar/` (cada análisis) y `educacion/` (marca "visto").
+`src/lib/activity.ts` cuenta en `localStorage` (`fishintt_activity`); los reportes se cuentan desde `fishintt_reports`. `computeBadges()` define los umbrales de las 4 insignias (Protector/Reporter/Educador/Elite). `computeCrd()` implementa el **CRD** con la fórmula operacional de la tesis (§3.2.1): `CRD = 10·(0,65·C + 0,35·U)`, donde `U` sale de la actividad (`computeU`) y `C` del conocimiento demostrado en ejercicios (`computeC` en `src/lib/ejercicios.ts`, ponderado básico=1/intermedio=2/avanzado=3, conservando **solo el primer intento** por ítem). Escala: Vulnerable <400, En formación <600, Resiliente <800, Experto ≥800. Se muestra en `perfil/`. `profiles.crd_score` está reservada para persistirlo. Se incrementa en `analizar/` (cada análisis) y con la marca "visto" de la zona formativa (`academia/`, `academia/[nivel]` y `educacion/` llaman a `markEducationViewed`; la insignia "Educador" depende de eso, por eso la Academy también la marca y no solo `educacion/`). Los ítems que alimentan `computeC` son las preguntas de las 13 cápsulas más los 13 de las pruebas de cierre.
 
 ### Rutas y tema
 
-- `src/app/(app)/` es la zona autenticada — su layout añade `BottomNav`. Rutas: home, analizar, educacion, ejemplos, operador, perfil, reportar.
+- `src/app/(app)/` es la zona autenticada — su layout añade `BottomNav`. Rutas: home, analizar, academia (+ `academia/[nivel]`), educacion, ejemplos, evaluacion, operador, perfil, red, reportar.
+- El `BottomNav` tiene **cinco pestañas y no debe crecer** (es el máximo cómodo en móvil). "Aprende" apunta a `/academia`, que es la puerta de toda la zona formativa: `educacion` (material de referencia), `ejemplos` y `evaluacion` cuelgan de ella y se marcan en el nav con el campo `extra` del item.
 - Tema claro/oscuro gestionado por `components/ThemeProvider.tsx` (`localStorage` `fishintt_theme`, clase `dark` en `<html>`). El modo oscuro vive en `globals.css` con jerarquía de superficies.
 
 ## Gotchas

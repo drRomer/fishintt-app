@@ -14,6 +14,7 @@ import {
   Moon,
   Sun,
   Users,
+  GraduationCap,
 } from "lucide-react";
 import { GLOBAL_STATS } from "@/lib/data/scams";
 import { useState, useEffect } from "react";
@@ -142,12 +143,12 @@ export default function HomePage() {
             description="Analiza y reporta URLs peligrosas"
           />
           <ActionCard
-            href="/educacion"
-            icon={Shield}
+            href="/academia"
+            icon={GraduationCap}
             iconColor="text-navy-500"
             iconBg="bg-navy-50"
-            title="Aprende a Identificar Phishing"
-            description="Guías y ejemplos educativos"
+            title="Cyber-Academy"
+            description="Tres niveles para aprender a leer un enlace antes de tocarlo"
           />
           <ActionCard
             href="/ejemplos"

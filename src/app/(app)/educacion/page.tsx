@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, AlertCircle, ChevronDown, X, ClipboardCheck, ChevronRight } from "lucide-react";
+import { ArrowLeft, AlertCircle, ChevronDown, X } from "lucide-react";
 import { THREAT_TYPES, RED_FLAGS } from "@/lib/data/education";
 import { useState, useEffect } from "react";
 import { markEducationViewed } from "@/lib/activity";
@@ -17,33 +17,16 @@ export default function EducacionPage() {
   return (
     <div className="fade-in">
       <div className="px-5 pt-6 pb-4 bg-white border-b border-navy-50">
-        <Link href="/home" className="inline-flex items-center gap-2 text-navy-500 hover:text-navy-700 text-sm mb-3">
-          <ArrowLeft className="w-4 h-4" /> Volver
+        <Link href="/academia" className="inline-flex items-center gap-2 text-navy-500 hover:text-navy-700 text-sm mb-3">
+          <ArrowLeft className="w-4 h-4" /> Cyber-Academy
         </Link>
         <h1 className="text-2xl font-bold text-navy-700">Cómo identificar phishing</h1>
         <p className="text-sm text-navy-500 mt-1">
-          Aprende a protegerte de las estafas digitales más comunes en Chile
+          Material de referencia: los tipos de estafa que circulan en Chile y cómo se reconocen
         </p>
       </div>
 
       <div className="px-5 py-5 space-y-3">
-        {/* Acceso al instrumento de medición del CRD (§3.2.3) */}
-        <Link
-          href="/evaluacion"
-          className="flex items-center gap-4 bg-navy-700 text-white rounded-2xl p-4 shadow-card hover:bg-navy-800 transition-colors"
-        >
-          <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
-            <ClipboardCheck className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-bold text-[15px] leading-tight">Evalúa tu resiliencia</div>
-            <div className="text-xs text-white/80 mt-1">
-              12 mensajes reales: descubre tu Coeficiente de Resiliencia Digital
-            </div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-white/60 flex-shrink-0" />
-        </Link>
-
         {/* HERO: Anatomía del email phishing - Botón */}
         <button
           onClick={() => setShowAnatomyModal(true)}

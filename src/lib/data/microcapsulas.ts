@@ -14,6 +14,13 @@
 // Cada microcápsula cierra con un ejercicio de clasificación que alimenta el
 // componente C del CRD (§3.2.1) a través de src/lib/ejercicios.ts.
 //
+// Las 13 cápsulas tienen DOS puntos de entrada y el contenido es el mismo:
+//   1. El analizador (/analizar), con el enlace real que la persona acaba de
+//      pegar: la intervención en el momento crítico.
+//   2. La Cyber-Academy (/academia), que las recorre de forma ordenada en tres
+//      niveles usando el `ejemplo` de cada cápsula. Los niveles viven en
+//      src/lib/data/academia.ts y el progreso en src/lib/academia.ts.
+//
 // NOTA: los textos deben ser revisados por el equipo antes de la entrega: son
 // afirmaciones sobre instituciones chilenas dirigidas a usuarios vulnerables.
 // =============================================================================
@@ -51,6 +58,32 @@ export interface Pregunta {
   nivel: NivelEjercicio;
 }
 
+/**
+ * Caso de demostración para recorrer la cápsula en la Cyber-Academy, donde no
+ * hay un enlace recién analizado del cual sacar la evidencia.
+ *
+ * El enlace se pasa por el MISMO motor determinista (`analyzeLocally`), así que
+ * lo que ve el usuario es evidencia real y no un texto escrito a mano.
+ * `servidor` rellena solo los campos que en el pipeline completo aportan
+ * RDAP/WHOIS, el handshake TLS, el DNS y la base comunitaria, y que el motor
+ * offline no puede conocer por sí mismo.
+ */
+export interface EjemploCapsula {
+  url: string;
+  /** Cómo le llegó el enlace a la persona: una línea, en su lenguaje. */
+  contexto: string;
+  servidor?: {
+    domainAgeDays?: number | null;
+    certChainValid?: boolean | null;
+    domainResolves?: boolean | null;
+    lookalikeOf?: string | null;
+    expandedUrl?: string | null;
+    reportCount?: number;
+  };
+  /** Evidencia que no se deriva del enlace (p. ej. cómo se veía en pantalla). */
+  evidenciaExtra?: Evidencia[];
+}
+
 export interface Microcapsula {
   id: IndicadorId;
   titulo: string;
@@ -59,6 +92,29 @@ export interface Microcapsula {
   pregunta: Pregunta;
   /** Evidencia tomada del enlace que el usuario acaba de analizar. */
   evidencia: (r: AnalysisResult) => Evidencia[];
+  /** Caso con el que se recorre esta cápsula en la Cyber-Academy. */
+  ejemplo: EjemploCapsula;
+}
+
+// -----------------------------------------------------------------------------
+
+// Sufijos de dos niveles que hay que conservar enteros: en "sii.gob.cl" el
+// dominio que manda es "sii.gob.cl", no "gob.cl".
+const SUFIJOS_COMPUESTOS = [
+  "gob.cl", "co.cl", "com.co", "co.uk", "com.ar", "com.br", "com.mx", "com.pe",
+];
+
+/**
+ * Dominio registrable del host: el único que decide a qué servidor llegas.
+ * En "bancochile.cl.seguridad-cuenta.info" manda "seguridad-cuenta.info", y
+ * todo lo que está a su izquierda lo controla libremente quien lo registró.
+ */
+function dominioQueManda(host: string): string {
+  const partes = host.split(".");
+  if (partes.length <= 2) return host;
+  const dosUltimas = partes.slice(-2).join(".");
+  if (SUFIJOS_COMPUESTOS.includes(dosUltimas)) return partes.slice(-3).join(".");
+  return dosUltimas;
 }
 
 // -----------------------------------------------------------------------------
@@ -66,6 +122,12 @@ export interface Microcapsula {
 export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
   comunidad: {
     id: "comunidad",
+    ejemplo: {
+      url: "https://bancoestado-verificacion.cl/actualizar",
+      contexto:
+        "Un correo con el asunto «Aviso de seguridad: su cuenta será bloqueada en 24 horas».",
+      servidor: { reportCount: 37 },
+    },
     titulo: "Otras personas ya reportaron este enlace",
     explicacion:
       "Este enlace coincide con uno que la comunidad de Fishin't ya denunció. Las campañas de estafa se envían de forma masiva: si otra persona recibió el mismo enlace, es muy probable que se trate del mismo fraude.",
@@ -90,6 +152,12 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   noExiste: {
     id: "noExiste",
+    ejemplo: {
+      url: "http://correoschile-retencion.ml/pagar",
+      contexto:
+        "Un SMS que avisa que tu encomienda está retenida y que hay que pagar la aduana.",
+      servidor: { domainResolves: false },
+    },
     titulo: "Este sitio no existe",
     explicacion:
       "El dominio no apunta a ningún servidor, así que no hay página que visitar. Suele pasar por tres motivos: la campaña de estafa ya fue dada de baja (duran días), el dominio está registrado pero sin uso, o hay un error de tipeo en el enlace. En ningún caso significa que el enlace sea confiable.",
@@ -108,6 +176,11 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   typosquat: {
     id: "typosquat",
+    ejemplo: {
+      url: "https://bancoestaco.cl/login",
+      contexto:
+        "Un WhatsApp de un supuesto ejecutivo del banco con el enlace para «reactivar» tu cuenta.",
+    },
     titulo: "Este dominio imita a uno real",
     explicacion:
       "Los estafadores registran dominios que cambian, agregan o quitan una sola letra respecto del original. En la pantalla de un celular la diferencia es casi imposible de notar, y por eso funciona tan bien. No pasa solo con los bancos: también con hospitales, municipalidades y servicios públicos.",
@@ -133,6 +206,15 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   homoglifo: {
     id: "homoglifo",
+    ejemplo: {
+      url: "https://xn--bancoestad-nvi.cl/ingreso",
+      contexto: "Un correo en el que el enlace se veía escrito igual que el del banco.",
+      // La «о» de este valor es cirílica a propósito: es el engaño que enseña la
+      // cápsula, y es exactamente lo que produce el host xn-- de arriba.
+      evidenciaExtra: [
+        { etiqueta: "Lo que se veía en pantalla", valor: "bancoestadо.cl", peligroso: true },
+      ],
+    },
     titulo: "El dominio usa letras de otro alfabeto",
     explicacion:
       "Existen caracteres de alfabetos como el cirílico que se ven idénticos a los nuestros. Una «о» cirílica es visualmente igual a una «o» latina, pero para el navegador es un dominio completamente distinto. Es uno de los engaños más difíciles de detectar a simple vista.",
@@ -154,6 +236,10 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   ip: {
     id: "ip",
+    ejemplo: {
+      url: "http://45.33.32.156/bancoestado/ingreso",
+      contexto: "Un SMS que pide «validar» tu cuenta por un bloqueo de seguridad.",
+    },
     titulo: "El enlace apunta a una dirección IP",
     explicacion:
       "En vez de un nombre de dominio, este enlace lleva a una dirección numérica. Los bancos, los organismos del Estado y las empresas establecidas siempre publican sus servicios bajo su propio nombre de dominio.",
@@ -172,6 +258,11 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   certificado: {
     id: "certificado",
+    ejemplo: {
+      url: "https://mi-cuenta-segura.cl/validar",
+      contexto: "Un enlace de pago que envió un vendedor desconocido por redes sociales.",
+      servidor: { certChainValid: false },
+    },
     titulo: "El certificado de seguridad tiene problemas",
     explicacion:
       "El candado de HTTPS solo sirve si el certificado detrás es válido. Este sitio presenta un certificado vencido, autofirmado o emitido para otro dominio, lo que significa que nadie confiable respalda que el sitio sea quien dice ser.",
@@ -190,6 +281,10 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   marca: {
     id: "marca",
+    ejemplo: {
+      url: "https://bancoestado-clientes.online/acceso",
+      contexto: "Un correo que copia el diseño del banco y lleva a «actualizar tus datos».",
+    },
     titulo: "Usa el nombre de una institución sin ser su sitio oficial",
     explicacion:
       "Que el nombre de una institución conocida aparezca dentro de la dirección no garantiza nada: cualquiera puede registrar un dominio que lo incluya. Lo que importa es el dominio principal, no las palabras que lo acompañan.",
@@ -211,6 +306,12 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   dominioNuevo: {
     id: "dominioNuevo",
+    ejemplo: {
+      url: "https://portalclientes-cl.com/acceso",
+      contexto:
+        "Un correo que ofrece una devolución de impuestos y pide tus datos para depositarla.",
+      servidor: { domainAgeDays: 11 },
+    },
     titulo: "El dominio se creó hace muy poco",
     explicacion:
       "Los sitios de estafa duran días: se crean, se usan en una campaña y se abandonan antes de que alcancen a bloquearlos. Por eso la antigüedad es una señal útil. Pero ojo con el otro lado: un emprendimiento o una empresa nueva también estrena su dominio, así que esto por sí solo no prueba que sea fraude. Lo que sí es raro es que una institución con décadas de existencia te escriba desde un dominio recién creado.",
@@ -240,6 +341,11 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   acortador: {
     id: "acortador",
+    ejemplo: {
+      url: "https://n9.cl/sii2026",
+      contexto: "Un SMS del «SII» avisando de una multa que hay que pagar hoy mismo.",
+      servidor: { expandedUrl: "https://sii-multa.buzz/pagar" },
+    },
     titulo: "Es un enlace acortado: oculta su destino",
     explicacion:
       "Los acortadores esconden a dónde te lleva realmente el enlace. Son muy usados en estafas por mensaje de texto, justamente porque impiden que revises la dirección antes de tocarla.",
@@ -264,6 +370,10 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   tld: {
     id: "tld",
+    ejemplo: {
+      url: "https://bancochile-seguridad.monster/bloqueo",
+      contexto: "Un SMS que avisa de una transferencia que no reconoces.",
+    },
     titulo: "La terminación del dominio es poco habitual",
     explicacion:
       "Terminaciones como .tk, .xyz o .top son gratuitas o muy baratas, por lo que concentran buena parte de las campañas de fraude. Las instituciones chilenas usan .cl, y las empresas establecidas, .com.",
@@ -285,12 +395,23 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   subdominios: {
     id: "subdominios",
+    ejemplo: {
+      url: "http://bancochile.cl.seguridad-cuenta.info/acceso",
+      contexto: "Un correo cuyo enlace empieza, efectivamente, con el dominio del banco.",
+    },
     titulo: "El dominio real está escondido entre subdominios",
     explicacion:
       "En una dirección web lo que manda es la parte final, justo antes de la terminación. Un enlace puede empezar con el nombre de tu banco y aun así llevar a otro sitio: «bancoestado.cl.verificar.xyz» NO es bancoestado.cl, es verificar.xyz.",
     queHacer:
       "Lee la dirección de derecha a izquierda: el dominio verdadero es el que está inmediatamente antes de la terminación.",
-    evidencia: (r) => [{ etiqueta: "Dominio real", valor: r.anatomy.host, peligroso: true }],
+    evidencia: (r) => [
+      { etiqueta: "El enlace que recibiste", valor: r.anatomy.host, peligroso: true },
+      {
+        etiqueta: "El dominio que manda",
+        valor: dominioQueManda(r.anatomy.host),
+        peligroso: true,
+      },
+    ],
     pregunta: {
       enunciado: "¿A qué sitio lleva realmente «bancoestado.cl.verificar.xyz»?",
       opciones: ["A bancoestado.cl", "A verificar.xyz"],
@@ -303,6 +424,10 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   aleatorio: {
     id: "aleatorio",
+    ejemplo: {
+      url: "https://pagos-cl.com/a7f3b91c2e/validar",
+      contexto: "Un SMS masivo en el que cada destinatario recibe un enlace distinto.",
+    },
     titulo: "La dirección incluye códigos al azar",
     explicacion:
       "Las campañas masivas generan una dirección distinta para cada víctima, con códigos aleatorios que le permiten al estafador saber quién hizo clic. Por eso la ruta o los parámetros parecen una secuencia sin sentido.",
@@ -321,6 +446,10 @@ export const MICROCAPSULAS: Record<IndicadorId, Microcapsula> = {
 
   sinHttps: {
     id: "sinHttps",
+    ejemplo: {
+      url: "http://pagoenlinea-cl.com/ingreso",
+      contexto: "Un formulario de pago al que llegaste desde un anuncio en redes sociales.",
+    },
     titulo: "La conexión no está cifrada",
     explicacion:
       "Este sitio usa http:// en vez de https://, así que lo que escribas puede viajar sin protección. Ojo con lo contrario: que un sitio tenga candado NO lo hace confiable, porque los sitios de estafa también lo consiguen fácilmente. El candado habla del canal, no de quién está al otro lado.",

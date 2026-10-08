@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Flag, User, Shield, BookOpen } from "lucide-react";
+import { Home, Flag, User, Shield, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+// Cinco pestañas es el máximo cómodo en móvil, así que "Aprende" cubre toda la
+// zona formativa: la Cyber-Academy es la puerta, y el material de referencia,
+// los casos reales y el instrumento de evaluación cuelgan de ella. `extra` son
+// las rutas que deben dejar la pestaña marcada aunque no sean su href.
+const NAV_ITEMS: { href: string; icon: typeof Home; label: string; extra?: string[] }[] = [
   { href: "/home", icon: Home, label: "Inicio" },
   { href: "/analizar", icon: Shield, label: "Analizar" },
-  { href: "/educacion", icon: BookOpen, label: "Aprende" },
+  {
+    href: "/academia",
+    icon: GraduationCap,
+    label: "Aprende",
+    extra: ["/educacion", "/ejemplos", "/evaluacion"],
+  },
   { href: "/reportar", icon: Flag, label: "Reportar" },
   { href: "/perfil", icon: User, label: "Perfil" },
 ];
@@ -19,8 +28,11 @@ export function BottomNav() {
   return (
     <nav className="sticky bottom-0 bg-white border-t border-navy-100 shadow-nav safe-bottom z-40">
       <div className="flex items-center justify-around px-2 py-2">
-        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
-          const active = pathname === href || (href !== "/home" && pathname.startsWith(href));
+        {NAV_ITEMS.map(({ href, icon: Icon, label, extra }) => {
+          const rutas = [href, ...(extra ?? [])];
+          const active = rutas.some(
+            (r) => pathname === r || (r !== "/home" && pathname.startsWith(r))
+          );
           return (
             <Link
               key={href}
