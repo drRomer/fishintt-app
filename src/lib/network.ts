@@ -23,6 +23,8 @@ export interface NetworkMember {
   user_id: string;
   role: "admin" | "protegido";
   display_name: string | null;
+  /** Solo lo recibe el admin de la red, y solo si el titular lo dio. */
+  phone: string | null;
   created_at: string;
 }
 
@@ -109,4 +111,85 @@ export async function resolveAlert(alertId: string): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) return;
   await supabase.rpc("resolve_member_alert", { p_alert_id: alertId });
+}
+
+// Las alertas del propio usuario. Si el admin ve lo que te pasó, tú también.
+export async function getMyAlerts(): Promise<MemberAlert[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("get_my_alerts");
+  if (error) return [];
+  return (data as MemberAlert[] | null) ?? [];
+}
+
+// -----------------------------------------------------------------------------
+// Teléfono de contacto (opcional)
+// -----------------------------------------------------------------------------
+
+/**
+ * Normaliza un teléfono chileno a formato marcable. Deliberadamente conservador:
+ * si no reconoce el patrón, devuelve lo escrito sin separadores en vez de
+ * rechazarlo. Preferimos guardar un número raro pero correcto a bloquear a
+ * alguien por un formato que no previmos.
+ */
+export function normalizarTelefono(raw: string): string | null {
+  const limpio = raw.trim().replace(/[\s().-]/g, "");
+  if (!limpio) return null;
+  const masPrefijo = limpio.startsWith("+");
+  const digitos = limpio.replace(/\D/g, "");
+  if (digitos.length < 8) return null; // demasiado corto para ser un teléfono
+  if (masPrefijo) return "+" + digitos;
+  if (digitos.length === 11 && digitos.startsWith("56")) return "+" + digitos;
+  if (digitos.length === 9) return "+56" + digitos; // móvil o fijo con código
+  return digitos;
+}
+
+/** Guarda MI teléfono en todas mis membresías. `null` o vacío lo borra. */
+export async function setMyPhone(phone: string | null): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase.rpc("set_my_phone", { p_phone: phone });
+  return !error;
+}
+
+// -----------------------------------------------------------------------------
+// Salir / eliminar
+// -----------------------------------------------------------------------------
+
+export async function leaveNetwork(
+  networkId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, error: "No disponible en modo demo." };
+  const { error } = await supabase.rpc("leave_protected_network", {
+    p_network_id: networkId,
+  });
+  if (error) return { ok: false, error: error.message || "No se pudo salir de la red." };
+  return { ok: true };
+}
+
+export async function removeMember(
+  networkId: string,
+  userId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, error: "No disponible en modo demo." };
+  const { error } = await supabase.rpc("remove_network_member", {
+    p_network_id: networkId,
+    p_user_id: userId,
+  });
+  if (error) return { ok: false, error: error.message || "No se pudo eliminar al miembro." };
+  return { ok: true };
+}
+
+export async function deleteNetwork(
+  networkId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, error: "No disponible en modo demo." };
+  const { error } = await supabase.rpc("delete_protected_network", {
+    p_network_id: networkId,
+  });
+  if (error) return { ok: false, error: error.message || "No se pudo eliminar la red." };
+  return { ok: true };
 }

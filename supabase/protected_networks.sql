@@ -9,6 +9,10 @@
 --
 -- Cómo usar: Supabase Dashboard → SQL Editor → pega y ejecuta (Run).
 -- Requiere schema.sql (auth.users / profiles) ya ejecutado.
+-- El archivo es RE-EJECUTABLE: si ya corriste una versión anterior, vuelve a
+-- pegarlo entero y se actualiza (agrega la columna phone y las RPCs de salir /
+-- eliminar miembro / eliminar red / ver mis alertas). get_network_members se
+-- suelta y se recrea porque cambió su tipo de retorno.
 --
 -- Nota de seguridad: todo el acceso pasa por funciones SECURITY DEFINER con
 -- chequeo interno de auth.uid(); las tablas tienen RLS activo SIN políticas de
@@ -38,6 +42,14 @@ CREATE TABLE IF NOT EXISTS public.network_members (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (network_id, user_id)
 );
+-- Telefono de contacto del miembro. OPCIONAL y entregado por el propio
+-- titular (nunca por el admin en su nombre): es el unico dato que permite que
+-- el boton "Llamar" de una alerta funcione de verdad. Minimizacion aplicada
+-- (Ley 19.628): se puede pertenecer a una red sin darlo, solo lo lee el admin
+-- de esa red via get_network_members, la UI no muestra los digitos —solo marca—
+-- y se borra junto con la membresia al salir o al ser eliminado.
+ALTER TABLE public.network_members ADD COLUMN IF NOT EXISTS phone TEXT;
+
 CREATE INDEX IF NOT EXISTS idx_member_user ON public.network_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_member_network ON public.network_members(network_id);
 
@@ -134,9 +146,10 @@ $$ LANGUAGE sql SECURITY DEFINER;
 -- -----------------------------------------------------------------------------
 -- RPC: miembros de una red (solo el admin de esa red)
 -- -----------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.get_network_members(UUID);
 CREATE OR REPLACE FUNCTION public.get_network_members(p_network_id UUID)
-RETURNS TABLE (user_id UUID, role TEXT, display_name TEXT, created_at TIMESTAMPTZ) AS $$
-  SELECT m.user_id, m.role, m.display_name, m.created_at
+RETURNS TABLE (user_id UUID, role TEXT, display_name TEXT, phone TEXT, created_at TIMESTAMPTZ) AS $$
+  SELECT m.user_id, m.role, m.display_name, m.phone, m.created_at
   FROM public.network_members m
   WHERE m.network_id = p_network_id
     AND EXISTS (SELECT 1 FROM public.protected_networks n
@@ -191,6 +204,88 @@ RETURNS VOID AS $$
 $$ LANGUAGE sql SECURITY DEFINER;
 
 -- -----------------------------------------------------------------------------
+-- RPC: mis propias alertas (como protegido). Una persona siempre puede ver lo
+-- que se registro sobre ella; que el admin vea tus alertas y tu no, no se
+-- sostiene ni como diseno ni frente a la Ley 19.628.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.get_my_alerts()
+RETURNS SETOF public.member_alerts AS $$
+  SELECT a.* FROM public.member_alerts a
+  WHERE a.member_id = auth.uid()
+  ORDER BY a.created_at DESC
+  LIMIT 50;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- -----------------------------------------------------------------------------
+-- RPC: guardar o borrar MI telefono de contacto. Solo el titular puede tocarlo,
+-- en todas sus membresias. Pasar NULL o vacio lo borra (derecho a supresion).
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.set_my_phone(p_phone TEXT)
+RETURNS VOID AS $$
+  UPDATE public.network_members m
+  SET phone = NULLIF(trim(COALESCE(p_phone, '')), '')
+  WHERE m.user_id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- -----------------------------------------------------------------------------
+-- RPC: salir de una red (un protegido se va por su cuenta).
+-- El admin NO puede salir: dejaria la red sin responsable y a los protegidos
+-- creyendose vigilados por nadie. Para irse tiene que eliminar la red entera.
+-- Al salir se borran tambien las alertas de esa persona en esa red: dejarlas en
+-- el panel del admin seria conservar su historial despues de que se fue.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.leave_protected_network(p_network_id UUID)
+RETURNS VOID AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'No autenticado'; END IF;
+  IF EXISTS (SELECT 1 FROM public.protected_networks n
+             WHERE n.id = p_network_id AND n.admin_id = v_uid) THEN
+    RAISE EXCEPTION 'El administrador no puede salir de su propia red';
+  END IF;
+  DELETE FROM public.member_alerts a
+    WHERE a.network_id = p_network_id AND a.member_id = v_uid;
+  DELETE FROM public.network_members m
+    WHERE m.network_id = p_network_id AND m.user_id = v_uid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- -----------------------------------------------------------------------------
+-- RPC: el admin elimina a un miembro. No puede eliminarse a si mismo (para eso
+-- esta delete_protected_network). Se borran sus alertas por la misma razon.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.remove_network_member(p_network_id UUID, p_user_id UUID)
+RETURNS VOID AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'No autenticado'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.protected_networks n
+                 WHERE n.id = p_network_id AND n.admin_id = v_uid) THEN
+    RAISE EXCEPTION 'Solo el administrador de la red puede eliminar miembros';
+  END IF;
+  IF p_user_id = v_uid THEN
+    RAISE EXCEPTION 'El administrador no puede eliminarse a si mismo';
+  END IF;
+  DELETE FROM public.member_alerts a
+    WHERE a.network_id = p_network_id AND a.member_id = p_user_id;
+  DELETE FROM public.network_members m
+    WHERE m.network_id = p_network_id AND m.user_id = p_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- -----------------------------------------------------------------------------
+-- RPC: el admin elimina la red completa. El ON DELETE CASCADE de las tablas se
+-- lleva miembros, telefonos y alertas: no queda rastro de los protegidos.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.delete_protected_network(p_network_id UUID)
+RETURNS VOID AS $$
+  DELETE FROM public.protected_networks n
+  WHERE n.id = p_network_id AND n.admin_id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- -----------------------------------------------------------------------------
 -- Permisos
 -- -----------------------------------------------------------------------------
 GRANT EXECUTE ON FUNCTION public.create_protected_network(TEXT) TO authenticated;
@@ -200,3 +295,8 @@ GRANT EXECUTE ON FUNCTION public.get_network_members(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_network_alerts(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.record_member_alert(TEXT, TEXT, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.resolve_member_alert(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_my_alerts() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.set_my_phone(TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.leave_protected_network(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.remove_network_member(UUID, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.delete_protected_network(UUID) TO authenticated;

@@ -51,7 +51,18 @@ Al reportar en `src/app/(app)/reportar/page.tsx`, se llama la RPC `register_thre
 
 ### La Red Empresa Protegida (seguridad delegada) — requiere cuenta
 
-Módulo `red/` (§2.4.1.b de la tesis). Un **admin** crea una red y comparte un **código de invitación** (6 chars); los **protegidos** se unen con ese código. Cuando un protegido analiza en `analizar/` un enlace `suspicious`/`dangerous`, se registra una **alerta** (`recordAlert` en `src/lib/network.ts`) que el admin ve en su panel para intervenir a tiempo. Esquema y RPCs (`create_protected_network`, `join_protected_network`, `get_my_network`, `get_network_members`, `get_network_alerts`, `record_member_alert`, `resolve_member_alert`) en `supabase/protected_networks.sql`. Patrón clave: RLS activo **sin políticas de SELECT directas** — todo el acceso pasa por funciones `SECURITY DEFINER` con chequeo interno de `auth.uid()`, para evitar la recursión de políticas cruzadas. `src/lib/network.ts` degrada a no-op si `getSupabase()` es `null` (modo demo).
+Módulo `red/` (§2.4.1.b de la tesis). Un **admin** crea una red y comparte un **código de invitación** (6 chars); los **protegidos** se unen con ese código. Cuando un protegido analiza en `analizar/` un enlace `suspicious`/`dangerous`, se registra una **alerta** (`recordAlert` en `src/lib/network.ts`) que el admin ve en su panel para intervenir a tiempo. Esquema y RPCs en `supabase/protected_networks.sql`: `create_protected_network`, `join_protected_network`, `get_my_network`, `get_network_members`, `get_network_alerts`, `record_member_alert`, `resolve_member_alert`, `get_my_alerts`, `set_my_phone`, `leave_protected_network`, `remove_network_member`, `delete_protected_network`.
+
+Patrón clave: RLS activo **sin políticas de SELECT directas** — todo el acceso pasa por funciones `SECURITY DEFINER` con chequeo interno de `auth.uid()`, para evitar la recursión de políticas cruzadas. `src/lib/network.ts` degrada a no-op si `getSupabase()` es `null` (modo demo).
+
+Cuatro decisiones de este módulo que conviene no deshacer:
+
+- **El protegido ve sus propias alertas** (`get_my_alerts`, sección "Tus alertas"). Que el admin sepa lo que te pasó y tú no, no se sostiene ni como producto —la alerta también es formativa para quien casi cae— ni frente a la Ley 19.628.
+- **El teléfono (`network_members.phone`) es opcional y lo entrega el propio titular** vía `set_my_phone`, nunca el admin por él; `''`/`null` lo borra. Solo lo devuelve `get_network_members`, o sea solo lo ve el admin de esa red. **La UI no imprime los dígitos**: el botón "Llamar" los usa en el `href="tel:"` y nada más. Sin teléfono el botón no finge — se muestra deshabilitado como "Sin teléfono". Es el único dato personal nuevo del módulo y existe solo para que ese botón funcione de verdad.
+- **El admin no puede salir de su red**, solo eliminarla (`delete_protected_network`): salir dejaría a los protegidos creyéndose vigilados por nadie. Salir o ser eliminado **borra también las alertas de esa persona**, porque conservar su historial después de que se fue es retención sin motivo.
+- **Las alertas se refrescan solas** cada 30 s (`INTERVALO_REFRESCO_MS`) y al volver a la pestaña, solo con `visibilityState === "visible"`. Una alerta que aparece media hora tarde no sirve para intervenir a tiempo, que es el propósito del módulo.
+
+> Si ya corriste una versión anterior de `protected_networks.sql`, **vuelve a ejecutarlo entero**: es re-ejecutable y agrega la columna `phone` y las RPCs nuevas. `get_network_members` se hace `DROP` y se recrea porque cambió su tipo de retorno.
 
 ### Microcápsulas: la intervención en el momento crítico
 
