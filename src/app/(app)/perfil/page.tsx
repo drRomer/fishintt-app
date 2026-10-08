@@ -82,6 +82,34 @@ export default function PerfilPage() {
     setReportsCount(getReportsCount());
     setLogged(isLoggedIn());
     setConocimiento(computeC());
+
+    // Lo de sessionStorage es solo el primer pintado. La fuente de verdad del
+    // perfil es la base, así que se re-lee y se sincroniza: si no, un cambio
+    // hecho desde otro dispositivo no aparece nunca acá.
+    (async () => {
+      const supabase = getSupabase();
+      if (!supabase) return;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from("profiles")
+          .select("name, phone")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (!data) return;
+        const remoto: UserProfile = {
+          name: data.name || DEFAULT_PROFILE.name,
+          email: user.email || "",
+          phone: data.phone || "",
+        };
+        setProfile(remoto);
+        setDraft(remoto);
+        sessionStorage.setItem("fishintt_user", JSON.stringify(remoto));
+      } catch {
+        /* sin conexión se mantiene lo local */
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -291,9 +319,9 @@ export default function PerfilPage() {
         <div className="bg-white rounded-2xl shadow-card overflow-hidden">
           {editing ? (
             <>
-              <EditableRow icon={User} label="Nombre" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="Ej: Tomás Romero" />
+              <EditableRow icon={User} label="Nombre" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="Tu nombre" />
               <EditableRow icon={Mail} label="Correo" value={draft.email} onChange={(v) => setDraft({ ...draft, email: v })} placeholder="tu@email.cl" type="email" disabled />
-              <EditableRow icon={Phone} label="Telefono" value={draft.phone} onChange={(v) => setDraft({ ...draft, phone: v })} placeholder="+56 9 1234 5678" type="tel" last />
+              <EditableRow icon={Phone} label="Telefono" value={draft.phone} onChange={(v) => setDraft({ ...draft, phone: v })} placeholder="+56 9 1234 5678" type="tel" hint="Opcional. Si perteneces a una Red Protegida, su administrador puede verlo para llamarte ante una alerta." last />
             </>
           ) : (
             <>
@@ -375,7 +403,7 @@ function InfoRow({ icon: Icon, label, value, last = false }: { icon: typeof User
   );
 }
 
-function EditableRow({ icon: Icon, label, value, onChange, placeholder, type = "text", last = false, disabled = false }: { icon: typeof User; label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; last?: boolean; disabled?: boolean; }) {
+function EditableRow({ icon: Icon, label, value, onChange, placeholder, type = "text", last = false, disabled = false, hint }: { icon: typeof User; label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; last?: boolean; disabled?: boolean; hint?: string; }) {
   return (
     <div className={`flex items-center gap-3 px-4 py-3 ${!last && "border-b border-navy-50"}`}>
       <div className="w-8 h-8 bg-navy-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -393,6 +421,7 @@ function EditableRow({ icon: Icon, label, value, onChange, placeholder, type = "
           disabled={disabled}
           className="w-full text-sm font-medium text-navy-700 bg-transparent border-0 p-0 mt-0.5 focus:outline-none focus:ring-0 disabled:text-navy-400 placeholder-navy-300"
         />
+        {hint && <p className="text-[11px] text-navy-400 leading-snug mt-1">{hint}</p>}
       </div>
     </div>
   );

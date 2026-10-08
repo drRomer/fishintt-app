@@ -10,9 +10,11 @@
 -- Cómo usar: Supabase Dashboard → SQL Editor → pega y ejecuta (Run).
 -- Requiere schema.sql (auth.users / profiles) ya ejecutado.
 -- El archivo es RE-EJECUTABLE: si ya corriste una versión anterior, vuelve a
--- pegarlo entero y se actualiza (agrega la columna phone y las RPCs de salir /
--- eliminar miembro / eliminar red / ver mis alertas). get_network_members se
--- suelta y se recrea porque cambió su tipo de retorno.
+-- pegarlo entero y se actualiza (RPCs de salir / eliminar miembro / eliminar
+-- red / ver mis alertas). get_network_members se suelta y se recrea porque
+-- cambió su tipo de retorno. Si corriste la versión que creaba
+-- network_members.phone, esta la elimina: el nombre y el teléfono que se
+-- muestran salen siempre de profiles, nunca de una copia guardada acá.
 --
 -- Nota de seguridad: todo el acceso pasa por funciones SECURITY DEFINER con
 -- chequeo interno de auth.uid(); las tablas tienen RLS activo SIN políticas de
@@ -42,13 +44,12 @@ CREATE TABLE IF NOT EXISTS public.network_members (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (network_id, user_id)
 );
--- Telefono de contacto del miembro. OPCIONAL y entregado por el propio
--- titular (nunca por el admin en su nombre): es el unico dato que permite que
--- el boton "Llamar" de una alerta funcione de verdad. Minimizacion aplicada
--- (Ley 19.628): se puede pertenecer a una red sin darlo, solo lo lee el admin
--- de esa red via get_network_members, la UI no muestra los digitos —solo marca—
--- y se borra junto con la membresia al salir o al ser eliminado.
-ALTER TABLE public.network_members ADD COLUMN IF NOT EXISTS phone TEXT;
+-- El teléfono de contacto NO vive acá: vive en profiles.phone, que ya existe
+-- en schema.sql y que la persona edita en /perfil. Hubo una versión intermedia
+-- de este archivo que agregó network_members.phone y fue un error: duplicar el
+-- dato significaba que actualizar el teléfono en el perfil no se reflejaba en
+-- la red. Esta línea deshace esa columna.
+ALTER TABLE public.network_members DROP COLUMN IF EXISTS phone;
 
 CREATE INDEX IF NOT EXISTS idx_member_user ON public.network_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_member_network ON public.network_members(network_id);
@@ -146,11 +147,19 @@ $$ LANGUAGE sql SECURITY DEFINER;
 -- -----------------------------------------------------------------------------
 -- RPC: miembros de una red (solo el admin de esa red)
 -- -----------------------------------------------------------------------------
+-- El nombre y el teléfono salen de profiles, la única fuente de ambos en el
+-- producto. network_members.display_name queda solo como respaldo histórico
+-- (por si el perfil se vació): usarlo como fuente significaba que cambiar tu
+-- nombre en /perfil no se reflejaba nunca en la red. NULLIF para que un campo
+-- vaciado en el perfil llegue como null y no como cadena vacía.
 DROP FUNCTION IF EXISTS public.get_network_members(UUID);
 CREATE OR REPLACE FUNCTION public.get_network_members(p_network_id UUID)
 RETURNS TABLE (user_id UUID, role TEXT, display_name TEXT, phone TEXT, created_at TIMESTAMPTZ) AS $$
-  SELECT m.user_id, m.role, m.display_name, m.phone, m.created_at
+  SELECT m.user_id, m.role,
+         COALESCE(NULLIF(trim(p.name), ''), m.display_name),
+         NULLIF(trim(COALESCE(p.phone, '')), ''), m.created_at
   FROM public.network_members m
+  LEFT JOIN public.profiles p ON p.id = m.user_id
   WHERE m.network_id = p_network_id
     AND EXISTS (SELECT 1 FROM public.protected_networks n
                 WHERE n.id = p_network_id AND n.admin_id = auth.uid())
@@ -160,9 +169,17 @@ $$ LANGUAGE sql SECURITY DEFINER;
 -- -----------------------------------------------------------------------------
 -- RPC: alertas de una red (solo el admin)
 -- -----------------------------------------------------------------------------
+-- member_alerts.member_name es el nombre que tenía la persona cuando se
+-- registró la alerta. Se resuelve contra profiles para que el panel muestre el
+-- nombre actual, y la copia guardada queda de respaldo para cuando member_id
+-- ya es null (la cuenta se eliminó).
 CREATE OR REPLACE FUNCTION public.get_network_alerts(p_network_id UUID)
 RETURNS SETOF public.member_alerts AS $$
-  SELECT a.* FROM public.member_alerts a
+  SELECT a.id, a.network_id, a.member_id,
+         COALESCE(NULLIF(trim(p.name), ''), a.member_name),
+         a.url, a.risk_level, a.resolved, a.created_at
+  FROM public.member_alerts a
+  LEFT JOIN public.profiles p ON p.id = a.member_id
   WHERE a.network_id = p_network_id
     AND EXISTS (SELECT 1 FROM public.protected_networks n
                 WHERE n.id = p_network_id AND n.admin_id = auth.uid())
@@ -210,22 +227,20 @@ $$ LANGUAGE sql SECURITY DEFINER;
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.get_my_alerts()
 RETURNS SETOF public.member_alerts AS $$
-  SELECT a.* FROM public.member_alerts a
+  SELECT a.id, a.network_id, a.member_id,
+         COALESCE(NULLIF(trim(p.name), ''), a.member_name),
+         a.url, a.risk_level, a.resolved, a.created_at
+  FROM public.member_alerts a
+  LEFT JOIN public.profiles p ON p.id = a.member_id
   WHERE a.member_id = auth.uid()
   ORDER BY a.created_at DESC
   LIMIT 50;
 $$ LANGUAGE sql SECURITY DEFINER;
 
--- -----------------------------------------------------------------------------
--- RPC: guardar o borrar MI telefono de contacto. Solo el titular puede tocarlo,
--- en todas sus membresias. Pasar NULL o vacio lo borra (derecho a supresion).
--- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.set_my_phone(p_phone TEXT)
-RETURNS VOID AS $$
-  UPDATE public.network_members m
-  SET phone = NULLIF(trim(COALESCE(p_phone, '')), '')
-  WHERE m.user_id = auth.uid();
-$$ LANGUAGE sql SECURITY DEFINER;
+-- El teléfono se edita en /perfil (profiles.phone) y en ningún otro lado: dos
+-- editores para el mismo dato fue justamente el error de la versión anterior.
+-- Esta línea borra la RPC que sobraba.
+DROP FUNCTION IF EXISTS public.set_my_phone(TEXT);
 
 -- -----------------------------------------------------------------------------
 -- RPC: salir de una red (un protegido se va por su cuenta).
@@ -296,7 +311,6 @@ GRANT EXECUTE ON FUNCTION public.get_network_alerts(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.record_member_alert(TEXT, TEXT, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.resolve_member_alert(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_my_alerts() TO authenticated;
-GRANT EXECUTE ON FUNCTION public.set_my_phone(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.leave_protected_network(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.remove_network_member(UUID, UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.delete_protected_network(UUID) TO authenticated;

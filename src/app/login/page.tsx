@@ -60,6 +60,25 @@ export default function LoginPage() {
         } catch {}
       }
 
+      // El perfil que vive en la base es el que manda. Sin esto, quien entra
+      // desde otro navegador o dispositivo ve su nombre y su teléfono en
+      // blanco aunque los tenga guardados, porque el sessionStorage de ese
+      // navegador está vacío. La RLS de profiles solo deja leer la fila propia.
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: perfil } = await supabase
+            .from("profiles")
+            .select("name, phone")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (perfil?.name) userData.name = perfil.name;
+          if (perfil?.phone) userData.phone = perfil.phone;
+        }
+      } catch {
+        /* si no se puede leer, se sigue con lo local: no bloquea el ingreso */
+      }
+
       sessionStorage.setItem("fishintt_user", JSON.stringify({ ...userData, email }));
       router.push("/home");
     }

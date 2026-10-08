@@ -9,8 +9,11 @@
 // 1. El protegido VE SUS PROPIAS ALERTAS. Que el admin sepa lo que te pasó y tú
 //    no, no se sostiene: ni como producto (la alerta también es formativa para
 //    quien casi cae) ni frente a la Ley 19.628.
-// 2. El teléfono es OPCIONAL y lo entrega el propio titular, nunca el admin por
-//    él. La UI no muestra los dígitos: el botón marca, no exhibe.
+// 2. El teléfono es el de `profiles.phone`, el que la persona edita en /perfil,
+//    y NO se duplica acá. Una versión anterior guardaba un teléfono propio de
+//    la red y el resultado fue el esperable: actualizarlo en el perfil no se
+//    reflejaba en la red. Es opcional, solo lo ve el admin de su red, y la UI
+//    no muestra los dígitos en ninguna parte: el botón marca, no exhibe.
 // 3. El admin no puede "salir" de su red —dejaría a los protegidos creyéndose
 //    vigilados por nadie—; tiene que eliminarla, y eso borra todo en cascada.
 // =============================================================================
@@ -20,13 +23,13 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   ArrowLeft, ShieldCheck, Users, Copy, Check, Phone, AlertTriangle,
   LogIn, Building2, Bell, CheckCircle2, Loader2, RefreshCw, UserMinus,
-  Trash2, LogOut, PhoneOff, X,
+  Trash2, LogOut, PhoneOff, ChevronRight,
 } from "lucide-react";
-import { isLoggedIn } from "@/lib/session";
+import { isLoggedIn, getStoredUser } from "@/lib/session";
 import {
   networkAvailable, getMyNetwork, createNetwork, joinNetwork,
-  getMembers, getAlerts, resolveAlert, getMyAlerts, setMyPhone,
-  normalizarTelefono, leaveNetwork, removeMember, deleteNetwork,
+  getMembers, getAlerts, resolveAlert, getMyAlerts,
+  leaveNetwork, removeMember, deleteNetwork,
   type MyNetwork, type NetworkMember, type MemberAlert,
 } from "@/lib/network";
 
@@ -50,8 +53,6 @@ export default function RedPage() {
   const [mode, setMode] = useState<"crear" | "unirse" | null>(null);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
-  const [joinName, setJoinName] = useState("");
-  const [joinPhone, setJoinPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -133,23 +134,14 @@ export default function RedPage() {
     e.preventDefault();
     setBusy(true);
     setErr(null);
-    const res = await joinNetwork(code, joinName);
+    const res = await joinNetwork(code);
+    setBusy(false);
     if (!res.ok) {
-      setBusy(false);
       setErr(res.error || "No se pudo unir.");
       return;
     }
-    // El teléfono va aparte y es opcional: si no se puede guardar, igual quedó
-    // dentro de la red. No vale la pena bloquear el ingreso por esto.
-    if (joinPhone.trim()) {
-      const normalizado = normalizarTelefono(joinPhone);
-      if (normalizado) await setMyPhone(normalizado);
-    }
-    setBusy(false);
     setMode(null);
     setCode("");
-    setJoinName("");
-    setJoinPhone("");
     await refresh();
   }
 
@@ -293,7 +285,7 @@ export default function RedPage() {
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ej: PyME Aura / Familia Romero"
+                  placeholder="Nombre de tu empresa o familia"
                   required
                   className="w-full px-3 py-3 bg-surface-alt border border-navy-100 rounded-xl text-navy-700 placeholder-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300"
                 />
@@ -323,30 +315,10 @@ export default function RedPage() {
                   required
                   className="w-full px-3 py-3 bg-surface-alt border border-navy-100 rounded-xl text-navy-700 tracking-widest font-mono placeholder-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300"
                 />
-                <label className="text-xs font-semibold text-navy-500 uppercase tracking-wide block pt-1">
-                  Tu nombre (visible para el admin)
-                </label>
-                <input
-                  value={joinName}
-                  onChange={(e) => setJoinName(e.target.value)}
-                  placeholder="Ej: Juan Pérez"
-                  className="w-full px-3 py-3 bg-surface-alt border border-navy-100 rounded-xl text-navy-700 placeholder-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300"
-                />
-                <label className="text-xs font-semibold text-navy-500 uppercase tracking-wide block pt-1">
-                  Teléfono <span className="text-navy-300 normal-case font-normal">— opcional</span>
-                </label>
-                <input
-                  value={joinPhone}
-                  onChange={(e) => setJoinPhone(e.target.value)}
-                  type="tel"
-                  inputMode="tel"
-                  placeholder="Ej: 9 1234 5678"
-                  className="w-full px-3 py-3 bg-surface-alt border border-navy-100 rounded-xl text-navy-700 placeholder-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300"
-                />
                 <p className="text-[11px] text-navy-400 leading-relaxed">
-                  Sirve solo para que el administrador pueda llamarte si detecta que estás a
-                  punto de caer en una estafa. Lo ve únicamente él y puedes borrarlo cuando
-                  quieras. Puedes unirte sin darlo.
+                  El administrador verá el nombre de tu perfil. Si además tienes un
+                  teléfono registrado ahí, podrá llamarte cuando detecte que estás a punto
+                  de caer en una estafa.
                 </p>
                 {err && <div className="text-sm text-brand-700 bg-brand-50 rounded-lg px-3 py-2">{err}</div>}
                 <div className="flex gap-3 pt-1">
@@ -406,7 +378,7 @@ export default function RedPage() {
               )}
             </div>
 
-            <TelefonoPropio onGuardado={() => refresh(true)} />
+            <TelefonoPropio />
 
             <button
               onClick={() => { setConfirmacion({ tipo: "salir" }); setAccionErr(null); }}
@@ -515,6 +487,8 @@ export default function RedPage() {
               </div>
             </div>
 
+            <TelefonoPropio />
+
             {/* Zona de riesgo */}
             <div className="border-t border-navy-50 pt-4">
               <button
@@ -578,93 +552,39 @@ function EncabezadoSeccion({
   );
 }
 
-/** Gestión del teléfono propio: darlo, cambiarlo o borrarlo. */
-function TelefonoPropio({ onGuardado }: { onGuardado: () => void }) {
-  const [abierto, setAbierto] = useState(false);
-  const [valor, setValor] = useState("");
-  const [estado, setEstado] = useState<"idle" | "guardando" | "ok" | "error">("idle");
+/**
+ * Estado del teléfono de contacto. NO lo edita: el teléfono vive en el perfil y
+ * se edita ahí y solo ahí. Tener dos editores del mismo dato fue exactamente el
+ * error de la versión anterior de esta pantalla.
+ */
+function TelefonoPropio() {
+  const [telefono, setTelefono] = useState<string | null>(null);
 
-  async function guardar(borrar = false) {
-    setEstado("guardando");
-    const telefono = borrar ? null : normalizarTelefono(valor);
-    if (!borrar && !telefono) {
-      setEstado("error");
-      return;
-    }
-    const ok = await setMyPhone(telefono);
-    setEstado(ok ? "ok" : "error");
-    if (ok) {
-      setValor("");
-      setAbierto(false);
-      onGuardado();
-    }
-  }
+  useEffect(() => {
+    setTelefono(getStoredUser()?.phone?.trim() || null);
+  }, []);
 
-  if (!abierto) {
-    return (
-      <button
-        onClick={() => { setAbierto(true); setEstado("idle"); }}
-        className="w-full flex items-center gap-3 bg-white rounded-2xl p-4 shadow-card hover:shadow-card-hover transition-shadow text-left"
-      >
-        <div className="w-10 h-10 rounded-xl bg-navy-50 flex items-center justify-center flex-shrink-0">
-          <Phone className="w-5 h-5 text-navy-500" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-navy-700 text-sm">Tu teléfono de contacto</div>
-          <div className="text-xs text-navy-400 mt-0.5">
-            Opcional. Permite que el administrador te llame ante una alerta.
-          </div>
-        </div>
-      </button>
-    );
-  }
-
+  const registrado = !!telefono;
   return (
-    <div className="bg-white rounded-2xl shadow-card p-5 space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="font-bold text-navy-700 text-sm">Tu teléfono de contacto</h3>
-        <button
-          onClick={() => setAbierto(false)}
-          className="w-8 h-8 flex items-center justify-center text-navy-400 hover:text-navy-700 rounded-lg hover:bg-surface-alt"
-          aria-label="Cerrar"
-        >
-          <X className="w-4 h-4" />
-        </button>
+    <Link
+      href="/perfil"
+      className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-card hover:shadow-card-hover transition-shadow"
+    >
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${registrado ? "bg-safe-50" : "bg-navy-50"}`}>
+        {registrado
+          ? <Phone className="w-5 h-5 text-safe-500" />
+          : <PhoneOff className="w-5 h-5 text-navy-500" />}
       </div>
-      <input
-        value={valor}
-        onChange={(e) => { setValor(e.target.value); setEstado("idle"); }}
-        type="tel"
-        inputMode="tel"
-        placeholder="Ej: 9 1234 5678"
-        className="w-full px-3 py-3 bg-surface-alt border border-navy-100 rounded-xl text-navy-700 placeholder-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300"
-      />
-      <p className="text-[11px] text-navy-400 leading-relaxed">
-        Solo lo ve el administrador de tu red, y solo para llamarte si detecta que estás a
-        punto de entregar tus datos. No se muestra en pantalla ni se comparte con nadie más.
-      </p>
-      {estado === "error" && (
-        <div className="text-sm text-brand-700 bg-brand-50 rounded-lg px-3 py-2">
-          Revisa el número: faltan dígitos o tiene caracteres que no corresponden.
+      <div className="flex-1 min-w-0">
+        <div className="font-semibold text-navy-700 text-sm">Tu teléfono de contacto</div>
+        <div className="text-xs text-navy-400 mt-0.5 leading-relaxed">
+          {registrado
+            ? "Registrado en tu perfil. El administrador de tu red puede llamarte ante una alerta."
+            : "Sin registrar. Agrégalo en tu perfil si quieres que puedan llamarte ante una alerta."}
         </div>
-      )}
-      <div className="flex gap-2">
-        <button
-          onClick={() => guardar(true)}
-          disabled={estado === "guardando"}
-          className="flex-1 py-3 rounded-xl bg-surface-alt text-navy-700 font-semibold text-sm disabled:opacity-50"
-        >
-          Borrar el mío
-        </button>
-        <button
-          onClick={() => guardar(false)}
-          disabled={estado === "guardando" || !valor.trim()}
-          className="flex-[2] py-3 rounded-xl bg-navy-700 text-white font-semibold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          {estado === "guardando" && <Loader2 className="w-4 h-4 animate-spin" />} Guardar
-        </button>
       </div>
-    </div>
+      <ChevronRight className="w-4 h-4 text-navy-300 flex-shrink-0" />
+    </Link>
   );
 }
 

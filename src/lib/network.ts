@@ -23,7 +23,10 @@ export interface NetworkMember {
   user_id: string;
   role: "admin" | "protegido";
   display_name: string | null;
-  /** Solo lo recibe el admin de la red, y solo si el titular lo dio. */
+  /**
+   * Teléfono de `profiles.phone`, el que la persona edita en /perfil. Solo lo
+   * recibe el admin de la red. null si no lo ha registrado.
+   */
   phone: string | null;
   created_at: string;
 }
@@ -61,15 +64,19 @@ export async function createNetwork(name: string): Promise<MyNetwork | null> {
   return getMyNetwork(); // re-lee para traer rol, código y conteo
 }
 
+/**
+ * Unirse a una red. No se pide un nombre: el que se muestra es el del perfil.
+ * Se manda vacío a propósito para que la RPC caiga en profiles.name, que es la
+ * única fuente del nombre en el producto.
+ */
 export async function joinNetwork(
-  code: string,
-  name: string
+  code: string
 ): Promise<{ ok: boolean; error?: string }> {
   const supabase = getSupabase();
   if (!supabase) return { ok: false, error: "Necesitas una cuenta real para unirte." };
   const { error } = await supabase.rpc("join_protected_network", {
     p_code: code,
-    p_name: name,
+    p_name: "",
   });
   if (error) {
     const msg = error.message || "";
@@ -120,36 +127,6 @@ export async function getMyAlerts(): Promise<MemberAlert[]> {
   const { data, error } = await supabase.rpc("get_my_alerts");
   if (error) return [];
   return (data as MemberAlert[] | null) ?? [];
-}
-
-// -----------------------------------------------------------------------------
-// Teléfono de contacto (opcional)
-// -----------------------------------------------------------------------------
-
-/**
- * Normaliza un teléfono chileno a formato marcable. Deliberadamente conservador:
- * si no reconoce el patrón, devuelve lo escrito sin separadores en vez de
- * rechazarlo. Preferimos guardar un número raro pero correcto a bloquear a
- * alguien por un formato que no previmos.
- */
-export function normalizarTelefono(raw: string): string | null {
-  const limpio = raw.trim().replace(/[\s().-]/g, "");
-  if (!limpio) return null;
-  const masPrefijo = limpio.startsWith("+");
-  const digitos = limpio.replace(/\D/g, "");
-  if (digitos.length < 8) return null; // demasiado corto para ser un teléfono
-  if (masPrefijo) return "+" + digitos;
-  if (digitos.length === 11 && digitos.startsWith("56")) return "+" + digitos;
-  if (digitos.length === 9) return "+56" + digitos; // móvil o fijo con código
-  return digitos;
-}
-
-/** Guarda MI teléfono en todas mis membresías. `null` o vacío lo borra. */
-export async function setMyPhone(phone: string | null): Promise<boolean> {
-  const supabase = getSupabase();
-  if (!supabase) return false;
-  const { error } = await supabase.rpc("set_my_phone", { p_phone: phone });
-  return !error;
 }
 
 // -----------------------------------------------------------------------------
