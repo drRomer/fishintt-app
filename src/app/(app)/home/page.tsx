@@ -163,7 +163,7 @@ export default function HomePage() {
             icon={Users}
             iconColor="text-navy-500"
             iconBg="bg-navy-50"
-            title="Red Empresa Protegida"
+            title="Red Protegida"
             description="Protege a tu equipo o familia y recibe alertas"
           />
           <ActionCard

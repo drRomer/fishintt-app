@@ -23,7 +23,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   ArrowLeft, ShieldCheck, Users, Copy, Check, Phone, AlertTriangle,
   LogIn, Building2, Bell, CheckCircle2, Loader2, RefreshCw, UserMinus,
-  Trash2, LogOut, PhoneOff, ChevronRight,
+  Trash2, LogOut, PhoneOff, ChevronRight, Search,
 } from "lucide-react";
 import { isLoggedIn, getStoredUser } from "@/lib/session";
 import {
@@ -194,7 +194,7 @@ export default function RedPage() {
         </Link>
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-6 h-6" />
-          <h1 className="text-2xl font-bold">Red Empresa Protegida</h1>
+          <h1 className="text-2xl font-bold">Red Protegida</h1>
         </div>
         <p className="text-sm text-white/70 mt-1">
           Protege a tu equipo o familia: recibe alertas cuando alguien abre un enlace peligroso.
@@ -685,32 +685,58 @@ function AlertRow({
         </div>
       </div>
 
-      {onResolve && !alert.resolved && (
-        <div className="flex gap-2 mt-3">
-          {telefono ? (
+      {/*
+        La acción principal es VER el enlace, no cerrar el aviso. Antes el único
+        botón destacado era "Resolver", que no hace nada sobre la amenaza: daba
+        por terminado el asunto sin que nadie lo hubiera mirado. Cerrar el aviso
+        queda abajo, en tono secundario y diciendo exactamente lo que hace.
+      */}
+      <div className="mt-3 space-y-2">
+        <div className="flex gap-2">
+          <Link
+            href={`/analizar?url=${encodeURIComponent(alert.url)}`}
+            className="flex-[2] flex items-center justify-center gap-1.5 py-2 rounded-lg bg-navy-700 text-white text-sm font-semibold hover:bg-navy-800 transition-colors"
+          >
+            <Search className="w-3.5 h-3.5 flex-shrink-0" /> Analizar enlace
+          </Link>
+
+          {/*
+            Sin teléfono NO se dibuja un botón deshabilitado: ocupaba el mismo
+            espacio que una acción real sin serlo, y a 320 px el texto no cabía.
+            Se avisa abajo en una línea y "Analizar enlace" toma la fila entera.
+          */}
+          {onResolve && telefono && (
             // El número no se imprime en pantalla: el botón marca, no exhibe.
             <a
               href={`tel:${telefono}`}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 border-navy-700 text-navy-700 text-sm font-semibold hover:bg-surface-alt transition-colors"
             >
-              <Phone className="w-3.5 h-3.5" /> Llamar
+              <Phone className="w-3.5 h-3.5 flex-shrink-0" /> Llamar
             </a>
-          ) : (
-            <div
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 border-navy-100 text-navy-300 text-sm font-semibold cursor-not-allowed"
-              title="Esta persona no registró un teléfono"
-            >
-              <PhoneOff className="w-3.5 h-3.5" /> Sin teléfono
-            </div>
           )}
-          <button
-            onClick={() => onResolve(alert.id)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-navy-700 text-white text-sm font-semibold hover:bg-navy-800 transition-colors"
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" /> Resolver
-          </button>
         </div>
-      )}
+
+        {onResolve && !telefono && (
+          <p className="text-[11px] text-navy-400 leading-snug text-center">
+            No registró un teléfono, así que no puedes llamarle desde aquí.
+          </p>
+        )}
+
+        {onResolve && !alert.resolved && (
+          <>
+            <button
+              onClick={() => onResolve(alert.id)}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-surface-alt text-navy-500 text-sm font-medium hover:text-navy-700 transition-colors"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> Marcar como resuelta
+            </button>
+            <p className="text-[11px] text-navy-400 leading-snug text-center">
+              Solo archiva el aviso en tu panel. No bloquea el enlace ni avisa a
+              la persona.
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

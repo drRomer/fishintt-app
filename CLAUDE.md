@@ -49,7 +49,7 @@ Detalle no obvio: las marcas suplantadas cortas (`tag`, `bci`, `sii`, `bch`, `cm
 
 Al reportar en `src/app/(app)/reportar/page.tsx`, se llama la RPC `register_threat` (upsert con contador, `SECURITY DEFINER`) guardando la **firma** del enlace en `threat_signatures`. Después, cualquier enlace **igual o estructuralmente similar** (misma `signature` o `host`) se marca sospechoso en futuros análisis vía `match_threats`. Esquema en `supabase/threat_signatures.sql`; tablas base (profiles, url_scans, reports, trigger de perfil, RLS) en `supabase/schema.sql`. Los **tres** SQL (`schema.sql`, `threat_signatures.sql`, `protected_networks.sql`) **deben ejecutarse a mano** en el SQL Editor de Supabase.
 
-### La Red Empresa Protegida (seguridad delegada) — requiere cuenta
+### La Red Protegida (seguridad delegada) — requiere cuenta
 
 Módulo `red/` (§2.4.1.b de la tesis). Un **admin** crea una red y comparte un **código de invitación** (6 chars); los **protegidos** se unen con ese código. Cuando un protegido analiza en `analizar/` un enlace `suspicious`/`dangerous`, se registra una **alerta** (`recordAlert` en `src/lib/network.ts`) que el admin ve en su panel para intervenir a tiempo. Esquema y RPCs en `supabase/protected_networks.sql`: `create_protected_network`, `join_protected_network`, `get_my_network`, `get_network_members`, `get_network_alerts`, `record_member_alert`, `resolve_member_alert`, `get_my_alerts`, `leave_protected_network`, `remove_network_member`, `delete_protected_network`.
 
@@ -104,7 +104,7 @@ Dos advertencias que deben acompañar cualquier cita de estas cifras: los indica
 
 ### Entrada libre — la cuenta es OPCIONAL
 
-La app es de **entrada libre / free**: la landing (`/`) entra directo a `/home` ("Entrar gratis") sin muro de login. Analizar, aprender, ejemplos y reportar funcionan **sin cuenta**. La cuenta solo se exige para funciones ligadas a la identidad: el **soporte con operador** (`operador/`, botón "Solicitar llamada"), la **Red Empresa Protegida** (`red/`) y, a futuro, el Wallet.
+La app es de **entrada libre / free**: la landing (`/`) entra directo a `/home` ("Entrar gratis") sin muro de login. Analizar, aprender, ejemplos y reportar funcionan **sin cuenta**. La cuenta solo se exige para funciones ligadas a la identidad: el **soporte con operador** (`operador/`, botón "Solicitar llamada"), la **Red Protegida** (`red/`) y, a futuro, el Wallet.
 - `src/lib/session.ts`: `isLoggedIn()` / `getStoredUser()` son la fuente de verdad de "hay cuenta activa" (existe `sessionStorage.fishintt_user` **con email**). Un invitado no lo tiene.
 - Home y perfil saludan "Invitado" y muestran CTA de "Crear cuenta" si no hay sesión; `operador/` degrada la acción de llamada a "Inicia sesión…". El bloque de emergencia (Ley 20.009 / PDI) y las FAQs quedan **siempre libres**.
 
