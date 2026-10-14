@@ -12,8 +12,14 @@ export const metadata: Metadata = {
     title: "Fishin't",
   },
   icons: {
-    icon: "/favicon.svg",
-    apple: "/favicon.svg",
+    // El SVG primero para los navegadores que lo soportan; el PNG de 32 es el
+    // respaldo. El apple-touch-icon va aparte y debe ser PNG opaco: iOS no
+    // acepta SVG y rellena de negro cualquier transparencia.
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
   },
 };
 
