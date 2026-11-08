@@ -88,9 +88,13 @@ async function enrichWithAI(a: UrlAnatomy): Promise<Partial<UrlAnatomy> | null> 
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
   try {
+    // MINIMIZACIÓN DE DATOS (§5.1, Ley 19.628): antes se enviaba la URL completa,
+    // que puede llevar tokens de sesión, identificadores o datos personales en la
+    // ruta y los parámetros. Para redactar la explicación basta la anatomía, que
+    // es justamente lo que el prompt pide analizar. Se manda el dominio y las
+    // señales detectadas; nunca la ruta ni la query.
     const prompt = `Eres un analista de ciberseguridad chileno. Analiza la ANATOMÍA de este enlace y responde SOLO con JSON válido.
-Enlace: ${a.normalizedUrl}
-Host: ${a.host} | Acortador: ${a.isShortener ? a.shortenerService : "no"} | Marca imitada: ${a.brandImpersonated || "ninguna"}
+Host: ${a.host} | TLD: ${a.tld} | Acortador: ${a.isShortener ? a.shortenerService : "no"} | Marca imitada: ${a.brandImpersonated || "ninguna"} | Señales: ${a.redFlags.join("; ") || "ninguna"}
 Devuelve: {"scamCategory": "<categoría breve de estafa o 'ninguna'>", "brandImpersonated": "<marca o null>", "summary": "<1 frase en español explicando el riesgo>"}`;
 
     const controller = new AbortController();
@@ -300,7 +304,12 @@ function applyCertChain(result: AnalysisResult, cadena: CadenaTls | null): Analy
 interface ThreatIntelHit {
   flagged: boolean;
   label?: string;
-  detections?: number;
+  /** VirusTotal: motores que lo declaran malicioso. */
+  malicious?: number;
+  /** VirusTotal: motores que lo declaran solo sospechoso (señal más débil). */
+  suspicious?: number;
+  /** VirusTotal: total de motores que respondieron, para dar proporción. */
+  total?: number;
 }
 
 // Los servicios externos hacen su propia canonicalización y necesitan la URL tal
@@ -372,15 +381,35 @@ async function checkVirusTotal(url: string): Promise<ThreatIntelHit | null> {
     }).finally(() => clearTimeout(timer));
     if (!res.ok) return null; // 404 = enlace no analizado previamente por VT
     const json = await res.json();
-    const stats = json?.data?.attributes?.last_analysis_stats;
-    const detections = (stats?.malicious || 0) + (stats?.suspicious || 0);
-    return { flagged: detections > 0, detections };
+    const stats = json?.data?.attributes?.last_analysis_stats ?? {};
+    const malicious = stats.malicious || 0;
+    const suspicious = stats.suspicious || 0;
+    const total =
+      malicious + suspicious + (stats.harmless || 0) + (stats.undetected || 0);
+    // Aquí NO se decide nada: el umbral vive en applyThreatIntel, que es donde
+    // se consolidan todas las fuentes.
+    return { flagged: malicious + suspicious > 0, malicious, suspicious, total };
   } catch {
     return null;
   }
 }
 
-// Aplica el veredicto de la inteligencia externa sobre el resultado heurístico.
+// Consolidación de la inteligencia externa sobre el resultado heurístico.
+//
+// UMBRAL DE VIRUSTOTAL. Antes bastaba UN motor de más de setenta para forzar
+// "peligroso", y eso infla los falsos positivos: entre tantos motores siempre
+// hay alguno heurístico que marca de más, y un único voto discrepante no es
+// consenso. Con el criterio de ≤10 % de falsos positivos de §3.2.4 esa regla no
+// se sostiene. Ahora se consolida así:
+//
+//   - 2 o más motores "malicious"  -> autoritativo, se fuerza "peligroso".
+//   - exactamente 1 "malicious", o 2+ "suspicious" -> señal corroborante
+//     (-30), que sube el riesgo pero no condena por sí sola.
+//   - 1 solo "suspicious" -> se ignora: es ruido.
+//
+// Safe Browsing SÍ se mantiene autoritativo con una sola coincidencia, y la
+// diferencia es deliberada: no es una votación entre motores heterogéneos, sino
+// una lista curada por un único proveedor que responde por ella.
 function applyThreatIntel(
   result: AnalysisResult,
   sb: ThreatIntelHit | null,
@@ -388,28 +417,54 @@ function applyThreatIntel(
 ): AnalysisResult {
   const reasons = [...result.reasons];
   let raw = result.rawScore;
-  let hit = false;
+  let autoritativo = false;
+  let corrobora = false;
+
   if (sb?.flagged) {
-    hit = true;
+    autoritativo = true;
     raw = Math.min(raw, 8);
     reasons.unshift(`⚠ Google Safe Browsing lo clasifica como ${sb.label}`);
   }
-  if (vt?.flagged) {
-    hit = true;
+
+  const mal = vt?.malicious ?? 0;
+  const sos = vt?.suspicious ?? 0;
+  const deCuantos = vt?.total ? ` de ${vt.total}` : "";
+  if (mal >= 2) {
+    autoritativo = true;
     raw = Math.min(raw, 10);
     reasons.unshift(
-      `⚠ VirusTotal: ${vt.detections} motor(es) de seguridad lo detectan como malicioso`
+      `⚠ VirusTotal: ${mal} motores${deCuantos} lo detectan como malicioso`
+    );
+  } else if (mal === 1 || sos >= 2) {
+    corrobora = true;
+    raw = Math.max(0, raw - 30);
+    reasons.unshift(
+      mal === 1
+        ? `VirusTotal: 1 motor${deCuantos} lo marca como malicioso. Es una sola alerta entre muchas, así que por sí sola no confirma el fraude`
+        : `VirusTotal: ${sos} motores${deCuantos} lo marcan como sospechoso`
     );
   }
-  if (!hit) return result;
+
+  if (!autoritativo && !corrobora) return result;
+
+  if (autoritativo) {
+    return {
+      ...result,
+      rawScore: raw,
+      score: Math.round((raw / 100) * 6) + 1,
+      riskLevel: "dangerous",
+      recommendation:
+        "ALTO RIESGO. No ingreses datos en este sitio. Reporta y elimina el mensaje que lo contiene.",
+      reasons,
+    };
+  }
+
+  // Corroborante: se recalcula el veredicto en vez de imponerlo.
   return {
     ...result,
     rawScore: raw,
-    score: Math.round((raw / 100) * 6) + 1,
-    riskLevel: "dangerous",
-    recommendation:
-      "ALTO RIESGO. No ingreses datos en este sitio. Reporta y elimina el mensaje que lo contiene.",
-    reasons,
+    ...clasificar(raw),
+    reasons: reasons.filter((r) => !r.startsWith("Sin señales de riesgo")),
   };
 }
 

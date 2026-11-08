@@ -38,12 +38,12 @@ Detalle no obvio: las marcas suplantadas cortas (`tag`, `bci`, `sii`, `bch`, `cm
 1. Heurística determinista de `analysis.ts`.
 2. **Expansión** best-effort del acortador — sigue redirects reales con `fetch` HEAD manual (5 hops, timeout 4s) y toma el **peor** puntaje entre origen y destino (`mergeWorst`).
 3. **Base comunitaria** — RPC `match_threats` (coincidencia `exacto` o `similar`).
-4. **Inteligencia de amenazas externa** — `checkSafeBrowsing` (Google Safe Browsing v4) y `checkVirusTotal` (VT v3), cada una detrás de su API key. Si marcan la URL, `applyThreatIntel` fuerza el resultado a `dangerous` (señal autoritativa). Sin keys, no-op.
+4. **Inteligencia de amenazas externa** — `checkSafeBrowsing` (Google Safe Browsing v4) y `checkVirusTotal` (VT v3), cada una detrás de su API key; sin keys, no-op. `applyThreatIntel` **consolida con umbral**, no con un simple "alguien lo marcó": VirusTotal necesita **≥2 motores `malicious`** para forzar `dangerous`; 1 solo `malicious` o ≥2 `suspicious` restan 30 como señal corroborante; 1 solo `suspicious` se ignora. Safe Browsing **sí** es autoritativo con una coincidencia, y la diferencia es deliberada: no es una votación entre ~70 motores heterogéneos sino una lista curada por un proveedor que responde por ella. Antes bastaba 1 motor de 70 para condenar, lo que choca con el criterio de ≤10 % de falsos positivos de §3.2.4 (revisión del profesor, nov-2026).
 5. **Antigüedad del dominio** — `getDomainAgeDays` penaliza proporcionalmente: ≤30d −45, ≤90d −30, ≤180d −15; si no hay dato, no penaliza. Dos vías según el TLD, ambas verificadas contra los registros reales:
    - **gTLD** → RDAP sobre `rdap.org`. **El User-Agent es obligatorio** (sin él, 403).
    - **`.cl`** → NO tiene RDAP (ni en el bootstrap de IANA ni en NIC Chile), pero `whois.nic.cl:43` sí entrega `Creation date`. Se consulta por TCP con `node:net`. De esa respuesta se extrae **solo la fecha**: incluye el nombre del titular y no se registra ni almacena (§5.1, Ley 19.628).
 6. **Cadena de confianza TLS** — `validarCadenaTlsConReintento` abre un handshake con `rejectUnauthorized: true` y penaliza (−40) solo si falla la **validación** (vencido, autofirmado, emitido para otro dominio). Un host que no resuelve no dice nada → null. **Ojo:** `normalizeUrl` quita el `www.`, pero muchos dominios resuelven solo con él (`bancoestado.cl` da ENOTFOUND), por eso se usa el host original y se reintenta con `www.`. No se usa la antigüedad del certificado: Let's Encrypt renueva cada 90 días, sería ruido.
-7. **IA opcional (Gemini)** — solo si existe `GEMINI_API_KEY`; enriquece categoría/resumen. Sin la key, la app funciona igual con pura heurística.
+7. **IA opcional (Gemini)** — solo si existe `GEMINI_API_KEY`; enriquece categoría/resumen. Sin la key, la app funciona igual con pura heurística. **Gemini recibe solo la anatomía** (host, TLD, acortador, marca imitada, señales), nunca la URL completa: la ruta y la query pueden llevar tokens o datos personales (§5.1, Ley 19.628). Y ojo con el encuadre: Gemini **explica** el veredicto en lenguaje simple, **no clasifica** — la clasificación es determinista. No hay ningún modelo entrenado en el producto, y afirmar lo contrario es el error que el profesor marcó en la tesis.
 
 ### El ciclo comunitario (reportar → detectar)
 
@@ -104,9 +104,11 @@ Dos advertencias que deben acompañar cualquier cita de estas cifras: los indica
 
 ### Entrada libre — la cuenta es OPCIONAL
 
-La app es de **entrada libre / free**: la landing (`/`) entra directo a `/home` ("Entrar gratis") sin muro de login. Analizar, aprender, ejemplos y reportar funcionan **sin cuenta**. La cuenta solo se exige para funciones ligadas a la identidad: el **soporte con operador** (`operador/`, botón "Solicitar llamada"), la **Red Protegida** (`red/`) y, a futuro, el Wallet.
+La app es **gratuita y no comercial** (decisión de nov-2026: no habrá versión de pago; ver §2.8 del informe, que pasa de "modelo de negocio" a "modelo de sostenibilidad"). Esa decisión además **cumple** los términos de Safe Browsing y VirusTotal, cuyos niveles gratuitos prohíben el uso comercial.
+
+La landing (`/`) entra directo a `/home` ("Entrar gratis") sin muro de login. Analizar, aprender, ejemplos y reportar funcionan **sin cuenta**. La **única** función que exige cuenta es la **Red Protegida** (`red/`), porque vincula identidades. El producto se describe así: **Consulta** (sin cuenta) y **Red** (con cuenta).
 - `src/lib/session.ts`: `isLoggedIn()` / `getStoredUser()` son la fuente de verdad de "hay cuenta activa" (existe `sessionStorage.fishintt_user` **con email**). Un invitado no lo tiene.
-- Home y perfil saludan "Invitado" y muestran CTA de "Crear cuenta" si no hay sesión; `operador/` degrada la acción de llamada a "Inicia sesión…". El bloque de emergencia (Ley 20.009 / PDI) y las FAQs quedan **siempre libres**.
+- Home y perfil saludan "Invitado" y muestran CTA de "Crear cuenta" si no hay sesión.
 
 ### Modo demo vs. Supabase real — patrón crítico
 
@@ -126,11 +128,13 @@ La app es de **entrada libre / free**: la landing (`/`) entra directo a `/home` 
 
 ### Rutas y tema
 
-- `src/app/(app)/` es la zona autenticada — su layout añade `BottomNav`. Rutas: home, analizar, academia (+ `academia/[nivel]`), educacion, ejemplos, evaluacion, operador, perfil, red, reportar.
+- `src/app/(app)/` es la zona autenticada — su layout añade `BottomNav`. Rutas: home, analizar, academia (+ `academia/[nivel]`), ayuda, educacion, ejemplos, evaluacion, perfil, red, reportar.
 - El `BottomNav` tiene **cinco pestañas y no debe crecer** (es el máximo cómodo en móvil). "Aprende" apunta a `/academia`, que es la puerta de toda la zona formativa: `educacion` (material de referencia), `ejemplos` y `evaluacion` cuelgan de ella y se marcan en el nav con el campo `extra` del item.
 - Tema claro/oscuro gestionado por `components/ThemeProvider.tsx` (`localStorage` `fishintt_theme`, clase `dark` en `<html>`). El modo oscuro vive en `globals.css` con jerarquía de superficies.
 
 ## Gotchas
+
+- **No prometer en la UI lo que el producto no hace.** `operador/` se renombró a **`ayuda/`** y se le quitaron el "Asistente IA" y el "Operador humano": ambos eran botones muertos, y una mesa de ayuda no va a existir porque el proyecto es gratuito y sin ingresos. Quedó el protocolo de emergencia (Ley 20.009 + PDI) y las FAQs, que sí están respaldados. En la misma pasada se corrigieron dos FAQs de `education.ts` que mentían: una decía que "nuestro equipo" revisa los reportes (son automáticos, vía `register_threat`) y otra que se aplica "un modelo de inteligencia artificial entrenado" (no existe tal modelo). Prometer un chat que no responde, en una app de seguridad, destruye la confianza que el producto busca construir — y además le da la razón al evaluador que marca afirmaciones sin respaldo.
 
 - **No corras `npm run build` con el dev server levantado**: el build sobrescribe `.next` y el server dev queda roto con `Cannot find module './NNN.js'`. Hay que detenerlo, borrar `.next` y reiniciar.
 - **Compartir con Fishin't**: `public/manifest.json` declara `share_target` apuntando a `/analizar`. Android suele mandar la URL dentro de `text` junto a otras palabras, por eso `extraerUrl()` la rescata con regex. `analizar/` usa `useSearchParams`, así que va envuelto en `<Suspense>`.

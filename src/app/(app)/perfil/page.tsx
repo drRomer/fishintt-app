@@ -365,8 +365,9 @@ export default function PerfilPage() {
           <div className="bg-navy-700 text-white rounded-2xl p-5">
             <div className="font-bold text-lg">Crea una cuenta gratis</div>
             <p className="text-sm text-white/80 mt-1 mb-4">
-              Estás usando Fishin&apos;t como invitado. Con una cuenta guardas tu progreso
-              y accedes al soporte con un operador.
+              Estás usando Fishin&apos;t como invitado. Analizar, aprender y reportar
+              seguirán siendo gratis y sin cuenta: la cuenta solo hace falta para la
+              Red Protegida, que vincula a las personas de tu círculo.
             </p>
             <div className="grid grid-cols-2 gap-3">
               <Link

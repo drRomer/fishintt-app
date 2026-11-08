@@ -162,7 +162,7 @@ export const RED_FLAGS = [
 export const FAQS = [
   {
     q: "¿Cómo reporto un enlace sospechoso?",
-    a: "Desde la pantalla principal toca 'Reportar Enlace Sospechoso', pega la URL y agrega contexto. Nuestro equipo lo analiza y alerta a la comunidad si confirma la amenaza.",
+    a: "Desde la pantalla principal toca 'Reportar Enlace Sospechoso' y pega la URL. El reporte entra de inmediato a la base comunitaria: no pasa por revisión humana. Desde ese momento, quien analice ese mismo enlace —o uno con la misma estructura— verá que ya fue reportado.",
   },
   {
     q: "¿Qué hago si caí en una estafa?",
@@ -178,7 +178,7 @@ export const FAQS = [
   },
   {
     q: "¿Cómo funciona el análisis de URLs?",
-    a: "Cruzamos la URL contra bases de datos globales de amenazas (VirusTotal, Google Safe Browsing), verificamos la antigüedad y reputación del dominio (WHOIS), y aplicamos un modelo de inteligencia artificial entrenado con casos chilenos.",
+    a: "Se combinan cuatro fuentes. Un motor propio revisa la estructura del enlace: dominios que imitan a otros reales, letras de otros alfabetos, terminaciones poco habituales, acortadores y direcciones IP. Luego se comprueba la antigüedad del dominio (WHOIS) y la validez de su certificado. En paralelo se consulta a Google Safe Browsing y VirusTotal. Por último se cruza con los enlaces que la comunidad ya reportó. El veredicto lo decide ese motor con reglas verificables, y por eso siempre puede decirte QUÉ señal se activó; la inteligencia artificial solo se usa para redactar la explicación en lenguaje simple, nunca para clasificar.",
   },
   {
     q: "¿Por qué Chile es un blanco frecuente?",

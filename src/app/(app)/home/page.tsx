@@ -8,7 +8,7 @@ import {
   Link as LinkIcon,
   AlertTriangle,
   BookOpen,
-  MessageCircle,
+  LifeBuoy,
   Menu,
   TrendingUp,
   Moon,
@@ -102,8 +102,8 @@ export default function HomePage() {
           <Link href="/red" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt text-navy-700">
             <Users className="w-4 h-4" /> Red Protegida
           </Link>
-          <Link href="/operador" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt text-navy-700">
-            <MessageCircle className="w-4 h-4" /> Ayuda y Soporte
+          <Link href="/ayuda" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt text-navy-700">
+            <LifeBuoy className="w-4 h-4" /> Ayuda y emergencias
           </Link>
           <hr className="my-1 border-navy-100" />
           {logged ? (
@@ -167,12 +167,12 @@ export default function HomePage() {
             description="Protege a tu equipo o familia y recibe alertas"
           />
           <ActionCard
-            href="/operador"
-            icon={MessageCircle}
+            href="/ayuda"
+            icon={LifeBuoy}
             iconColor="text-safe-500"
             iconBg="bg-safe-50"
-            title="Contactar Operador"
-            description="Asistencia humana y con IA"
+            title="¿Caíste en una estafa?"
+            description="Qué hacer en las primeras 24 horas"
           />
         </div>
       </div>
