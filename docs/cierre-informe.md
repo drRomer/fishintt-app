@@ -320,3 +320,197 @@ parámetros pueden contener identificadores de sesión. La transmisión íntegra
 coincidencia exacta de Safe Browsing depende de ella —se verificó que la supresión de la barra final
 anula la detección—, de modo que existe una tensión real entre capacidad de detección y minimización
 de datos. Corresponde declararla como limitación, no resolverla por omisión.
+
+---
+
+## Parte 7 — Objetivos específicos: un verbo por objetivo (#139, #143, #145)
+
+El profesor marcó que un objetivo lleva **un solo verbo**. Hoy los objetivos b), c) y d) empiezan
+con «Diseñar e implementar», que son dos.
+
+| | Hoy | Propuesto |
+|---|---|---|
+| a) | Diagnosticar… | **Diagnosticar** — sin cambios |
+| b) | ~~Diseñar e implementar~~ el motor de análisis heurístico | **Implementar** el motor de análisis heurístico de enlaces (URL Analyzer) |
+| c) | ~~Diseñar e implementar~~ el núcleo pedagógico | **Construir** el núcleo pedagógico gamificado (Cyber-Academy) |
+| d) | ~~Diseñar e implementar~~ el módulo de seguridad delegada | **Desarrollar** el módulo de seguridad delegada (Red Protegida) |
+| e) | Validar… | **Validar** — sin cambios |
+
+El verbo elegido no es arbitrario: el diseño de los tres módulos ya está en los capítulos 5 a 7,
+así que lo que el objetivo compromete es la construcción, no el diseño. Eliminar «Diseñar» corrige
+la redacción y además evita duplicar lo que otros capítulos ya cubren.
+
+En el objetivo e) conviene revisar también el cuerpo, que arrastra el mismo problema
+(«Evaluar la usabilidad […] **y medir** la efectividad pedagógica»). Propuesta:
+
+> Validar el prototipo funcional integrado mediante pruebas con usuarios y evaluación técnica.
+> La validación comprende tres mediciones: usabilidad del cliente web mediante el instrumento
+> System Usability Scale, desempeño del motor de detección sobre conjuntos etiquetados, y
+> efectividad pedagógica mediante la variación del Coeficiente de Resiliencia Digital conforme a
+> los criterios de la sección 3.2.
+
+---
+
+## Parte 8 — El conjunto de evaluación (#144)
+
+El comentario señala tres defectos en el objetivo b). Los tres tienen arreglo.
+
+### 8.1 La frase duplicada
+
+El texto actual repite palabra por palabra un fragmento completo:
+
+> …y **evaluar su desempeño mediante las métricas de precisión, exhaustividad y tasa de falsos
+> positivos** sobre un conjunto controlado de enlaces y **evaluar su desempeño mediante las
+> métricas de precisión, exhaustividad y tasa de falsos positivos** construido a partir de
+> repositorios públicos…
+
+Es un error de edición: la segunda aparición debe eliminarse.
+
+### 8.2 Redacción propuesta para el objetivo b)
+
+> **Implementar** el motor de análisis heurístico de enlaces (URL Analyzer).
+>
+> Construir un algoritmo de clasificación que combine reglas heurísticas propias sobre la
+> estructura de la URL con consultas a servicios externos de inteligencia de amenazas (Google Safe
+> Browsing y VirusTotal) y con una base comunitaria de firmas alimentada por los reportes de los
+> usuarios, orientado a los patrones de fraude del escenario chileno, y evaluar su desempeño
+> mediante las métricas de precisión, exhaustividad y tasa de falsos positivos sobre dos conjuntos
+> etiquetados independientes, cuya composición se especifica en la sección 3.2.4.
+
+### 8.3 Especificación del conjunto de evaluación
+
+El comentario pide fuentes concretas, tamaño, proporción y fecha de captura. Como la evaluación ya
+se ejecutó, estos datos son reales y no proyectados. Conviene incorporarlos a §3.2.4:
+
+| | Conjunto de afinamiento | Conjunto de validación |
+|---|---|---|
+| Tamaño | 77 enlaces | 45 enlaces |
+| Proporción fraude / legítimo | 38 / 39 | 22 / 23 |
+| Proporción nacional / internacional | 69 / 8 | 41 / 4 |
+| Fecha de captura | Octubre 2026 | Noviembre 2026 |
+
+**Fuentes.** Los enlaces legítimos son dominios oficiales reales de instituciones chilenas,
+seleccionados entre las entidades suplantadas con mayor frecuencia (banca, Servicio de Impuestos
+Internos, administradoras de fondos de pensiones, empresas de reparto, casas comerciales y
+organismos públicos), incluyendo deliberadamente instituciones fuera de la lista blanca del motor.
+Los enlaces fraudulentos se construyeron a partir de las tipologías de campañas chilenas
+documentadas en el corpus del objetivo a).
+
+**Independencia entre conjuntos.** El segundo conjunto se construyó con un criterio de muestreo
+distinto y sin reutilizar ninguna institución del primero, de modo que permita estimar el sesgo
+introducido por el ajuste de los indicadores sobre el primer conjunto.
+
+**Limitación declarada.** Los enlaces fraudulentos son casos curados, no capturas en vivo de un
+repositorio público verificado. La incorporación de una muestra de ese tipo queda como trabajo
+pendiente y así se reporta en §9.5.
+
+### 8.4 El criterio de éxito que falta para la precisión
+
+El comentario observa que §3.2.4 fija umbrales para exhaustividad y falsos positivos, pero no para
+la precisión, pese a que el objetivo b) la compromete como métrica. Propuesta de criterio
+adicional, coherente con los otros dos:
+
+> Precisión igual o superior al 90 % sobre el conjunto de validación, de modo que a lo más uno de
+> cada diez enlaces marcados como amenaza resulte ser legítimo.
+
+El valor medido es de 100 %, de modo que el criterio se cumple con holgura; fijarlo igualmente es
+necesario para que la métrica sea evaluable y no meramente informativa.
+
+---
+
+## Parte 9 — Marco legal: la Ley 21.719 (#203)
+
+> **Advertencia.** Lo que sigue es orientación general para redactar §4.2.1, no asesoría jurídica.
+> El texto vigente debe verificarse en la Biblioteca del Congreso Nacional y conviene revisión de
+> un especialista en derecho de datos antes de afirmar cumplimiento. El informe no debe declarar
+> que la aplicación «cumple la ley»: debe indicar qué obligaciones aborda y cuáles no.
+
+### 9.1 Por qué el comentario es crítico
+
+§4.2.1 fundamenta el tratamiento de datos en la **Ley 19.628**, de 1999. Esa ley está siendo
+reemplazada por la **Ley 21.719**, publicada el 13 de diciembre de 2024 y con **entrada en plena
+vigencia el 1 de diciembre de 2026** — es decir, antes del cierre del año académico en que se
+presenta este informe. Citar únicamente la norma anterior deja el marco desactualizado justo en el
+momento en que el estándar exigible cambia.
+
+La nueva ley reforma íntegramente la 19.628, se alinea con el Reglamento General de Protección de
+Datos europeo y crea la **Agencia de Protección de Datos Personales**, con facultades de
+fiscalización y sanción. Las multas alcanzan hasta 20.000 UTM, y hasta el 4 % de los ingresos
+anuales en casos de reincidencia grave.
+
+### 9.2 Por qué afecta de lleno a la Red Protegida
+
+El módulo de seguridad delegada es el punto sensible, por tres razones:
+
+1. **Trata datos de terceros, no solo del titular de la cuenta.** El administrador accede a
+   información sobre la conducta de otra persona: qué enlaces analizó y cuándo.
+2. **El público objetivo incluye personas mayores y menores de edad.** La nueva ley otorga
+   protección reforzada a los datos de niños, niñas y adolescentes.
+3. **Genera un registro conductual persistente**, que es precisamente lo que la ley somete a los
+   principios de licitud, finalidad y proporcionalidad.
+
+### 9.3 Qué obligaciones ya aborda el diseño
+
+Conviene reconocerlo, porque son decisiones de arquitectura y no declaraciones:
+
+- **Minimización y finalidad.** La Red no almacena datos personales propios: el nombre y el
+  teléfono se leen del perfil del usuario y se editan solo allí. Las alertas guardan el enlace, el
+  nivel de riesgo y la fecha, no el contenido de la navegación.
+- **Consentimiento mediante acto positivo.** La persona protegida se incorpora voluntariamente
+  introduciendo un código de invitación; no es posible añadirla sin su participación.
+- **Transparencia hacia el supervisado.** La persona protegida ve sus propias alertas, de modo que
+  no existe supervisión oculta.
+- **Derecho de supresión.** Salir del grupo, o ser retirado de él, elimina también las alertas
+  asociadas a esa persona.
+- **Control de acceso.** Las políticas de seguridad a nivel de fila restringen cada consulta al
+  grupo del administrador que la realiza.
+- **Seguridad desde el diseño.** Las credenciales no se almacenan de forma reversible y el tráfico
+  viaja cifrado.
+
+### 9.4 Qué obligaciones NO están cubiertas
+
+Deben declararse como limitaciones, no omitirse:
+
+- **No hay registro de consentimiento.** Unirse con un código es un acto positivo, pero el sistema
+  no conserva constancia de qué se consintió, cuándo ni para qué finalidad. La fiscalización mira
+  evidencia operativa, no solo el diseño.
+- **No hay verificación de edad ni consentimiento parental.** Si una persona menor de edad se
+  incorpora a un grupo, el sistema no lo distingue ni recaba autorización de su representante
+  legal, pese a que §2.4.1.b menciona expresamente a menores entre los supervisados.
+- **No hay portabilidad.** El titular no puede exportar sus datos.
+- **No hay detección ni procedimiento de notificación de brechas**, que la nueva ley exige sin
+  dilación indebida.
+- **No hay registro de auditoría** sobre qué administrador accedió a qué información y cuándo.
+- **No se evaluó la necesidad de designar un delegado de protección de datos.**
+
+### 9.5 Redacción propuesta para §4.2.1
+
+> El tratamiento de datos personales en Chile se rige por la Ley N.º 19.628 sobre protección de la
+> vida privada, actualmente en proceso de reemplazo por la **Ley N.º 21.719**, publicada el 13 de
+> diciembre de 2024 y con entrada en plena vigencia el 1 de diciembre de 2026. Esta última reforma
+> íntegramente el régimen anterior, se alinea con el estándar del Reglamento General de Protección
+> de Datos europeo y crea la Agencia de Protección de Datos Personales con facultades de
+> fiscalización y sanción.
+>
+> El diseño de Fishin't se orientó por el estándar de la nueva ley y no solo por el de la norma que
+> reemplaza, dado que su entrada en vigencia es anterior al despliegue previsto de la solución. El
+> módulo Red Protegida concentra las exigencias más altas, por tratar datos conductuales de
+> terceros dentro de un público que incluye personas mayores y menores de edad, categoría esta
+> última sujeta a protección reforzada.
+>
+> La arquitectura aborda los principios de minimización y finalidad (la Red no almacena datos
+> personales propios y las alertas registran únicamente el enlace, su nivel de riesgo y la fecha),
+> la incorporación mediante acto positivo del titular, la transparencia hacia la persona
+> supervisada —que accede a sus propias alertas, de modo que no existe supervisión oculta—, el
+> derecho de supresión y el control de acceso por fila.
+>
+> Quedan fuera del alcance de esta versión, y se declaran como limitaciones de cumplimiento, el
+> registro formal de consentimiento, la verificación de edad y el consentimiento del representante
+> legal para personas menores de edad, la portabilidad de los datos del titular, el procedimiento
+> de detección y notificación de brechas, el registro de auditoría de accesos y la evaluación sobre
+> la necesidad de designar un delegado de protección de datos. Su implementación es condición
+> previa a cualquier despliegue en producción con usuarios reales y requiere revisión jurídica
+> especializada.
+
+Ese último párrafo es el que conviene no suavizar: un prototipo académico puede tener brechas de
+cumplimiento declaradas, pero no puede afirmar que cumple.
