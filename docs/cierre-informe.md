@@ -849,3 +849,133 @@ muestra no se ejecutó dentro del período del proyecto.
 
 Dos de estos requieren modificar el código: eliminar D del componente de uso, y aleatorizar el
 orden de las formas del instrumento.
+
+---
+
+## Parte 12 — Metodología (#210, #214)
+
+### 12.1 #210 — Las fases del HCD están mal atribuidas
+
+**Qué dice hoy (§4.2.2):**
+
+> Diseño Centrado en el Humano (HCD): Metodología de innovación orientada a modelar soluciones
+> tecnológicas a partir del análisis profundo de las necesidades. **Estructurar** su ejecución en
+> **cinco fases sucesivas: empatía, definición, ideación, prototipado y validación**. […] (IDEO, 2015).
+
+**Dos errores, y el segundo es de fondo.**
+
+El primero es gramatical: «Estructurar» es infinitivo y deja la oración sin verbo conjugado. Debe
+decir «Estructura».
+
+El segundo es de atribución. Las cinco fases enumeradas —empatizar, definir, idear, prototipar y
+evaluar— corresponden al modelo de *Design Thinking* difundido por la escuela de diseño de
+Stanford, no a la guía de IDEO que el informe cita. **The Field Guide to Human-Centered Design**
+(IDEO, 2015) organiza el proceso en **tres fases: Inspiración, Ideación e Implementación**. Se está
+citando una fuente que dice otra cosa.
+
+**Dos caminos.**
+
+1. **Usar las tres fases de IDEO.** Es la opción recomendada: la referencia ya está en la
+   bibliografía, no requiere fuentes nuevas y elimina la discrepancia.
+2. **Conservar las cinco fases** y atribuirlas a su origen real, añadiendo la referencia
+   correspondiente a la escuela de diseño de Stanford. Esto obliga a incorporar una referencia que
+   el informe hoy no tiene, y habría que ubicarla y citarla correctamente.
+
+**Redacción propuesta (camino 1):**
+
+> Diseño Centrado en el Humano (Human-Centered Design, HCD): metodología de innovación que modela
+> soluciones a partir del análisis profundo de las necesidades de las personas. Estructura su
+> ejecución en tres fases sucesivas —inspiración, ideación e implementación—, en las que la
+> comprensión del contexto precede a la definición de la solución y el prototipado se somete
+> iterativamente a la validación de los propios usuarios (IDEO, 2015). Constituye un enfoque de
+> alta idoneidad para aplicaciones orientadas a mitigar brechas de alfabetización digital, donde
+> la arquitectura de la experiencia de usuario determina la tasa de adopción.
+
+> **Revisar también §5.2 y la nota de la Figura 1**, que citan a IDEO (2015) para el enfoque
+> general. Esas menciones son correctas, pero conviene verificar que ninguna repita el esquema de
+> cinco fases.
+
+### 12.2 #214 — La matriz gana por construcción
+
+Este es el comentario metodológicamente más serio de los dos, porque no se corrige reescribiendo
+una frase: el problema está en cómo está armada la tabla.
+
+**Qué observa el profesor.** La Tabla 3 compara cuatro columnas —Cascada, SCRUM, HCD e Híbrido
+SCRUM+HCD— y a la columna del híbrido le asigna, en cada criterio, el máximo de sus dos
+componentes:
+
+| Criterio | Peso | Cascada | SCRUM | HCD | Híbrido |
+|---|---|---|---|---|---|
+| Validación constante con el usuario | 25 % | 1 | 3 | 5 | **5** |
+| Capacidad de adaptación al cambio | 20 % | 1 | 5 | 4 | **5** |
+
+Construida así, **la columna del híbrido no puede perder**: por definición vale lo mismo que el
+mejor de sus componentes en cada fila. Que obtenga el puntaje más alto no es un hallazgo, es una
+consecuencia aritmética de cómo se llenó la tabla. El comentario lo resume con precisión: el
+puntaje no fundamenta la elección.
+
+El profesor señala además que en rigor documental el híbrido recibe un 4, **superior a ambos
+componentes**. Eso es indefendible sin explicación: una combinación no puede superar a las dos
+partes que la forman salvo que se describa el mecanismo de sinergia que lo produce.
+
+Y hay un tercer problema que el comentario también anota: **la matriz no registra ningún costo de
+integración**. Combinar dos marcos tiene costos reales —ceremonias duplicadas, sobrecarga de
+coordinación, un equipo de tres personas asumiendo a la vez los roles de SCRUM y el trabajo de
+campo del HCD— que en la tabla simplemente no existen.
+
+**La corrección propuesta.** Sacar el híbrido de la matriz. No es una cuarta alternativa: es una
+síntesis de dos de ellas, y ponerla a competir contra sus propios componentes es un error de
+categoría.
+
+Lo interesante es que **el argumento queda más fuerte, no más débil**. Una matriz de tres columnas
+muestra lo siguiente:
+
+| Criterio | Peso | Cascada | SCRUM | HCD |
+|---|---|---|---|---|
+| Validación constante con el usuario | 25 % | 1 | 3 | **5** |
+| Capacidad de adaptación al cambio | 20 % | 1 | **5** | 4 |
+| Viabilidad en equipos reducidos | 15 % | … | … | … |
+| Rigor en documentación académica | 15 % | … | … | … |
+| Idoneidad para interfaces móviles | 15 % | … | … | … |
+| Gestión de requerimientos evolutivos | 10 % | … | … | … |
+
+Lo que fundamenta combinar SCRUM y HCD no es que la combinación puntúe más alto —eso sería
+circular—, sino que **cada uno domina criterios distintos y ninguno cubre el conjunto**: SCRUM
+lidera en adaptación al cambio y cadencia de construcción; el HCD lidera en validación con usuarios,
+que es además el criterio de mayor peso. Un perfil de fortalezas complementarias es evidencia de
+que conviene combinarlos; una columna que gana en todo no prueba nada.
+
+**Redacción propuesta para el párrafo de cierre:**
+
+> El resultado descarta el modelo en cascada, cuya única fortaleza relevante es el rigor
+> documental, insuficiente frente al peso conjunto de la validación con usuarios y la adaptación
+> al cambio. Entre los dos marcos restantes, la matriz no arroja un ganador único sino un **perfil
+> de fortalezas complementarias**: SCRUM domina los criterios de adaptación y cadencia de
+> construcción, mientras que el Diseño Centrado en el Humano domina la validación con usuarios,
+> que concentra el mayor peso por ser el que sostiene el objetivo específico de mayor exigencia.
+> Ninguno de los dos cubre por sí solo el conjunto de criterios.
+>
+> Esa complementariedad —y no un puntaje superior, que una combinación obtendría por construcción—
+> es lo que fundamenta adoptar una estrategia híbrida. La decisión no es gratuita: integrar ambos
+> marcos impone costos de coordinación, duplicación de instancias de planificación y una carga
+> adicional sobre un equipo de tres integrantes que debe asumir simultáneamente los roles del marco
+> ágil y el trabajo de campo del enfoque centrado en el humano. Esos costos se asumen
+> deliberadamente, por considerarse menores que el riesgo de renunciar a la validación temprana con
+> usuarios o a la capacidad de adaptación durante el ciclo.
+
+El párrafo final es el que cambia la naturaleza del argumento: pasa de «el híbrido puntuó más» a
+«los marcos son complementarios y asumimos el costo de integrarlos». Lo segundo es una decisión de
+ingeniería fundamentada; lo primero era una tautología.
+
+### 12.3 Resumen de la sección
+
+| Comentario | Problema | Corrección |
+|---|---|---|
+| #210 | «Estructurar» sin conjugar | «Estructura» |
+| #210 | Cinco fases atribuidas a IDEO, que usa tres | Adoptar las tres fases de IDEO (sin fuentes nuevas) |
+| #214 | El híbrido toma el máximo de sus componentes y gana por construcción | Sacarlo de la matriz |
+| #214 | Un 4 en rigor documental, superior a ambos componentes | Eliminar ese puntaje con la columna |
+| #214 | Costos de integración ausentes | Declararlos en el párrafo de cierre |
+
+Ninguna de estas correcciones requiere buscar fuentes nuevas, salvo que se decida conservar las
+cinco fases del modelo de Stanford.
