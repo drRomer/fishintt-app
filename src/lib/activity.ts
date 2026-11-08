@@ -83,16 +83,30 @@ export interface CrdStatus {
 }
 
 /**
- * Componente de Uso (0..100) según §3.2.1:
- *   U = mín(100; 40·mín(A,15)/15 + 30·mín(R,8)/8 + 30·mín(D,10)/10)
- * A = enlaces analizados, R = amenazas reportadas, D = amenazas detectadas.
- * Los topes evitan que la repetición mecánica infle el indicador.
+ * Componente de Uso (0..100):
+ *   U = mín(100; 55·mín(A,15)/15 + 45·mín(R,8)/8)
+ * A = enlaces analizados, R = amenazas reportadas.
+ *
+ * SE ELIMINÓ el tercer término, D (amenazas detectadas), que la versión previa
+ * ponderaba en 30. No fue un ajuste de calibración sino de validez: A y R son
+ * CONDUCTAS que la persona decide, mientras que D cuenta cuántos de los enlaces
+ * que analizó resultaron peligrosos, y eso depende de qué le llegó al teléfono.
+ * Dos usuarios con la misma conducta obtenían puntajes distintos según cuántas
+ * estafas les hubieran enviado: el indicador premiaba haber sido blanco de
+ * delincuentes, que es lo contrario de lo que pretende medir.
+ *
+ * U sigue entre 0 y 100, así que la escala del CRD y sus cortes no cambian.
+ * Los topes (15 y 8) y la ponderación 55/45 son parámetros de diseño fijados
+ * por juicio, declarados como sujetos a calibración con datos de uso real.
+ *
+ * El campo `blocked` se mantiene en Activity: lo usan la insignia Elite y el
+ * contador de actividad del perfil, que son gamificación y no el instrumento
+ * de medición del CRD.
  */
 export function computeU(a: Activity, reports: number): number {
   const A = Math.min(a.analyses, 15);
   const R = Math.min(reports, 8);
-  const D = Math.min(a.blocked, 10);
-  return Math.min(100, (40 * A) / 15 + (30 * R) / 8 + (30 * D) / 10);
+  return Math.min(100, (55 * A) / 15 + (45 * R) / 8);
 }
 
 /**

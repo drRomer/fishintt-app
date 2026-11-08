@@ -312,5 +312,15 @@ export const POST_TEST: ItemEvaluacion[] = [
   },
 ];
 
+// Las dos listas son FORMAS equivalentes, no momentos fijos. Cual se administra
+// primero se decide por sorteo (contrabalanceo), de modo que una eventual
+// diferencia de dificultad entre ellas no quede confundida con el aprendizaje.
+// Los nombres PRE_TEST / POST_TEST se conservan por compatibilidad historica.
+export const FORMA_A = PRE_TEST;
+export const FORMA_B = POST_TEST;
+export const FORMAS = { A: FORMA_A, B: FORMA_B } as const;
+export type Forma = keyof typeof FORMAS;
+
 export const INSTRUMENTOS = { pre: PRE_TEST, post: POST_TEST } as const;
+/** Momento de aplicacion del instrumento, no la forma administrada. */
 export type TipoInstrumento = keyof typeof INSTRUMENTOS;

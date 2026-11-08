@@ -19,7 +19,7 @@
 // =============================================================================
 
 import { PESO_NIVEL, type NivelEjercicio } from "./ejercicios";
-import { INSTRUMENTOS, type TipoInstrumento } from "./data/evaluacion";
+import { FORMAS, type Forma, type TipoInstrumento } from "./data/evaluacion";
 import { computeU, type Activity } from "./activity";
 
 export interface RespuestaItem {
@@ -30,6 +30,8 @@ export interface RespuestaItem {
 
 export interface ResultadoInstrumento {
   tipo: TipoInstrumento;
+  /** Forma administrada en este momento. Queda registrada para el analisis. */
+  forma?: Forma;
   c: number; // componente de Conocimiento (0..100)
   u: number; // componente de Uso al momento de rendirlo (0..100)
   crd: number; // 0..1000
@@ -79,6 +81,7 @@ export function guardarResultado(
   const u = tipo === "pre" ? 0 : computeU(actividad, reportes);
   const resultado: ResultadoInstrumento = {
     tipo,
+    forma: getFormaDe(tipo),
     c,
     u,
     crd: Math.round(10 * (0.65 * c + 0.35 * u)),
@@ -139,6 +142,42 @@ export function compararAplicaciones(): Comparacion | null {
   };
 }
 
+// -----------------------------------------------------------------------------
+// Contrabalanceo de las formas
+// -----------------------------------------------------------------------------
+// Antes la forma A era siempre el pre-test y la B siempre el post-test. Con ese
+// orden fijo, cualquier diferencia de dificultad entre ambas queda PERFECTAMENTE
+// CONFUNDIDA con el aprendizaje que se quiere medir: una mejora podria deberse a
+// un instrumento mas benevolo y no habria forma de distinguirlo.
+//
+// Ahora la forma inicial se sortea una vez por participante y se conserva; la
+// segunda aplicacion usa la otra. Al repartirse entre los participantes, una
+// eventual diferencia entre formas se distribuye entre ambos momentos y deja de
+// sesgar el resultado. No cuesta nada y no requiere mas participantes.
+
+const KEY_FORMA = "fishintt_forma_inicial";
+
+/** Forma asignada como primera aplicacion. Se sortea una sola vez. */
+export function getFormaInicial(): Forma {
+  if (typeof window === "undefined") return "A";
+  try {
+    const guardada = localStorage.getItem(KEY_FORMA);
+    if (guardada === "A" || guardada === "B") return guardada;
+    const sorteada: Forma = Math.random() < 0.5 ? "A" : "B";
+    localStorage.setItem(KEY_FORMA, sorteada);
+    return sorteada;
+  } catch {
+    return "A";
+  }
+}
+
+/** Que forma corresponde a cada momento, segun el sorteo del participante. */
+export function getFormaDe(tipo: TipoInstrumento): Forma {
+  const inicial = getFormaInicial();
+  if (tipo === "pre") return inicial;
+  return inicial === "A" ? "B" : "A";
+}
+
 export function getItems(tipo: TipoInstrumento) {
-  return INSTRUMENTOS[tipo];
+  return FORMAS[getFormaDe(tipo)];
 }
