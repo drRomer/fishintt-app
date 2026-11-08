@@ -1496,3 +1496,133 @@ imagen de §7.3.1 y que conviene no repetir aquí.
 | — | Actualizada la frase sobre qué casos requieren cuenta: solo CU06, CU07 y CU08 |
 | #277 | Tres diagramas de secuencia conformes a UML para CU01, CU03 y CU08 |
 | #277 | §7.5.2 debe recibir estilo de título, según observa el mismo comentario |
+
+---
+
+## Parte 15 — La limitación de iOS (#273)
+
+### 15.1 El comentario es correcto, con una precisión técnica que conviene hacer
+
+El profesor observa que Web Share Target no es compatible con Safari en iOS, de modo que RF02 y
+RNF09 no se cumplen en esa plataforma. Es exacto, y conviene formularlo con la distinción precisa
+porque son dos tecnologías distintas con nombres parecidos:
+
+- **Web Share API** (`navigator.share`): permite que una página **envíe** contenido al menú de
+  compartir del sistema. Safari en iOS **sí** la implementa.
+- **Web Share Target**: permite que una aplicación web instalada **se registre como destino** del
+  menú de compartir, de modo que aparezca en la lista junto a las aplicaciones nativas. Safari en
+  iOS **no** la implementa; es una capacidad de los navegadores basados en Chromium sobre Android y
+  ChromeOS.
+
+Fishin't usa la segunda. En iOS, la declaración del manifiesto simplemente se ignora: no produce
+error, pero la aplicación nunca aparece en el menú de compartir.
+
+### 15.2 Qué se pierde realmente, y qué no
+
+Aquí conviene ser preciso en ambas direcciones, sin minimizar ni exagerar.
+
+**Lo que no se pierde.** La función de analizar enlaces está **plenamente disponible en iOS**. El
+campo de pegado es la vía de entrada principal de la aplicación en todas las plataformas, y
+funciona igual en Safari. Un usuario de iPhone copia el enlace desde el mensaje, abre Fishin't y lo
+pega: obtiene exactamente el mismo análisis, con las mismas señales y la misma microcápsula.
+
+**Lo que sí se pierde.** La vía de entrada de menor fricción. En Android bastan dos toques —
+mantener presionado el enlace y elegir Fishin't—; en iOS son cuatro pasos: copiar, salir de la
+aplicación, abrir Fishin't y pegar. Para un público definido por sus competencias digitales
+básicas, esa diferencia **no es trivial**, y es precisamente el tipo de fricción que §4.2.3
+identifica como determinante para la adopción.
+
+**Dimensión del impacto.** RF02 tiene prioridad **Media** en la propia tabla de requerimientos, no
+Alta: el proyecto ya lo clasificó como conveniencia y no como función esencial. Eso acota el
+alcance del incumplimiento, aunque no lo elimina.
+
+### 15.3 Corrección de RNF09
+
+El problema está en una palabra. RNF09 exige «operación **equivalente** en Android, iOS y
+navegadores de escritorio desde una única base de código». Tal como está, la limitación lo
+incumple.
+
+La formulación precisa distingue entre la función y su vía de acceso:
+
+> **RNF09 (propuesto).** Disponibilidad del conjunto completo de funcionalidades en Android, iOS y
+> navegadores de escritorio desde una única base de código. Se exceptúa la recepción por el menú
+> «Compartir» del sistema (RF02), cuya tecnología habilitante no está implementada en Safari sobre
+> iOS; en esa plataforma la misma funcionalidad se alcanza mediante el ingreso manual del enlace,
+> que es la vía de entrada principal en todas las plataformas.
+
+El cambio de «operación equivalente» a «disponibilidad del conjunto completo de funcionalidades,
+con la excepción declarada» convierte un requisito incumplido en uno cumplido con una salvedad
+explícita. No es un recurso retórico: describe con exactitud lo que el sistema hace.
+
+### 15.4 Corrección de RF02
+
+Añadir a la ficha del requerimiento una restricción de plataforma:
+
+> **Restricción.** Disponible en navegadores basados en Chromium sobre Android y ChromeOS. No
+> disponible en Safari sobre iOS, que no implementa Web Share Target. En esa plataforma la entrada
+> se realiza mediante pegado directo.
+
+El informe ya contiene una salvedad parcial —«sujeta al soporte del navegador y del sistema»— en la
+sección de interfaces externas. Conviene **nombrar la plataforma concreta** en lugar de dejarla
+como una condición genérica: el evaluador ya identificó cuál es.
+
+### 15.5 Sobre mitigaciones
+
+Existe una alternativa que conviene mencionar sin presentarla como solución del producto: iOS
+permite al usuario crear un atajo propio que aparece en el menú de compartir y abre una dirección
+con el enlace seleccionado. Es funcional, pero exige configuración manual por parte del usuario, lo
+que la vuelve inviable para el segmento objetivo de este proyecto. Corresponde declararla como
+posibilidad existente, no como parte de la solución entregada.
+
+### 15.6 No se requiere cambio en el código
+
+Se revisó la interfaz y **ninguna vista promete la función de compartir**: las únicas menciones
+están en comentarios del código fuente. En consecuencia, un usuario de iOS no recibe una promesa
+incumplida; simplemente no ve una opción que en su plataforma no existe, y usa el campo de pegado
+que es la vía principal.
+
+Se evaluó añadir detección de plataforma para mostrar un aviso en iOS y se descartó: el campo de
+pegado ya es el elemento más visible de la pantalla de análisis, de modo que el aviso explicaría
+una ausencia que el usuario no percibe. Agregaría complejidad sin resolver ningún problema real.
+
+La declaración del manifiesto se mantiene: en iOS es ignorada sin efecto alguno, y en Android
+habilita la función.
+
+---
+
+## Parte 16 — Estado de los 23 comentarios
+
+| # | Tema | Severidad | Estado |
+|---|---|---|---|
+| 3 | Estado del proyecto contradictorio | ALTA | Material listo · Parte 1 |
+| 21 | Contexto nacional sin fuente | ALTA | Material listo · Parte 10 |
+| 28 | «Encuestados» sin fuente primaria | MEDIA | Material listo · Parte 10 |
+| 116 | Consumo de recursos sin medición | MEDIA | **Medido** · Parte 10 |
+| 125 | Licencias prohíben uso comercial | **CRÍTICA** | **Resuelto** por la decisión no comercial |
+| 127 | Punto de equilibrio sin supuestos | MEDIA | **Disuelto**: sin ingresos no hay punto de equilibrio |
+| 139 | Objetivo general con dos verbos | — | Material listo · Partes 1 y 7 |
+| 143 | Objetivo con dos verbos | — | Material listo · Parte 7 |
+| 144 | Frase duplicada y conjunto sin especificar | ALTA | Material listo · Parte 8 |
+| 145 | Objetivo con dos verbos | — | Material listo · Parte 7 |
+| 146 | Diseño de validación insuficiente | ALTA | Material listo · Parte 11 · **código corregido** |
+| 149 | Topes y ponderaciones sin justificar; D | MEDIA | Material listo · Parte 11 · **código corregido** |
+| 203 | Marco legal desactualizado | ALTA | Material listo · Parte 9 |
+| 210 | Fases del HCD mal atribuidas | MEDIA | Material listo · Parte 12 |
+| 214 | La matriz gana por construcción | ALTA | Material listo · Parte 12 |
+| 226 | URL completa a servicios externos | ALTA | **Parcial**: corregido en Gemini; declarado para los demás |
+| 239 | El dato debilita la decisión de PWA | ALTA | Material listo · Parte 10 |
+| 259 | Falta el diagrama de casos de uso | ALTA | **Diagrama entregado** · Parte 14 |
+| 266 | VirusTotal sin umbral | ALTA | **Resuelto en código** |
+| 269 | Diccionario de datos ausente | ALTA | **Diccionario entregado** · Parte 13 |
+| 273 | Web Share Target no existe en iOS | ALTA | Material listo · Parte 15 |
+| 277 | Secuencias en pseudotexto | ALTA | **Tres diagramas entregados** · Parte 14 |
+| 280 | Informe sin implementación ni resultados | **CRÍTICA** | Material listo · Partes 3, 4 y 5 |
+
+**Resueltos directamente en el código:** #266 (umbral de VirusTotal), #226 parcialmente (Gemini ya
+no recibe la URL completa), #149 (el componente D sale de la fórmula) y #146 (contrabalanceo de las
+formas del instrumento).
+
+**Lo que queda por hacer, y es trabajo de redacción, no de análisis:** llevar este material al
+documento, generar las imágenes de los cuatro diagramas y numerarlas, y decidir los dos puntos
+abiertos — si se conserva la afirmación del ranking regional en #21, y si se adopta la corrección
+de la fórmula del CRD en el texto de §3.2.1, que en el código ya está aplicada.
