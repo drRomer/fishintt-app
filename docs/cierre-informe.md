@@ -1247,3 +1247,252 @@ Si se adopta, debe acompañarse del consentimiento correspondiente y de una pol�
 y restricciones—, reemplazar la imagen actual por una figura numerada y titulada con fuente
 declarada, e incorporar la sección de estado de uso. Declarar que `url_scans` está definida pero no
 utilizada es preferible a presentarla como parte operativa del sistema.
+
+---
+
+## Parte 14 — Diagramas UML (#259, #277)
+
+Los dos comentarios piden lo mismo: que lo enunciado en prosa se presente como diagramas UML
+numerados. Se entregan en notación textual —PlantUML para el diagrama de casos de uso y Mermaid
+para los de secuencia— de modo que puedan generarse como imagen en plantuml.com, mermaid.live o
+Draw.io, e insertarse numerados y con fuente declarada.
+
+### 14.1 Tres correcciones previas al diagrama de casos de uso
+
+Antes de dibujar hay que resolver tres inconsistencias del modelo actual, dos señaladas por el
+profesor y una derivada de los cambios recientes en el producto.
+
+**a) El «include» apunta a algo que no existe (#259).** El texto declara que CU04 y CU05 hacen
+«include» del *cálculo del CRD*, pero ese cálculo no está definido como caso de uso. Un «include»
+solo puede apuntar a otro caso de uso. Se resuelve definiéndolo:
+
+> **CU11 Calcular Coeficiente de Resiliencia Digital.** Caso de uso incluido, no invocado
+> directamente por ningún actor. Combina el componente de conocimiento, obtenido de los ejercicios
+> de clasificación, con el componente de uso, derivado de la actividad registrada.
+
+**b) CU10 describe una función que ya no existe.** El modelo define «CU10 Contactar operador
+(asistencia humana y con IA)». Esa funcionalidad fue eliminada del producto: no hay chat con
+inteligencia artificial ni mesa de ayuda, porque el proyecto es gratuito y sin ingresos. Lo que
+quedó en su lugar es el protocolo de emergencia de la Ley N° 20.009 y las preguntas frecuentes.
+
+Conviene **renombrar en lugar de eliminar**, para no alterar la numeración que otras secciones
+referencian:
+
+> **CU10 Consultar ayuda y protocolo de emergencia.** El usuario accede a los pasos a seguir si fue
+> víctima de una estafa y a las preguntas frecuentes. No requiere cuenta.
+
+**c) La frase sobre qué requiere cuenta quedó desactualizada.** El texto dice que CU06, CU07, CU08
+**y CU10** exigen cuenta. Con la eliminación del operador, la única funcionalidad ligada a la
+identidad es la Red Protegida. La frase correcta es:
+
+> CU01 a CU05, CU09 y CU10 se ejecutan sin cuenta. CU06, CU07 y CU08 la requieren, por operar sobre
+> vínculos entre personas identificadas.
+
+### 14.2 Diagrama de casos de uso (#259)
+
+Notación PlantUML. Reemplaza el enunciado en prosa de §6.4.2.
+
+```plantuml
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Usuario" as U
+actor "Administrador\nde grupo" as A
+actor "Usuario\nvinculado" as V
+actor "Servicios de inteligencia\nde amenazas" as S
+
+A --|> U
+V --|> U
+
+rectangle "Fishin't" {
+  usecase "CU01 Analizar enlace" as CU01
+  usecase "CU02 Reportar enlace" as CU02
+  usecase "CU03 Completar microcápsula" as CU03
+  usecase "CU04 Realizar pre-test y post-test" as CU04
+  usecase "CU05 Consultar CRD" as CU05
+  usecase "CU06 Crear grupo de protección" as CU06
+  usecase "CU07 Vincular cuenta protegida" as CU07
+  usecase "CU08 Visualizar alertas del grupo" as CU08
+  usecase "CU09 Consultar fichas de estafas" as CU09
+  usecase "CU10 Consultar ayuda y\nprotocolo de emergencia" as CU10
+  usecase "CU11 Calcular CRD" as CU11
+  usecase "Consultar servicios externos" as EXT
+}
+
+U --> CU01
+U --> CU04
+U --> CU05
+U --> CU09
+U --> CU10
+A --> CU06
+A --> CU08
+V --> CU07
+
+CU01 ..> EXT : <<include>>
+CU02 ..> CU01 : <<extend>>
+CU03 ..> CU01 : <<extend>>
+CU04 ..> CU11 : <<include>>
+CU05 ..> CU11 : <<include>>
+
+EXT --> S
+
+note bottom of CU10
+  CU01–CU05, CU09 y CU10
+  no requieren cuenta.
+  CU06, CU07 y CU08 sí.
+end note
+@enduml
+```
+
+Dos precisiones sobre la notación: las flechas de «extend» apuntan **desde** el caso extensor
+**hacia** el caso base —CU02 y CU03 extienden a CU01, no al revés—, y CU11 no recibe flecha de
+ningún actor porque es un caso incluido, nunca invocado directamente.
+
+### 14.3 Diagramas de secuencia (#277)
+
+El comentario observa que lo rotulado como diagramas de secuencia en §7.5 es pseudotexto, y que
+§6.4.3 comprometió este nivel de detalle para CU01, CU03 y CU08. Se entregan los tres, en notación
+Mermaid, construidos sobre el flujo real del sistema.
+
+#### Figura — Secuencia CU01: Analizar enlace sospechoso
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant C as Cliente PWA
+    participant API as Función de servidor
+    participant BD as Base comunitaria
+    participant EXT as Servicios externos
+    participant REG as Registros de dominio
+
+    U->>C: Pega el enlace o lo comparte desde el sistema
+    C->>C: Normaliza el localizador
+    C->>API: POST /api/analyze {url}
+    API->>API: Evalúa la estructura (heurística determinista)
+
+    par Consultas en paralelo
+        API->>EXT: Google Safe Browsing
+        EXT-->>API: Coincidencia o ausencia
+    and
+        API->>EXT: VirusTotal
+        EXT-->>API: Motores que lo detectan
+    and
+        API->>BD: match_threats(firma, host)
+        BD-->>API: Coincidencia exacta o similar
+    and
+        API->>REG: Antigüedad del dominio (RDAP o WHOIS)
+        REG-->>API: Fecha de creación
+    and
+        API->>REG: Cadena TLS y resolución DNS
+        REG-->>API: Validez y existencia
+    end
+
+    API->>REG: Vecinos tipográficos del dominio
+    REG-->>API: Cuáles existen y desde cuándo
+    API->>API: Consolida el veredicto con umbrales
+    API-->>C: Veredicto, razones y anatomía
+    C-->>U: Semáforo con el indicador que lo originó
+
+    alt El veredicto no es seguro
+        C-->>U: Ofrece la microcápsula del indicador (CU03)
+        C-->>U: Ofrece reportar el enlace (CU02)
+    end
+```
+
+La consulta de vecinos tipográficos aparece después del bloque paralelo porque depende de la
+antigüedad obtenida en él: solo se ejecuta si el dominio es reciente o de antigüedad desconocida.
+
+#### Figura — Secuencia CU03: Completar microcápsula
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant C as Cliente PWA
+    participant M as Contenido formativo
+    participant L as Almacenamiento local
+
+    C->>M: Solicita la cápsula del indicador dominante
+    M-->>C: Explicación, evidencia y ejercicio
+    C-->>U: Muestra la evidencia del propio enlace
+    U->>C: Clasifica la opción que considera correcta
+    C->>L: ¿Existe un intento previo de este ejercicio?
+    L-->>C: Respuesta
+
+    alt Primer intento
+        C->>L: Registra el resultado con su peso por dificultad
+        Note over L: Solo el primer intento alimenta el componente C
+    else Ya respondido
+        C->>C: No altera el registro
+    end
+
+    C-->>U: Retroalimentación y explicación de la respuesta
+```
+
+#### Figura — Secuencia CU08: Visualizar alertas del grupo
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor V as Usuario vinculado
+    actor A as Administrador
+    participant C as Cliente PWA
+    participant F as Funciones con privilegios
+    participant BD as Base de datos
+
+    Note over V: La alerta se origina al analizar un enlace de riesgo
+    V->>F: record_member_alert(enlace, nivel)
+    F->>F: Verifica la identidad del solicitante
+    F->>BD: Inserta la alerta en sus grupos
+    BD-->>F: Confirmación
+
+    A->>C: Abre el panel de Red Protegida
+    C->>F: get_my_network()
+    F->>BD: Consulta pertenencia del solicitante
+    BD-->>F: Grupo y rol
+    F-->>C: Grupo y rol
+
+    alt El rol es administrador
+        C->>F: get_network_members() y get_network_alerts()
+        F->>F: Verifica que administre ese grupo
+        F->>BD: Consulta con unión a los perfiles
+        BD-->>F: Integrantes y alertas
+        F-->>C: Datos del grupo
+        C-->>A: Panel con alertas e integrantes
+        A->>F: resolve_member_alert(id)
+        F-->>C: Alerta marcada como atendida
+    end
+
+    loop Cada 30 segundos y al volver a la pestaña
+        C->>F: Vuelve a consultar las alertas
+    end
+```
+
+El bucle final documenta el refresco automático: una alerta que apareciera media hora tarde no
+serviría para intervenir a tiempo, que es el propósito del módulo.
+
+### 14.4 Cómo generar las imágenes
+
+| Notación | Herramienta | Exporta |
+|---|---|---|
+| PlantUML | plantuml.com/plantuml, o la extensión de PlantUML en el editor | PNG, SVG |
+| Mermaid | mermaid.live | PNG, SVG |
+
+Ambas aceptan el texto tal cual y permiten descargar la imagen. Al insertarlas en el informe,
+**cada figura debe llevar número, título y nota de fuente** («Elaboración propia»), e incorporarse
+al índice de figuras. Esa es la parte formal que el comentario #269 señaló como ausente en la
+imagen de §7.3.1 y que conviene no repetir aquí.
+
+### 14.5 Resumen de la sección
+
+| Comentario | Corrección |
+|---|---|
+| #259 | Diagrama de casos de uso en PlantUML, numerado como figura |
+| #259 | CU11 definido, de modo que el «include» de CU04 y CU05 apunte a un caso real |
+| — | CU10 renombrado: el operador con IA ya no existe en el producto |
+| — | Actualizada la frase sobre qué casos requieren cuenta: solo CU06, CU07 y CU08 |
+| #277 | Tres diagramas de secuencia conformes a UML para CU01, CU03 y CU08 |
+| #277 | §7.5.2 debe recibir estilo de título, según observa el mismo comentario |
