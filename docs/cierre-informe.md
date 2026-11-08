@@ -684,3 +684,168 @@ falla es el razonamiento, no la elección técnica. Dos hechos lo sostienen:
 
 Tres de los cuatro se resuelven sin fuentes nuevas. El único que las necesita es #21, y solo si el
 equipo decide conservar la afirmación del ranking regional.
+
+---
+
+## Parte 11 — Diseño de validación y componentes del CRD (#146, #149)
+
+### 11.1 #149 — El componente D no mide resiliencia
+
+El comentario observa que los topes y las ponderaciones carecen de justificación, y agrega una
+objeción de fondo: **D depende de la exposición a amenazas, no de la resiliencia**. Esa objeción es
+correcta y obliga a modificar la fórmula, no solo a justificarla.
+
+**Por qué es correcta.** El componente de uso se define hoy como:
+
+> U = mín(100; 40·mín(A,15)/15 + 30·mín(R,8)/8 + 30·mín(D,10)/10)
+
+donde A son los enlaces analizados, R las amenazas reportadas y D las amenazas detectadas. A y R
+son **conductas**: la persona decide analizar y decide reportar. D no lo es. D cuenta cuántos de
+los enlaces que la persona analizó resultaron peligrosos, y eso depende de qué le llegó al teléfono,
+no de lo que hizo.
+
+Dos usuarios con conducta idéntica —quince enlaces analizados cada uno— obtienen puntajes distintos
+si a uno le llegaron diez estafas y al otro ninguna. El indicador premia haber sido blanco de
+delincuentes, que es precisamente lo contrario de lo que pretende medir. El problema no es de
+calibración: es de validez de constructo.
+
+**Corrección propuesta.** Eliminar D y redistribuir su peso entre las dos conductas que sí dependen
+del usuario:
+
+> U = mín(100; 55·mín(A,15)/15 + 45·mín(R,8)/8)
+
+El rango de U permanece entre 0 y 100, de modo que la escala del CRD y sus cortes de interpretación
+no requieren recalibración. La ponderación 55/45 reconoce que analizar es la conducta preventiva
+básica, accesible a cualquier usuario, mientras que reportar exige una iniciativa adicional y
+beneficia a terceros.
+
+> Esta corrección implica una modificación en el código: la función que calcula el componente de
+> uso. Es un cambio de una línea y no altera ninguna otra parte del sistema.
+
+**Sobre los topes y las ponderaciones restantes.** Aquí la respuesta honesta no es justificarlos,
+porque no hay con qué: se fijaron por juicio de los autores a partir del volumen de interacción
+esperado, no por evidencia. El propio comentario ofrece la salida correcta —«declararlos parámetros
+a calibrar»— y es la que conviene tomar.
+
+**Redacción propuesta para §3.2.1:**
+
+> Los topes de cada actividad (quince enlaces analizados y ocho amenazas reportadas) y las
+> ponderaciones entre componentes (65 % conocimiento y 35 % uso) constituyen **parámetros de
+> diseño establecidos por juicio experto**, no derivados de evidencia empírica previa. Su función
+> es doble: evitar que la repetición mecánica de una misma acción domine el indicador, y expresar
+> la premisa central del proyecto, según la cual la resiliencia descansa principalmente en la
+> competencia adquirida por la persona y solo de manera complementaria en su uso de la
+> herramienta. Se declaran explícitamente como parámetros sujetos a calibración: su ajuste
+> requiere datos de uso real que este trabajo no alcanzó a recoger, y constituye una línea de
+> trabajo posterior.
+
+### 11.2 #146 — El protocolo de validación
+
+El comentario identifica cinco carencias en el objetivo e). Se abordan una por una, y al final se
+declara cuál es la situación real.
+
+#### a) Tamaño y criterio de selección de la muestra
+
+**Propuesta.** Muestreo intencionado, no probabilístico, de entre doce y dieciséis participantes
+distribuidos en los dos perfiles que define §2.2.1:
+
+| Estrato | Perfil | Participantes |
+|---|---|---|
+| 1 | Personas de 55 años o más, con uso de banca digital | 6 a 8 |
+| 2 | Usuarios financieros emergentes, 18 a 35 años | 6 a 8 |
+
+El rango responde al instrumento SUS, cuyo promedio se estabiliza razonablemente a partir de una
+docena de respuestas. **Debe declararse que es una muestra pequeña y no probabilística**: permite
+caracterizar la experiencia de uso, no generalizar a la población.
+
+#### b) Grupo control
+
+El comentario es exacto: un diseño pre-post sin control no permite atribuir el cambio al módulo
+formativo, porque el efecto de práctica —simplemente haber respondido antes un instrumento
+parecido— produce mejoras por sí solo.
+
+**Dos caminos, y conviene ser realista sobre cuál es viable.** Con una muestra de doce a dieciséis
+personas, dividirla en dos grupos deja seis u ocho por rama, cantidad insuficiente para inferencia
+estadística. Añadir un grupo control no rescataría la causalidad; solo daría la apariencia de un
+experimento que la muestra no sostiene.
+
+**Recomendación.** Declarar el diseño por su nombre: **preexperimental de un solo grupo con
+medición antes y después**, y enunciar expresamente las amenazas a la validez interna que ello
+implica —efecto de práctica, maduración e instrumentación—. Reportar la variación observada como
+resultado **descriptivo**, sin atribuirla causalmente al módulo. Un diseño con grupo control y
+muestra suficiente queda como trabajo posterior.
+
+Esta es la opción honesta. Un diseño preexperimental declarado como tal es metodológicamente
+aceptable en un trabajo de prototipo; uno presentado como experimental sin serlo, no.
+
+#### c) Equivalencia de las formas pre y post
+
+**Aquí hay un hallazgo de la revisión del código.** El sistema administra siempre la forma A como
+pre-test y la forma B como post-test, en orden fijo. Eso significa que, si una de las dos formas
+resulta más fácil, esa diferencia queda **perfectamente confundida** con el aprendizaje que se
+pretende medir: no habría manera de distinguir una mejora real de un instrumento más benévolo.
+
+**Solución: contrabalanceo.** Asignar aleatoriamente a la mitad de los participantes la forma A
+como pre-test y a la otra mitad la forma B, invirtiendo el orden en la segunda aplicación. Con eso,
+cualquier diferencia residual entre las formas se distribuye entre ambos momentos y deja de
+sesgar el resultado.
+
+Es la corrección más rentable de toda esta sección: no cuesta nada, no requiere participantes
+adicionales y elimina un factor de confusión que de otro modo invalidaría la medición. Requiere un
+ajuste menor en el código, que hoy fija el orden.
+
+Las dos formas ya comparten estructura —cuatro ítems de cada nivel de dificultad, con la misma
+ponderación— y fueron construidas sobre las mismas tipologías de suplantación. Eso respalda su
+equivalencia de contenido, aunque no la demuestra psicométricamente; el contrabalanceo hace
+innecesaria esa demostración.
+
+#### d) Consentimiento informado y resguardos éticos
+
+Deben especificarse, con particular atención al estrato de personas mayores:
+
+- **Consentimiento informado por escrito**, en lenguaje sencillo y sin tecnicismos, que indique el
+  propósito del estudio, qué datos se registran, cuánto dura la sesión y quién tendrá acceso a los
+  resultados.
+- **Participación voluntaria con derecho a retirarse** en cualquier momento y sin expresión de
+  causa, incluyendo el retiro de los datos ya entregados.
+- **Anonimización**: los resultados se analizan de forma agregada y no se vinculan a la identidad
+  de los participantes.
+- **Minimización**: no se recogen datos sensibles ni información que exceda lo necesario para las
+  dos mediciones.
+- **Acompañamiento durante la sesión**, de modo que ningún participante quede expuesto a la
+  sensación de estar siendo evaluado personalmente. Conviene enunciar explícitamente que lo que se
+  evalúa es la herramienta, no la persona.
+
+Estos resguardos conectan con las obligaciones de la Ley 21.719 descritas en la Parte 9: el
+registro del consentimiento es, precisamente, una de las brechas de cumplimiento allí declaradas.
+
+#### e) La situación real
+
+Por coherencia con §9.6, debe quedar claro que **este protocolo especifica cómo se realizaría la
+validación, no cómo se realizó**. El instrumento está construido y operativo; su aplicación a una
+muestra no se ejecutó dentro del período del proyecto.
+
+**Redacción propuesta para cerrar el apartado:**
+
+> El protocolo de validación aquí especificado no alcanzó a ejecutarse dentro del período del
+> proyecto. El instrumento de medición se encuentra construido y operativo —veinticuatro ítems
+> distribuidos en dos formas equivalentes—, pero no fue administrado a una muestra de
+> participantes. En consecuencia, los criterios de éxito definidos en §3.2.4 relativos a variación
+> del Coeficiente de Resiliencia Digital, ascenso de nivel y puntaje SUS no cuentan con evidencia
+> de cumplimiento. Su aplicación conforme al protocolo descrito constituye la primera línea de
+> trabajo posterior.
+
+### 11.3 Resumen de la sección
+
+| Carencia señalada | Tratamiento |
+|---|---|
+| Componente D mide exposición, no resiliencia | **Eliminarlo** y redistribuir su peso (55/45) |
+| Topes y ponderaciones sin justificación | Declararlos parámetros de diseño sujetos a calibración |
+| Tamaño y criterio de muestra | 12 a 16 participantes, muestreo intencionado en dos estratos |
+| Ausencia de grupo control | Declarar el diseño como **preexperimental** y no atribuir causalidad |
+| Equivalencia de las formas pre/post | **Contrabalanceo aleatorio** del orden de administración |
+| Consentimiento y ética | Protocolo explícito, con atención al estrato de personas mayores |
+| Ejecución | Declarar que no se realizó (coherente con §9.6) |
+
+Dos de estos requieren modificar el código: eliminar D del componente de uso, y aleatorizar el
+orden de las formas del instrumento.
