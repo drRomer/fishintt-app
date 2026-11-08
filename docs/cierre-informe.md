@@ -514,3 +514,173 @@ Deben declararse como limitaciones, no omitirse:
 
 Ese último párrafo es el que conviene no suavizar: un prototipo académico puede tener brechas de
 cumplimiento declaradas, pero no puede afirmar que cumple.
+
+---
+
+## Parte 10 — Afirmaciones sin respaldo (#21, #28, #116, #239)
+
+> **Nota sobre el método.** En esta sección no se inventa ninguna cita. Donde hace falta una fuente
+> que el informe no tiene, se dice explícitamente «hay que buscarla» en vez de rellenar con una
+> referencia plausible. Donde la afirmación puede sostenerse con datos que el informe **ya** cita o
+> con mediciones del propio sistema, se reformula sobre esa base.
+
+### 10.1 #21 — El contexto nacional (§1.1)
+
+**Qué dice hoy.** Que, «conforme a las métricas provistas por el CSIRT gubernamental y diversos
+informes de corporaciones de ciberseguridad», Chile «se sitúa de manera persistente en los primeros
+lugares de los indicadores regionales». Y que la causa «no es una infraestructura deficiente, sino
+un desajuste estructural en la alfabetización digital».
+
+**Los dos problemas.** La atribución es genérica —«diversos informes» no es una fuente— y el
+ranking regional no trae cifra. Pero el más serio es el segundo: se afirma una **causa**, y una
+causa necesita evidencia que el informe no presenta.
+
+**Qué hacer.** Dos caminos, y conviene tomarlos juntos:
+
+1. **Reemplazar el ranking por la cifra que el informe ya tiene.** Kaspersky (2025) y los 37,7
+   millones de detecciones en Chile aparecen citados en §1.3 y §2.7. Es un dato concreto, con
+   fuente, y sostiene la magnitud sin necesidad de un ranking.
+2. **Degradar la causa a hipótesis.** Es legítimo plantear la brecha de alfabetización como la
+   explicación que el proyecto asume; no lo es presentarla como hecho establecido.
+
+> Si quieren conservar la afirmación de «primeros lugares», **hace falta buscar la fuente
+> específica**: un informe regional con ranking explícito, con año y cifra. No basta con citar al
+> CSIRT en general. Si no aparece, el camino es eliminarla.
+
+**Redacción propuesta:**
+
+> La situación en Chile expone un escenario complejo. Durante 2025, Kaspersky reportó el bloqueo de
+> 37,7 millones de intentos de phishing dirigidos a usuarios en el país (Kaspersky, 2025), cifra
+> que da cuenta de la magnitud del fenómeno. El presente proyecto parte de la premisa de que esta
+> exposición no se explica principalmente por deficiencias de infraestructura tecnológica, sino por
+> una brecha en la alfabetización digital de la población: mientras las instituciones financieras y
+> las grandes organizaciones capacitan sistemáticamente a su personal, los usuarios particulares
+> carecen de formación equivalente. Esta premisa orienta el diseño de la solución y su validación
+> empírica queda fuera del alcance de este trabajo.
+
+El cambio clave es «parte de la premisa» en lugar de afirmarlo. Una premisa declarada no exige
+prueba; una afirmación causal sí.
+
+### 10.2 #28 — «La gran mayoría de los encuestados» (§1.3)
+
+**Qué dice hoy.** Tras la cifra de Kaspersky: «La gran mayoría de los encuestados manifestó haber
+sido destinatario de enlaces fraudulentos o haber resultado afectado por alguna estafa informática
+(Central Web, 2026)».
+
+**El problema.** No se identifica la encuesta, la muestra ni el instrumento, y Central Web es un
+medio de comunicación, no la fuente primaria del estudio.
+
+**Qué hacer.** La recomendación es **eliminar la frase**, no arreglarla. Razón: la oración anterior
+ya trae un dato sólido y con fuente (37,7 millones de detecciones). La frase sobre «encuestados»
+no agrega evidencia nueva y sí agrega una vulnerabilidad: es el tipo de afirmación que un evaluador
+puede desmontar pidiendo la ficha técnica.
+
+**Redacción propuesta:**
+
+> ¿Cuánto sucede? Se trata de una problemática de alcance masivo: solo durante 2025, Kaspersky
+> reportó el bloqueo de 37,7 millones de intentos de phishing dirigidos a usuarios en Chile
+> (Kaspersky, 2025). Esa magnitud evidencia un estado de exposición generalizado y la falta de
+> herramientas de verificación accesibles en el momento en que el usuario enfrenta el enlace.
+
+> Si el equipo quiere conservar el dato de percepción, **debe ubicar el estudio primario** —con
+> institución responsable, año, tamaño muestral y método— y citarlo directamente, no a través del
+> medio que lo difundió.
+
+### 10.3 #116 — «Consume mínimos recursos de hardware» (§2.7.3)
+
+Este es el único de los cuatro donde **no hace falta moderar: se puede medir**.
+
+**Qué dice hoy.** «El proyecto demuestra su pertinencia técnica al integrar […] dentro de un
+entorno móvil optimizado que consume mínimos recursos de hardware (batería, procesamiento y datos
+móviles)».
+
+**El problema.** «Demuestra» exige evidencia, y de los tres recursos mencionados **ninguno fue
+medido**. En particular, el consumo de batería no se midió en absoluto.
+
+**Lo que sí se puede afirmar, con medición.** El proceso de construcción del sistema reporta el
+peso exacto de lo que el usuario descarga:
+
+| Vista | Carga inicial |
+|---|---|
+| Código compartido por toda la aplicación | 87,4 kB |
+| Vista más liviana | 88,2 kB |
+| Vista del analizador (la más pesada) | 154 kB |
+| Mediana de las vistas | ≈ 140 kB |
+
+A esto se suman dos hechos **arquitectónicos**, que no requieren medición porque se derivan del
+diseño:
+
+- **No hay instalación.** La aplicación no descarga un paquete nativo, que en una solución de
+  seguridad convencional ocupa decenas de megabytes.
+- **No hay proceso residente.** A diferencia de un agente antivirus de los descritos en §1.3.1
+  —cuya crítica central en ese mismo apartado es el «consumo elevado de recursos de hardware»—,
+  Fishin't solo se ejecuta mientras el usuario lo tiene abierto y el análisis ocurre en el
+  servidor, no en el dispositivo.
+
+**Redacción propuesta:**
+
+> El sistema integra servicios de inteligencia de amenazas y un motor heurístico propio dentro de
+> un cliente deliberadamente liviano. La carga inicial de la vista más pesada —el analizador de
+> enlaces— alcanza 154 kB, con 87,4 kB de código compartido por toda la aplicación. A diferencia
+> de las suites de seguridad convencionales analizadas en §1.3.1, cuya principal limitación
+> operativa es el consumo de recursos del dispositivo, la solución no requiere instalación de un
+> paquete nativo ni mantiene procesos residentes: el análisis se ejecuta en el servidor y el
+> cliente solo opera mientras el usuario lo utiliza. El consumo de batería y de datos móviles en
+> uso sostenido no fue medido y se identifica como trabajo pendiente.
+
+Nótese que la última frase **declara lo que no se midió**. Eso es lo que convierte el párrafo en
+defendible: el resto son cifras verificables ejecutando la construcción del proyecto.
+
+### 10.4 #239 — El dato que parecía debilitar la decisión (§4.2.3)
+
+Este comentario es el más agudo de los cuatro y merece una respuesta de fondo, no un ajuste de
+redacción.
+
+**Qué observa el profesor.** El texto usa un dato —solo la mitad de las personas mayores de 60 años
+posee teléfono inteligente (Observatorio del Envejecimiento UC–Confuturo, 2024)— para justificar
+una PWA **móvil**. Pero si la mitad del segmento prioritario no tiene smartphone, una aplicación
+móvil no les llega. El dato, tal como está empleado, **argumenta en contra** de la decisión.
+
+**Tiene razón, y el argumento está mal construido.** Pero la decisión sí es defendible: lo que
+falla es el razonamiento, no la elección técnica. Dos hechos lo sostienen:
+
+1. **Una PWA no es una aplicación móvil: es una aplicación web.** Se ejecuta en cualquier navegador,
+   incluido el de un computador de escritorio. Para la mitad del segmento que no tiene smartphone,
+   la PWA sigue siendo alcanzable; una aplicación nativa compilada para iOS y Android **no lo
+   sería**. El dato, correctamente leído, es un argumento **a favor** de la web y en contra del
+   desarrollo nativo que se descartó.
+2. **La arquitectura ya contempla que parte del segmento no opere la tecnología por sí mismo.** Ese
+   es exactamente el propósito del módulo Red Protegida descrito en §2.4.1.b: el integrante con
+   mayor competencia digital del grupo familiar es quien administra la protección. El proyecto no
+   supone que cada adulto mayor manejará la herramienta; supone que alguien de su círculo lo hará
+   por él.
+
+**Redacción propuesta:**
+
+> En primer lugar, elimina la barrera de instalación: el acceso mediante navegador evita la
+> búsqueda, descarga y concesión de permisos en una tienda de aplicaciones. Esta decisión adquiere
+> particular relevancia a la luz de la cobertura real del segmento prioritario: solo alrededor de
+> la mitad de las personas mayores de 60 años en Chile posee un teléfono inteligente y un 21 %
+> maneja ClaveÚnica (Observatorio del Envejecimiento UC–Confuturo, 2024). Lejos de debilitar la
+> elección, ese dato la fundamenta: una aplicación web progresiva se ejecuta en cualquier
+> navegador, incluido el de un equipo de escritorio, mientras que un desarrollo nativo compilado
+> para iOS y Android habría excluido por completo a la fracción del segmento que no dispone de
+> teléfono inteligente. A ello se suma que el módulo Red Protegida (§2.4.1.b) no presupone que cada
+> persona mayor opere la herramienta: contempla que lo haga el integrante del grupo con mayor
+> competencia digital.
+
+> Queda pendiente un ajuste de coherencia: si la cobertura de escritorio es parte del argumento,
+> conviene revisar que el informe no describa la solución como «exclusivamente móvil» en otros
+> apartados. El diseño es *mobile-first*, que no es lo mismo que *solo móvil*.
+
+### 10.5 Resumen de la sección
+
+| Comentario | Tratamiento | ¿Requiere buscar fuente? |
+|---|---|---|
+| #21 | Reemplazar ranking por cifra ya citada; degradar la causa a premisa | Solo si se conserva «primeros lugares» |
+| #28 | Eliminar la frase; el dato de Kaspersky basta | Solo si se conserva el dato de percepción |
+| #116 | **Medir en vez de moderar**: cifras reales de carga + hechos arquitectónicos | No |
+| #239 | Reconstruir el argumento: el dato favorece a la web frente a lo nativo | No |
+
+Tres de los cuatro se resuelven sin fuentes nuevas. El único que las necesita es #21, y solo si el
+equipo decide conservar la afirmación del ranking regional.
