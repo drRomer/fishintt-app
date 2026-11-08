@@ -979,3 +979,271 @@ ingeniería fundamentada; lo primero era una tautología.
 
 Ninguna de estas correcciones requiere buscar fuentes nuevas, salvo que se decida conservar las
 cinco fases del modelo de Stanford.
+
+---
+
+## Parte 13 — Diccionario de datos (#269)
+
+El comentario observa que §7.3.1 contiene solo una imagen sin número, título ni fuente, y que falta
+el diccionario propiamente tal. Lo que sigue se generó leyendo los tres archivos de esquema del
+repositorio (`schema.sql`, `threat_signatures.sql`, `protected_networks.sql`), de modo que cada
+tipo, restricción y clave es verificable contra el código fuente y no una transcripción aproximada.
+
+La base de datos relacional comprende **siete tablas** en el esquema `public`, más la tabla
+`auth.users` administrada por el proveedor de autenticación, a la que las demás referencian.
+
+### 13.1 Diagrama de relaciones
+
+```mermaid
+erDiagram
+    auth_users ||--o| profiles : "tiene perfil"
+    auth_users ||--o{ url_scans : "registra"
+    auth_users ||--o{ reports : "emite"
+    auth_users ||--o{ protected_networks : "administra"
+    auth_users ||--o{ network_members : "integra"
+    auth_users ||--o{ member_alerts : "origina"
+    protected_networks ||--o{ network_members : "agrupa"
+    protected_networks ||--o{ member_alerts : "recibe"
+
+    profiles {
+        uuid id PK_FK
+        text name
+        text email
+        text phone
+        int crd_score
+    }
+    threat_signatures {
+        uuid id PK
+        text normalized_url UK
+        text host
+        text signature
+        int report_count
+    }
+    protected_networks {
+        uuid id PK
+        text name
+        uuid admin_id FK
+        text invite_code UK
+    }
+    network_members {
+        uuid id PK
+        uuid network_id FK
+        uuid user_id FK
+        text role
+    }
+    member_alerts {
+        uuid id PK
+        uuid network_id FK
+        uuid member_id FK
+        text url
+        text risk_level
+        bool resolved
+    }
+```
+
+`threat_signatures` no mantiene relación formal con las demás tablas: es un repositorio comunitario
+cuyas filas no pertenecen a ningún usuario, decisión deliberada que se explica en 13.4.
+
+### 13.2 Tablas
+
+#### profiles — datos de perfil del usuario
+
+Extiende `auth.users` con la información que la aplicación necesita mostrar. Se crea
+automáticamente al registrarse, mediante el disparador descrito en 13.5.
+
+| Columna | Tipo | Nulo | Predeterminado | Restricciones |
+|---|---|---|---|---|
+| id | UUID | No | — | PK; FK → `auth.users(id)` ON DELETE CASCADE |
+| name | TEXT | No | — | — |
+| email | TEXT | No | — | — |
+| avatar_url | TEXT | Sí | — | — |
+| phone | TEXT | Sí | — | Visible para el administrador de la red que integra |
+| birth_date | DATE | Sí | — | — |
+| crd_score | INTEGER | No | 500 | CHECK entre 0 y 1000 |
+| created_at | TIMESTAMPTZ | No | NOW() | — |
+| updated_at | TIMESTAMPTZ | No | NOW() | — |
+
+#### url_scans — historial de análisis
+
+| Columna | Tipo | Nulo | Predeterminado | Restricciones |
+|---|---|---|---|---|
+| id | UUID | No | uuid_generate_v4() | PK |
+| user_id | UUID | Sí | — | FK → `auth.users(id)` ON DELETE CASCADE |
+| url | TEXT | No | — | — |
+| risk_score | INTEGER | No | — | CHECK entre 0 y 1000 |
+| risk_level | TEXT | No | — | CHECK ∈ {safe, suspicious, dangerous} |
+| reasons | JSONB | Sí | `[]` | — |
+| metadata | JSONB | Sí | `{}` | — |
+| created_at | TIMESTAMPTZ | No | NOW() | — |
+
+#### reports — reportes de amenazas
+
+| Columna | Tipo | Nulo | Predeterminado | Restricciones |
+|---|---|---|---|---|
+| id | UUID | No | uuid_generate_v4() | PK |
+| user_id | UUID | Sí | — | FK → `auth.users(id)` ON DELETE SET NULL |
+| url | TEXT | No | — | — |
+| type | TEXT | No | — | CHECK ∈ {phishing, smishing, vishing, scam} |
+| description | TEXT | Sí | — | — |
+| status | TEXT | No | `pending` | CHECK ∈ {pending, confirmed, rejected} |
+| created_at | TIMESTAMPTZ | No | NOW() | — |
+| updated_at | TIMESTAMPTZ | No | NOW() | — |
+
+El borrado de la cuenta pone `user_id` en nulo en lugar de eliminar la fila: el reporte ya benefició
+a la comunidad y su valor no depende de quién lo emitió.
+
+#### threat_signatures — base comunitaria de firmas
+
+| Columna | Tipo | Nulo | Predeterminado | Restricciones |
+|---|---|---|---|---|
+| id | UUID | No | uuid_generate_v4() | PK |
+| normalized_url | TEXT | No | — | **UNIQUE** |
+| url | TEXT | No | — | — |
+| host | TEXT | No | — | Indexado |
+| signature | TEXT | No | — | Indexado; permite hallar enlaces estructuralmente similares |
+| anatomy | JSONB | Sí | `{}` | — |
+| risk_level | TEXT | No | `suspicious` | CHECK ∈ {safe, suspicious, dangerous} |
+| score | INTEGER | No | 1 | CHECK entre 1 y 7 |
+| report_count | INTEGER | No | 1 | Se incrementa en cada reporte del mismo enlace |
+| created_at | TIMESTAMPTZ | No | NOW() | — |
+| updated_at | TIMESTAMPTZ | No | NOW() | — |
+
+La unicidad de `normalized_url` es lo que permite el comportamiento acumulativo: reportar un enlace
+ya existente no duplica la fila, sino que incrementa su contador.
+
+#### protected_networks — grupos de protección
+
+| Columna | Tipo | Nulo | Predeterminado | Restricciones |
+|---|---|---|---|---|
+| id | UUID | No | uuid_generate_v4() | PK |
+| name | TEXT | No | — | — |
+| admin_id | UUID | No | — | FK → `auth.users(id)` ON DELETE CASCADE; indexado |
+| invite_code | TEXT | No | — | **UNIQUE**; seis caracteres |
+| created_at | TIMESTAMPTZ | No | NOW() | — |
+
+#### network_members — pertenencia a un grupo
+
+| Columna | Tipo | Nulo | Predeterminado | Restricciones |
+|---|---|---|---|---|
+| id | UUID | No | uuid_generate_v4() | PK |
+| network_id | UUID | No | — | FK → `protected_networks(id)` ON DELETE CASCADE; indexado |
+| user_id | UUID | No | — | FK → `auth.users(id)` ON DELETE CASCADE; indexado |
+| role | TEXT | No | `protegido` | CHECK ∈ {admin, protegido} |
+| display_name | TEXT | Sí | — | Solo respaldo; el nombre se lee de `profiles` |
+| created_at | TIMESTAMPTZ | No | NOW() | — |
+| — | — | — | — | **UNIQUE (network_id, user_id)**: impide duplicar la pertenencia |
+
+#### member_alerts — alertas generadas por una persona protegida
+
+| Columna | Tipo | Nulo | Predeterminado | Restricciones |
+|---|---|---|---|---|
+| id | UUID | No | uuid_generate_v4() | PK |
+| network_id | UUID | No | — | FK → `protected_networks(id)` ON DELETE CASCADE |
+| member_id | UUID | Sí | — | FK → `auth.users(id)` ON DELETE SET NULL |
+| member_name | TEXT | Sí | — | Solo respaldo cuando la cuenta ya no existe |
+| url | TEXT | No | — | — |
+| risk_level | TEXT | No | — | CHECK ∈ {safe, suspicious, dangerous} |
+| resolved | BOOLEAN | No | FALSE | — |
+| created_at | TIMESTAMPTZ | No | NOW() | Indexado junto a `network_id`, en orden descendente |
+
+### 13.3 Índices
+
+| Índice | Tabla | Columnas | Consulta que optimiza |
+|---|---|---|---|
+| idx_url_scans_user_id | url_scans | user_id | Historial de un usuario |
+| idx_url_scans_created_at | url_scans | created_at DESC | Análisis recientes |
+| idx_reports_user_id | reports | user_id | Reportes de un usuario |
+| idx_reports_status | reports | status | Reportes por estado de revisión |
+| idx_threat_host | threat_signatures | host | Coincidencia por dominio |
+| idx_threat_signature | threat_signatures | signature | Coincidencia por estructura |
+| idx_network_admin | protected_networks | admin_id | Redes que administra un usuario |
+| idx_member_user | network_members | user_id | Grupos a los que pertenece |
+| idx_member_network | network_members | network_id | Integrantes de un grupo |
+| idx_alert_network | member_alerts | network_id, created_at DESC | Panel de alertas del administrador |
+
+### 13.4 Seguridad a nivel de fila
+
+Las **siete** tablas tienen activado el control de acceso por fila. El tratamiento, sin embargo,
+sigue dos estrategias distintas y la diferencia es deliberada.
+
+**Estrategia A — políticas declarativas** (tablas del esquema base):
+
+| Tabla | Política | Efecto |
+|---|---|---|
+| profiles | Users can view own profile | Cada usuario lee solo su perfil |
+| profiles | Users can update own profile | Cada usuario modifica solo su perfil |
+| url_scans | Users can view own scans | Cada usuario lee solo sus análisis |
+| url_scans | Users can create own scans | Solo puede insertar los propios |
+| reports | Authenticated users can create reports | Cualquier autenticado puede reportar |
+| reports | Users can view own reports | Cada usuario lee solo sus reportes |
+| threat_signatures | Threat signatures are public to read | **Lectura pública**: el analizador consulta la base comunitaria sin sesión |
+
+**Estrategia B — sin políticas de lectura directa** (tablas de la Red Protegida):
+`protected_networks`, `network_members` y `member_alerts` tienen el control activado pero **no
+declaran políticas de SELECT**. Todo el acceso ocurre a través de funciones con privilegios de
+definidor que verifican internamente la identidad de quien llama.
+
+La razón es técnica y vale explicitarla: una política sobre `network_members` que consultara
+`protected_networks` para decidir el acceso, combinada con una política sobre `protected_networks`
+que consultara `network_members`, produce una recursión mutua que el motor no puede resolver.
+Concentrar la verificación dentro de funciones evita ese ciclo y mantiene la lógica de autorización
+en un solo lugar auditable.
+
+### 13.5 Funciones almacenadas y disparador
+
+Todas las funciones se ejecutan con privilegios de definidor y verifican internamente la identidad
+del solicitante.
+
+| Función | Parámetros | Propósito |
+|---|---|---|
+| handle_new_user | — | **Disparador** sobre `auth.users`: crea el perfil al registrarse |
+| register_threat | url, normalized, host, signature, risk_level, score, anatomy | Inserta o incrementa una firma comunitaria |
+| match_threats | normalized, signature, host | Devuelve coincidencia exacta o estructuralmente similar |
+| gen_invite_code | — | Genera un código de invitación de seis caracteres |
+| create_protected_network | name | Crea el grupo y registra al creador como administrador |
+| join_protected_network | code, name | Incorpora al solicitante como persona protegida |
+| get_my_network | — | Devuelve el grupo del solicitante y su rol |
+| get_network_members | network_id | Integrantes, solo para el administrador del grupo |
+| get_network_alerts | network_id | Alertas del grupo, solo para su administrador |
+| get_my_alerts | — | Alertas propias de la persona protegida |
+| record_member_alert | url, risk, name | Registra una alerta en los grupos del solicitante |
+| resolve_member_alert | alert_id | Marca una alerta como atendida |
+| leave_protected_network | network_id | Abandona el grupo y elimina sus alertas |
+| remove_network_member | network_id, user_id | Retira a un integrante, solo el administrador |
+| delete_protected_network | network_id | Elimina el grupo completo |
+
+El disparador `on_auth_user_created` se ejecuta después de cada inserción en `auth.users`.
+
+### 13.6 Estado de uso: lo declarado frente a lo utilizado
+
+Esta sección existe porque un diccionario que enumere estructuras sin indicar si se usan induce a
+error. La revisión del código fuente arroja lo siguiente:
+
+| Estructura | Estado |
+|---|---|
+| profiles | **En uso.** Lectura y escritura directa desde el cliente |
+| reports | **En uso.** Inserción al reportar |
+| threat_signatures | **En uso**, exclusivamente a través de `register_threat` y `match_threats` |
+| protected_networks, network_members, member_alerts | **En uso**, exclusivamente a través de sus funciones |
+| **url_scans** | **Declarada y no utilizada.** El historial de análisis no se persiste |
+| profiles.crd_score | **Reservada.** El coeficiente se calcula en el cliente y no se guarda |
+| profiles.birth_date, profiles.avatar_url | **Declaradas y no utilizadas** |
+
+**Sobre `url_scans`.** La tabla, sus dos índices y sus dos políticas existen, pero ninguna vista
+escribe en ella: el resultado de cada análisis se muestra y se descarta, y los contadores de
+actividad viven en el almacenamiento local del navegador. Esto tiene dos consecuencias que conviene
+declarar en lugar de omitir:
+
+1. El componente de uso del Coeficiente de Resiliencia Digital se calcula sobre datos locales, de
+   modo que **no sobrevive a un cambio de dispositivo ni al borrado de los datos del navegador**.
+2. No existe un historial de análisis consultable por el usuario.
+
+Persistir los análisis es una decisión abierta y no meramente una omisión: hacerlo mejora la
+continuidad del indicador, pero construye un registro de la navegación de cada persona, lo que
+tensiona el principio de minimización declarado en §5.1 y las obligaciones descritas en la Parte 9.
+Si se adopta, debe acompañarse del consentimiento correspondiente y de una política de retención.
+
+**Recomendación para el informe.** Incluir el diccionario completo —tablas, atributos, tipos, claves
+y restricciones—, reemplazar la imagen actual por una figura numerada y titulada con fuente
+declarada, e incorporar la sección de estado de uso. Declarar que `url_scans` está definida pero no
+utilizada es preferible a presentarla como parte operativa del sistema.
