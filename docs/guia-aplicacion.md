@@ -340,14 +340,94 @@ si a uno le llegaron diez estafas y al otro ninguna. **El indicador premia haber
 delincuentes**, que es lo contrario de lo que pretende medir. No es un problema de calibración sino
 de validez de constructo.
 
-**Fórmula final** (ya implementada en el código):
+### Cómo queda la formulación completa
 
-> U = mín(100; 55·mín(A,15)/15 + 45·mín(R,8)/8)
+Esto es lo que debe aparecer en §3.2.1. Las tres expresiones corresponden exactamente a lo
+implementado en el código, así que el documento y el sistema quedan consistentes.
 
-El rango de U permanece entre 0 y 100, así que la escala del CRD y sus cortes de interpretación no
-requieren recalibración. La ponderación 55/45 reconoce que analizar es la conducta preventiva básica,
-accesible a cualquier usuario, mientras que reportar exige iniciativa adicional y beneficia a
-terceros.
+**Indicador global**
+
+> **CRD = 10 · (0,65 · C + 0,35 · U)**,  con CRD ∈ [0, 1000]
+
+donde **C** es el componente de conocimiento y **U** el componente de uso, ambos expresados en una
+escala de 0 a 100.
+
+**Componente de conocimiento (C)** — porcentaje de acierto ponderado por dificultad:
+
+> **C = 100 · ( Σᵢ wᵢ · xᵢ ) / ( Σᵢ wᵢ )**
+
+- La sumatoria recorre los ítems **efectivamente respondidos** por la persona.
+- **wᵢ** es el peso por nivel de dificultad del ítem: básico = 1, intermedio = 2, avanzado = 3.
+- **xᵢ** = 1 si la respuesta fue correcta, 0 en caso contrario.
+- Se conserva **únicamente el primer intento** de cada ítem; los reintentos posteriores no
+  modifican C, de modo que el componente mide conocimiento y no persistencia.
+- Si la persona no ha respondido ningún ítem, C = 0.
+
+**Componente de uso (U)** — conductas preventivas, con tope por actividad:
+
+> **U = 55 · mín(A, 15) / 15 + 45 · mín(R, 8) / 8**
+
+- **A** = número de enlaces analizados.
+- **R** = número de amenazas reportadas.
+- Los topes de 15 y 8 ya acotan U al intervalo [0, 100], de modo que no se requiere una restricción
+  adicional sobre la suma.
+
+**Escala de interpretación** (sin cambios: el rango de U sigue siendo [0, 100], así que los cortes
+no requieren recalibración):
+
+| Puntaje CRD | Nivel |
+|---|---|
+| 0 – 399 | Vulnerable |
+| 400 – 599 | En formación |
+| 600 – 799 | Resiliente |
+| 800 – 1000 | Experto |
+
+### Qué cambió, exactamente
+
+| | Antes | Ahora |
+|---|---|---|
+| Componente de uso | U = mín(100; 40·mín(A,15)/15 + **30·mín(R,8)/8** + **30·mín(D,10)/10**) | U = 55·mín(A,15)/15 + 45·mín(R,8)/8 |
+| Variables | A (analizados), R (reportados), **D (detectados)** | A (analizados), R (reportados) |
+| Ponderación interna | 40 / 30 / 30 | **55 / 45** |
+| Indicador global | CRD = 10·(0,65·C + 0,35·U) | **sin cambios** |
+| Escala | 4 niveles, cortes en 400 / 600 / 800 | **sin cambios** |
+
+Solo se modifica la definición interna de U. El indicador global, la ponderación 65/35 y la escala
+quedan intactos, que es precisamente la ventaja de redistribuir el peso de D en lugar de eliminarlo
+sin reemplazo: no hay que recalibrar nada.
+
+La ponderación **55 / 45** reconoce que analizar es la conducta preventiva básica, accesible a
+cualquier usuario, mientras que reportar exige una iniciativa adicional y beneficia a terceros.
+
+### Ejemplo de cálculo, para incluir en el informe
+
+Un usuario que ha respondido ejercicios con 75 % de acierto ponderado, ha analizado 10 enlaces y ha
+reportado 3 amenazas:
+
+> U = 55 · (10/15) + 45 · (3/8) = 36,67 + 16,88 = **53,54**
+>
+> CRD = 10 · (0,65 · 75 + 0,35 · 53,54) = 10 · (48,75 + 18,74) = **675** → nivel *Resiliente*
+
+### Y por qué el criterio de §3.2.4 debe aplicarse sobre ΔC
+
+En la aplicación inicial del instrumento **U = 0 por definición**, porque la persona aún no ha usado
+la herramienta. Eso tiene una consecuencia aritmética que conviene declarar: el componente de uso
+puede aportar por sí solo hasta
+
+> 10 · 0,35 · 100 = **350 puntos**
+
+de variación, más del doble del umbral de 150 que fija §3.2.4. Un usuario que respondiera 100 % en
+ambas aplicaciones —es decir, **sin aprendizaje alguno**, ΔC = 0— «cumpliría» el criterio solo por
+haber usado la aplicación. Está comprobado empíricamente en el sistema.
+
+La medida que sí evidencia aprendizaje es la ganancia de conocimiento aislada:
+
+> **ΔC = C_post − C_pre**,  y su contribución al indicador es 10 · 0,65 · ΔC = **6,5 · ΔC**
+
+Por eso el sistema reporta ΔCRD y ΔC como dos cifras distintas, y por eso se recomienda que el
+criterio de éxito se enuncie sobre ΔC. Con el umbral actual de 150 puntos de CRD, el equivalente en
+conocimiento es **ΔC ≥ 23,1 puntos porcentuales** (porque 150 / 6,5 = 23,08), cifra que conviene
+redondear y declarar explícitamente si se adopta este criterio.
 
 **➕ Texto final sobre los topes y las ponderaciones** (el comentario también pedía justificarlos; la
 respuesta honesta es que no hay con qué, y el propio comentario ofrece la salida):
