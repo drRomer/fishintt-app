@@ -324,10 +324,18 @@ no para la precisión, pese a que el objetivo b) la compromete:
 El valor medido es 100 %, así que se cumple con holgura. Fijarlo igualmente es necesario para que la
 métrica sea evaluable y no meramente informativa.
 
-## 4.5 🔁 §3.2.1 — La fórmula del CRD: eliminar el componente D `#149`
+## 4.5 ✅ §3.2.1 — La fórmula del CRD: eliminar el componente D `#149`
+
+> ✅ **Ya aplicado en el documento** (verificado sobre el archivo guardado el 8 de noviembre a las
+> 22:51). §3.2.1 ya trae la fórmula sin D, la definición de variables sin D y el párrafo de
+> «parámetros de diseño establecidos por juicio experto». Aparecen como **cambios controlados**, no
+> como texto plano — ver el cierre del Paso 10.
+>
+> Lo que sigue queda como referencia: la formulación completa en un solo lugar, por si hay que
+> defenderla en la presentación o verificar que el documento y el código coinciden.
 
 **Por qué — y esta es la objeción más de fondo de toda la revisión:** el componente D **no mide
-resiliencia, mide exposición**. La fórmula actual es
+resiliencia, mide exposición**. La fórmula original era
 
 > U = mín(100; 40·mín(A,15)/15 + 30·mín(R,8)/8 + 30·mín(D,10)/10)
 
@@ -426,11 +434,10 @@ La medida que sí evidencia aprendizaje es la ganancia de conocimiento aislada:
 
 Por eso el sistema reporta ΔCRD y ΔC como dos cifras distintas.
 
-> ✅ **Esto ya está aplicado en el documento.** §3.2.4 enuncia el criterio sobre ΔC con un umbral de
-> **15 puntos porcentuales**, equivalente a 97,5 puntos de CRD (= 6,5 · 15), e incluye la
-> justificación aritmética completa. **No hay que cambiar nada ahí.** Solo verifica que §3.2.1 use la
-> fórmula sin D, porque hoy todavía tiene la versión antigua y el documento se contradice consigo
-> mismo entre §3.2.1 y §3.2.4.
+> ✅ **Esto ya está en el documento, como texto vigente y sin marcas de cambio.** §3.2.4 enuncia el
+> criterio sobre ΔC con un umbral de **15 puntos porcentuales**, equivalente a 97,5 puntos de CRD
+> (= 6,5 · 15), e incluye la justificación aritmética completa con el caso del participante que
+> responde 12/12 en ambas aplicaciones. **No hay que cambiar nada ahí.**
 
 **➕ Texto final sobre los topes y las ponderaciones** (el comentario también pedía justificarlos; la
 respuesta honesta es que no hay con qué, y el propio comentario ofrece la salida):
@@ -1672,7 +1679,7 @@ revisa **cada** aparición.
 - [ ] 4.2 objetivos específicos b) c) d) e) `#139` `#143` `#145`
 - [ ] 4.3 objetivo b): frase duplicada + redacción `#144`
 - [ ] 4.4 §3.2.4 conjunto de evaluación + criterio de precisión `#144`
-- [ ] 4.5 §3.2.1 fórmula del CRD sin D + parámetros `#149`
+- [x] 4.5 §3.2.1 fórmula del CRD sin D + parámetros `#149` — ya aplicado
 - [ ] 4.6 protocolo de validación, cinco bloques `#146`
 - [ ] 5.1 §4.2.1 Ley 21.719 `#203`
 - [ ] 5.2 §4.2.2 fases del HCD `#210`
@@ -1701,6 +1708,12 @@ revisa **cada** aparición.
 - [ ] Subsección «estado de uso» con `url_scans` declarada como no utilizada `#269`
 
 ### Cierre
+- [ ] **Revisar los cambios controlados.** El documento tiene el control de cambios activado: al 8 de
+      noviembre, **32 inserciones y 73 eliminaciones** pendientes de aceptar o rechazar, más los **23
+      comentarios** de la revisión. Antes de entregar hay que aceptarlos y eliminar los comentarios
+      ya resueltos — si no, el evaluador recibe un documento con las dos versiones encima.
+      Conviene además trabajar con la vista en «Sin marcas» mientras se redacta: con el marcado
+      visible es fácil leer como vigente un texto que en realidad está eliminado.
 - [ ] Las diez búsquedas de control del Paso 10
 - [ ] Índice general actualizado con los capítulos 8, 9 y 10
 - [ ] Numeración de tablas y figuras corrida tras las inserciones
