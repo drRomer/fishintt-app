@@ -424,10 +424,13 @@ La medida que sí evidencia aprendizaje es la ganancia de conocimiento aislada:
 
 > **ΔC = C_post − C_pre**,  y su contribución al indicador es 10 · 0,65 · ΔC = **6,5 · ΔC**
 
-Por eso el sistema reporta ΔCRD y ΔC como dos cifras distintas, y por eso se recomienda que el
-criterio de éxito se enuncie sobre ΔC. Con el umbral actual de 150 puntos de CRD, el equivalente en
-conocimiento es **ΔC ≥ 23,1 puntos porcentuales** (porque 150 / 6,5 = 23,08), cifra que conviene
-redondear y declarar explícitamente si se adopta este criterio.
+Por eso el sistema reporta ΔCRD y ΔC como dos cifras distintas.
+
+> ✅ **Esto ya está aplicado en el documento.** §3.2.4 enuncia el criterio sobre ΔC con un umbral de
+> **15 puntos porcentuales**, equivalente a 97,5 puntos de CRD (= 6,5 · 15), e incluye la
+> justificación aritmética completa. **No hay que cambiar nada ahí.** Solo verifica que §3.2.1 use la
+> fórmula sin D, porque hoy todavía tiene la versión antigua y el documento se contradice consigo
+> mismo entre §3.2.1 y §3.2.4.
 
 **➕ Texto final sobre los topes y las ponderaciones** (el comentario también pedía justificarlos; la
 respuesta honesta es que no hay con qué, y el propio comentario ofrece la salida):
@@ -443,7 +446,54 @@ respuesta honesta es que no hay con qué, y el propio comentario ofrece la salid
 
 ## 4.6 ➕ §3.2 — El protocolo de validación `#146`
 
-El comentario identifica cinco carencias. Agrega estos cinco bloques.
+### Dónde va: en un apartado nuevo, §3.2.5
+
+**Es agregar, no reemplazar.** Se verificó contra el documento: §3.2 tiene hoy cuatro apartados
+—3.2.1 componentes y fórmula, 3.2.2 escala, 3.2.3 instrumento, 3.2.4 criterios de éxito— y **ninguno
+contiene protocolo de validación**. No hay tamaño de muestra, criterio de selección, diseño,
+contrabalanceo ni resguardos éticos. Lo único que existe es la frase del objetivo e), «a una muestra
+de usuarios con distintos niveles de competencia digital», que enuncia la intención sin especificar
+nada.
+
+Por eso el protocolo va como un apartado nuevo:
+
+> **3.2.5 PROTOCOLO DE VALIDACIÓN**
+
+**No renumeres los apartados existentes.** El documento referencia «3.2.4» desde otras secciones —al
+menos desde los criterios de aceptación del capítulo de requerimientos—, así que insertar el
+protocolo como 3.2.4 y correr los criterios a 3.2.5 rompería esas referencias. Agregarlo al final es
+limpio y no toca nada.
+
+### Qué es adición y qué toca texto existente
+
+| Bloque | Acción | Texto afectado hoy |
+|---|---|---|
+| a) Muestra | ➕ Agregar | Nada. Solo la frase vaga del objetivo e), que este bloque concreta |
+| b) Grupo control / diseño preexperimental | ➕ Agregar | Nada |
+| c) Contrabalanceo | ➕ Agregar en §3.2.5 **y** 🔁 ajustar una frase de §3.2.3 (ver abajo) |
+| d) Consentimiento y ética | ➕ Agregar | Nada |
+| e) Declarar que no se ejecutó | ➕ Agregar al cierre | Nada |
+
+### 🔁 El ajuste en §3.2.3
+
+§3.2.3 dice hoy que la medición se realiza «mediante dos aplicaciones del mismo instrumento, **con
+ítems distintos pero equivalentes en estructura y dificultad**». Esa es una **afirmación de
+equivalencia que el documento no demuestra**, y es exactamente el punto que el comentario #146
+señala. Reemplázala por:
+
+> La medición se realiza mediante dos aplicaciones del mismo instrumento, con ítems distintos
+> construidos bajo idéntica estructura —cuatro ítems de cada nivel de dificultad, con la misma
+> ponderación— y a partir de las mismas tipologías de suplantación. La equivalencia de dificultad
+> entre ambas formas no fue establecida psicométricamente; el diseño controla ese riesgo mediante el
+> contrabalanceo de su orden de administración, especificado en 3.2.5.
+
+> Es el movimiento clave: en lugar de **afirmar** la equivalencia, se declara que no está demostrada
+> y se explica el mecanismo que vuelve innecesario demostrarla. Una afirmación no probada es
+> atacable; un factor de confusión controlado por diseño, no.
+
+### Los cinco bloques de §3.2.5
+
+Agrega estos cinco bloques en este orden.
 
 ### a) ➕ Tamaño y criterio de selección de la muestra
 
