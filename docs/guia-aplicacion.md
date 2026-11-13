@@ -1605,7 +1605,7 @@ hizo:
 > un conjunto de afinamiento de 77 enlaces y un conjunto de validación independiente de 45 enlaces,
 > este último con vectores evasivos ausentes del primero. La ampliación a un banco de mayor tamaño,
 > con enlaces capturados de un repositorio público verificado, queda declarada como trabajo
-> pendiente en 9.6.
+> pendiente en 9.7.
 
 ---
 
@@ -1613,12 +1613,12 @@ hizo:
 
 ### 9.1 INTRODUCCIÓN DEL CAPÍTULO
 
-> El presente capítulo reporta la evaluación del prototipo construido. Se organiza en dos partes
-> asimétricas y conviene anticipar esa asimetría: la evaluación técnica del motor de detección se
-> ejecutó y sus resultados se presentan en detalle, mientras que la validación con usuarios
-> especificada en 3.2.5 no alcanzó a realizarse dentro del período del proyecto. Los criterios de
-> éxito de 3.2.4 se verifican por tanto de forma parcial, y el apartado 9.7 declara exactamente
-> cuáles cuentan con evidencia y cuáles no.
+> El presente capítulo reporta la evaluación del prototipo construido, y conviene anticipar que su
+> alcance es desigual. La evaluación técnica del motor de detección se ejecutó y sus resultados se
+> presentan en detalle; las pruebas de aislamiento de datos comprometidas en el objetivo d) se
+> reportan en 9.6; y la validación con usuarios especificada en 3.2.5 no alcanzó a realizarse dentro
+> del período del proyecto. Los criterios de éxito de 3.2.4 se verifican por tanto de forma parcial,
+> y el apartado 9.8 declara exactamente cuáles cuentan con evidencia y cuáles no.
 
 ### 9.2 DISEÑO DE LA EVALUACIÓN DEL MOTOR
 
@@ -1640,7 +1640,7 @@ hizo:
 > Los enlaces legítimos son dominios oficiales reales de las instituciones suplantadas con mayor
 > frecuencia, incluyendo deliberadamente entidades ausentes de la lista blanca del motor. Los
 > enlaces fraudulentos son casos curados a partir de tipologías documentadas y no capturas en vivo
-> de un repositorio público; esta limitación se discute en 9.6.
+> de un repositorio público; esta limitación se discute en 9.7.
 >
 > Ambas evaluaciones se ejecutan mediante comandos del propio repositorio, lo que hace la medición
 > reproducible por un tercero con acceso al código.
@@ -1717,7 +1717,52 @@ hizo:
 > Estos casos no constituyen una muestra estadística, pero sí evidencia de funcionamiento en
 > condiciones reales.
 
-### 9.6 LIMITACIONES DE LA EVALUACIÓN
+### 9.6 PRUEBAS DE AISLAMIENTO DE DATOS
+
+> El objetivo específico d) no declara el aislamiento entre grupos como un hecho, sino como «una
+> hipótesis técnica a verificar mediante pruebas de acceso cruzado». El presente apartado reporta
+> esa verificación.
+>
+> **Garantía estructural.** Las tres tablas del módulo Red Protegida tienen activado el control de
+> acceso por fila y **no declaran políticas de lectura directa**, de modo que no existe ruta de
+> consulta desde el cliente: toda lectura ocurre a través de funciones con privilegios de definidor
+> que resuelven internamente la identidad del solicitante y la contrastan con la pertenencia al
+> grupo. Un cliente que presente un token válido no obtiene filas de otro grupo porque no hay
+> consulta que se lo permita, con independencia de los parámetros que envíe. Esta propiedad se
+> deriva del esquema y es verificable por inspección del código, pero **no sustituye a la prueba
+> dinámica**: una función mal escrita podría omitir la verificación interna.
+>
+> **Diseño de la prueba de acceso cruzado.** Se constituyen dos cuentas independientes, cada una
+> administradora de su propio grupo, y en el segundo grupo se incorpora una persona protegida que
+> genera alertas. Desde la sesión de la primera cuenta se intentan las siguientes operaciones sobre
+> identificadores del segundo grupo, todas las cuales deben ser rechazadas:
+
+> **Tabla.** Casos de prueba de acceso cruzado
+
+| Caso | Operación intentada | Resultado esperado |
+|---|---|---|
+| AC-01 | Consultar los integrantes del grupo ajeno | Rechazo |
+| AC-02 | Consultar las alertas del grupo ajeno | Rechazo |
+| AC-03 | Marcar como atendida una alerta ajena | Rechazo |
+| AC-04 | Retirar a un integrante del grupo ajeno | Rechazo |
+| AC-05 | Eliminar el grupo ajeno | Rechazo |
+| AC-06 | Consulta directa a las tres tablas con sesión válida | Conjunto vacío |
+| AC-07 | Unirse al grupo ajeno con un código inválido | Rechazo |
+| AC-08 | Consultar las alertas propias desde la cuenta protegida | Solo las propias |
+
+> *Nota.* Elaboración propia.
+>
+> Se verifica además que AC-08 devuelva efectivamente las alertas de la persona protegida, porque el
+> aislamiento no puede lograrse a costa de ocultarle a cada persona su propia información: la
+> transparencia hacia la persona supervisada es un requisito declarado en 4.2.1.
+
+> ⚠️ **Completa este apartado con los resultados de una ejecución real.** El diseño de la prueba y
+> la garantía estructural son correctos y verificables, pero **el resultado de cada caso debe
+> provenir de haber corrido la prueba**, no del diseño. Si no se ejecuta, declara el apartado como
+> pendiente con la misma franqueza que 9.8, porque el objetivo d) enuncia explícitamente una
+> hipótesis a verificar y darla por verificada sin evidencia es precisamente lo que #280 objetó.
+
+### 9.7 LIMITACIONES DE LA EVALUACIÓN
 
 > Se declaran de forma explícita las cuatro limitaciones que acotan el alcance de las cifras
 > anteriores.
@@ -1737,7 +1782,7 @@ hizo:
 >    sistemático descrito en 8.3.3. Una tasa de 0 % no debe leerse como ausencia de falsos positivos
 >    en producción.
 
-### 9.7 VALIDACIÓN CON USUARIOS: NO EJECUTADA
+### 9.8 VALIDACIÓN CON USUARIOS: NO EJECUTADA
 
 > El objetivo específico e) compromete una evaluación de usabilidad mediante el instrumento System
 > Usability Scale y la medición del Coeficiente de Resiliencia Digital antes y después de la
@@ -1764,7 +1809,7 @@ hizo:
 >
 > La aplicación del protocolo de 3.2.5 constituye la primera línea de trabajo posterior.
 
-### 9.8 CONCLUSIÓN DEL CAPÍTULO
+### 9.9 CONCLUSIÓN DEL CAPÍTULO
 
 > El capítulo reportó la evaluación del motor de detección sobre dos conjuntos etiquetados
 > independientes y declaró el estado de verificación de cada criterio de éxito. Los dos criterios
@@ -1787,11 +1832,12 @@ hizo:
 > objetivo general queda sin verificar.
 >
 > **Objetivos específicos.** El objetivo a), de diagnóstico, se cumplió y se reporta en el capítulo
-> 1. Los objetivos b), c) y d) —motor de análisis heurístico, núcleo pedagógico y módulo de
-> seguridad delegada— se cumplieron y cuentan con evidencia en los capítulos 7, 8 y 9. El objetivo
-> f), de modelado de amenazas, se cumplió y se reporta en 5.5. El objetivo e) **se cumplió
+> 1. Los objetivos b) y c) —motor de análisis heurístico y núcleo pedagógico— se cumplieron y
+> cuentan con evidencia en los capítulos 7, 8 y 9. El objetivo d) se cumplió en su parte
+> constructiva, y la hipótesis de aislamiento de datos que él mismo enuncia se verifica en 9.6. El
+> objetivo f), de modelado de amenazas, se cumplió y se reporta en 5.5. El objetivo e) **se cumplió
 > parcialmente**: la evaluación técnica del motor se ejecutó y se reporta en 9.3, mientras que las
-> pruebas con usuarios no se realizaron, según se declara en 9.7.
+> pruebas con usuarios no se realizaron, según se declara en 9.8.
 
 > ⚠️ **Este apartado se escribió contra el objetivo general que el documento tiene hoy**, que es de
 > evaluación y no de construcción. Si vuelven a redactarlo, ajusta el párrafo: lo que no puede pasar
@@ -1820,7 +1866,7 @@ hizo:
 
 ### 10.3 LIMITACIONES DEL TRABAJO
 
-> Además de las limitaciones de la evaluación declaradas en 9.6, el trabajo presenta tres
+> Además de las limitaciones de la evaluación declaradas en 9.7, el trabajo presenta tres
 > limitaciones de alcance.
 >
 > La validación con usuarios no se ejecutó, de modo que la premisa central del proyecto —que la
@@ -2005,7 +2051,19 @@ constancia de Web Risk, que sea en 2.8.2 donde ya está bien planteado.
 pero ese caso de uso no existe —«CU11» no aparece en el documento— y un «include» solo puede apuntar
 a otro caso de uso. La definición está en el **Paso 7.2 a)**.
 
-## 11.8 ➕ §2.7.3 — Opcional: cambiar la cautela por cifras
+## 11.8 🔁 §7.6 — Apuntar la verificación al capítulo nuevo
+
+**Severidad: baja, pero queda colgando.** §7.6 quedó bien redactado: ya no «garantiza la
+factibilidad» sino que dice que la conformidad «no se da por supuesta: debe verificarse mediante el
+plan de pruebas de calidad». El problema es que **ese plan no existe en el documento** —la expresión
+no aparece en ninguna otra parte—, así que la frase remite a algo que el lector no puede encontrar.
+
+Una vez incorporado el capítulo 9, cambia el final por:
+
+> …no se da por supuesta: se verifica en el capítulo 9, y en particular el aislamiento de datos
+> entre grupos en 9.6.
+
+## 11.9 ➕ §2.7.3 — Opcional: cambiar la cautela por cifras
 
 No es un pendiente, es una mejora disponible. §2.7.3 quedó resuelto por el camino honesto: se
 eliminó la afirmación de que «consume mínimos recursos» y se declaró que el consumo «no ha sido
@@ -2019,7 +2077,7 @@ instalación y sin proceso residente—. El texto está en el **Paso 3.2**.
 > compatibilidad». Si esas pruebas no se van a ejecutar, esa frase promete evidencia futura que no
 > llegará, y conviene reemplazarla por la declaración de trabajo pendiente del Paso 3.2.
 
-## 11.9 🔁 Numeración automática — el comentario que queda abierto
+## 11.10 🔁 Numeración automática — el comentario que queda abierto
 
 **Severidad: alta y es de forma**, así que es la que más barato sale y más se nota. El comentario
 pide numeración automática de Word, jerarquía uniforme de subtítulos y tabla de contenidos
@@ -2030,7 +2088,7 @@ Conviene dejarla **para el final**, después de aplicar 11.1 a 11.6 y los capít
 porque la renumeración del capítulo 8 y las tablas nuevas la afectan. Y hacerla con estilos de Word,
 no a mano: es lo que impide que el problema vuelva.
 
-## 11.10 ⚠️ La decisión sobre el plan de pago
+## 11.11 ⚠️ La decisión sobre el plan de pago
 
 §2.8.2 mantiene el esquema freemium con el Plan Protegido de $2.990 mensuales. El encuadre que le
 dieron —«análisis de viabilidad, no plan de ejecución», remitiendo a §3.3.1.2— **es defendible**, y
@@ -2052,17 +2110,20 @@ con eso la tensión queda resuelta por declaración y no por omisión.
 | 4 | **11.2** defectos de edición del capítulo 2 | Dos minutos de trabajo y muy visibles |
 | 5 | **11.3** diagramas de secuencia | Único comentario de fondo que sigue tal como el profesor lo encontró |
 | 6 | **11.4, 11.5, 11.6** | Completan comentarios abordados a medias |
-| 7 | **11.8** cifras de §2.7.3, si se decide | Opcional: mejora, no corrección |
-| 8 | **11.9** numeración automática y tabla de contenidos | Al final, cuando ya nada más se mueve |
+| 7 | **11.8** §7.6 apunta al capítulo 9 | Depende de que el capítulo 9 exista |
+| 8 | **11.9** cifras de §2.7.3, si se decide | Opcional: mejora, no corrección |
+| 9 | **11.10** numeración automática y tabla de contenidos | Al final, cuando ya nada más se mueve |
 
-**11.10** no es un paso de ejecución: es una decisión del grupo sobre el plan de pago.
+**11.11** no es un paso de ejecución: es una decisión del grupo sobre el plan de pago.
 
 ---
 
 # Lista de verificación
 
 Estado contrastado contra el texto vigente de la versión del 13 de noviembre.
-**✅** verificado como aplicado · **⬜** pendiente · **❓** no pude comprobarlo con certeza, revísalo tú.
+**✅** verificado como aplicado · **⬜** pendiente. Los cuatro ítems que quedaban por confirmar se
+verificaron el 13 de noviembre: los cuatro están resueltos, tres de ellos por eliminación del texto
+problemático en lugar de su reformulación.
 
 ### Comentarios de la revisión
 
@@ -2071,13 +2132,13 @@ Estado contrastado contra el texto vigente de la versión del 13 de noviembre.
 | ✅ | 1.1 y 1.2 Resumen y Abstract: ya no hay futuro ni «se construirá» | `#3` |
 | ⬜ | 2.1 §1.1 «primeros lugares» sigue en el texto | `#21` |
 | ⬜ | 2.2 §1.3 «los encuestados» sigue en el texto | `#28` |
-| ❓ | 3.1 §2.5.2 fechar la frase del prototipo | `#3` |
+| ✅ | 3.1 §2.5.2 la frase del prototipo en fase de diseño se eliminó | `#3` |
 | ✅ | 3.2 §2.7.3 se eliminó la afirmación no respaldada | `#116` |
 | ✅ | 3.3 §2.8.4 punto de equilibrio con supuestos y sensibilidad | `#127` |
 | ✅ | 3.3 §2.8.2 licencias declaradas y citadas | `#125` |
 | ✅ | 4.1 objetivo general con un solo verbo | `#139` |
 | ✅ | 4.2 objetivos b), c) y d) con un solo verbo | `#139` `#143` `#145` |
-| ❓ | 4.3 objetivo b): frase duplicada eliminada | `#144` |
+| ✅ | 4.3 objetivo b): frase duplicada eliminada; la evaluación se consolidó en e) | `#144` |
 | ⬜ | 4.4 §3.2.4 composición de los conjuntos y criterio de precisión | `#144` |
 | ⬜ | **4.5 §3.2.1 fórmula del CRD — REGRESIÓN, el componente D volvió** | `#149` |
 | ✅ | 4.6 §3.2.5 protocolo creado: muestra, diseño, ética | `#146` |
@@ -2086,15 +2147,16 @@ Estado contrastado contra el texto vigente de la versión del 13 de noviembre.
 | ✅ | 5.2 §4.2.2 tres fases de IDEO | `#210` |
 | ✅ | 5.3 matriz de tres columnas | `#214` |
 | ✅ | 5.4 §4.2.3 no se afirma aprendizaje automático | — |
-| ❓ | 5.5 §4.2.3 argumento de la PWA reconstruido | `#239` |
+| ✅ | 5.5 §4.2.3 el dato que argumentaba en contra se retiró de ahí | `#239` |
 | ✅ | 6.1 URL completa a terceros, declarada en §5.5 | `#226` |
 | ✅ | 7.1 RF02 y RNF09 con la restricción de iOS | `#273` |
 | ⬜ | 7.2 CU11 sin definir y CU10 sin renombrar | `#259` |
 | ⬜ | 8.1 Tabla 11 sin tipos de dato ni restricciones | `#269` |
 | ⬜ | 8.2 §7.5 sigue en pseudotexto | `#277` |
 | ✅ | §7.5.2 con estilo de título | `#277` |
-| ❓ | 8.3 §7.6 cierre del capítulo de diseño | `#3` |
+| ✅ | 8.3 §7.6 ya no «garantiza la factibilidad» · ver 11.8 | `#3` |
 | ⬜ | **9 capítulos 9 y 10 — no existen** | `#280` |
+| ⬜ | 9.6 pruebas de acceso cruzado comprometidas en el objetivo d) | `#280` |
 | ⬜ | Comentario abierto: numeración automática y tabla de contenidos | forma |
 
 ### Figuras
