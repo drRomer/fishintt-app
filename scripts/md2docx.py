@@ -20,21 +20,58 @@ PT_CUERPO = 12
 PT_TITULO = 14
 
 
+PT_TABLA = 10
+
+# Atributos de fuente-de-tema. Word les da prioridad sobre la fuente
+# explicita, asi que hay que borrarlos o los encabezados salen en Calibri.
+TEMA = ("w:asciiTheme", "w:hAnsiTheme", "w:cstheme", "w:eastAsiaTheme")
+EXPLICITA = ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia")
+
+
+def forzar_rfonts(rpr):
+    rfonts = rpr.get_or_add_rFonts()
+    for attr in TEMA:
+        if rfonts.get(qn(attr)) is not None:
+            del rfonts.attrib[qn(attr)]
+    for attr in EXPLICITA:
+        rfonts.set(qn(attr), CUERPO)
+
+
 def fijar_fuente(estilo, tamano, negrita=None):
-    """Fija la fuente del estilo, incluida la referencia interna que Word usa
-    para los alfabetos no latinos: sin ella Word sustituye la tipografia."""
-    estilo.font.name = CUERPO
     estilo.font.size = Pt(tamano)
     estilo.font.color.rgb = RGBColor(0, 0, 0)
     if negrita is not None:
         estilo.font.bold = negrita
-    rpr = estilo.element.get_or_add_rPr()
-    rfonts = rpr.get_or_add_rFonts()
-    for attr in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
-        rfonts.set(qn(attr), CUERPO)
+    forzar_rfonts(estilo.element.get_or_add_rPr())
 
 
 def aplicar_formato(doc):
+    # 1. El valor por defecto del documento.
+    defaults = doc.styles.element.find(qn("w:docDefaults"))
+    if defaults is not None:
+        rpr_def = defaults.find(qn("w:rPrDefault"))
+        if rpr_def is not None:
+            rpr = rpr_def.find(qn("w:rPr"))
+            if rpr is None:
+                rpr = rpr_def.makeelement(qn("w:rPr"), {})
+                rpr_def.append(rpr)
+            forzar_rfonts(rpr)
+
+    # 2. Todos los estilos de parrafo y caracter, no solo los que uso.
+    for estilo in doc.styles:
+        el = getattr(estilo, "element", None)
+        if el is not None and hasattr(el, "get_or_add_rPr"):
+            forzar_rfonts(el.get_or_add_rPr())
+
+    # 3. El tema, que es de donde Word saca la fuente cuando no hay otra.
+    for parte in doc.part.package.iter_parts():
+        if "theme" in parte.partname and str(parte.partname).endswith(".xml"):
+            xml = parte.blob.decode("utf-8")
+            xml = re.sub(r'(<a:(?:latin|ea|cs)\b[^>]*typeface=")[^"]*(")',
+                         r"\g<1>" + CUERPO + r"\g<2>", xml)
+            parte._blob = xml.encode("utf-8")
+
+    # 4. Los tamanos.
     fijar_fuente(doc.styles["Normal"], PT_CUERPO)
     for nombre in ("Heading 1", "Heading 2", "Heading 3"):
         fijar_fuente(doc.styles[nombre], PT_TITULO, negrita=True)
@@ -88,8 +125,11 @@ def bloque(doc, lineas):
             for j, celda in enumerate(fila[: len(filas[0])]):
                 p = t.cell(i, j).paragraphs[0]
                 runs(p, celda)
-                if i == 0:
-                    for r in p.runs:
+                for r in p.runs:
+                    r.font.name = CUERPO
+                    r.font.size = Pt(PT_TABLA)
+                    forzar_rfonts(r.element.get_or_add_rPr())
+                    if i == 0:
                         r.bold = True
 
     for ln in lineas:
