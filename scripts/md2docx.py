@@ -213,6 +213,35 @@ def seccion(src, desde, hasta):
     return txt[i + 1:j]
 
 
+def main_1011():
+    """Segunda entrega: los capitulos 10 y 11."""
+    salida = sys.argv[1]
+    src = SCRATCH / "cap1011.md"
+    doc = Document()
+    aplicar_formato(doc)
+
+    doc.add_heading("Bloques para pegar — capítulos 10 y 11", level=1)
+    nota(doc, "Este archivo NO es parte del informe. Copia desde el encabezado que sigue al "
+              "título rojo hasta el final de ese bloque. Borra los textos en rojo.")
+    p = doc.add_paragraph()
+    runs(p, "Los dos capítulos van **entre el 9 y el 12**, en orden. Si ya pegaste el 12 y el 13, "
+            "colócalos justo antes del 12.")
+
+    separador(doc, "BLOQUE 5 — CAPÍTULO 10",
+              "Va después del capítulo 9 y antes del 12. Título «10 Gestión del Cambio» en "
+              "estilo Título 1.")
+    doc.add_heading("10 GESTIÓN DEL CAMBIO", level=1)
+    bloque(doc, seccion(src, "## CAP10", "## CAP11"))
+
+    separador(doc, "BLOQUE 6 — CAPÍTULO 11",
+              "Va inmediatamente después del capítulo 10 y antes del 12.")
+    doc.add_heading("11 GESTIÓN DE RIESGOS", level=1)
+    bloque(doc, seccion(src, "## CAP11", "ZZZZZ"))
+
+    doc.save(salida)
+    print("escrito:", salida)
+
+
 def main():
     salida = sys.argv[1]
     p9 = SCRATCH / "paso9b.md"
@@ -256,4 +285,8 @@ def main():
     print("escrito:", salida)
 
 
-main()
+if __name__ == "__main__":
+    if len(sys.argv) > 3 and sys.argv[3] == "1011":
+        main_1011()
+    else:
+        main()
