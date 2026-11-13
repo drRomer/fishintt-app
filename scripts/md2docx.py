@@ -13,6 +13,36 @@ import pathlib
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
+
+CUERPO = "Arial"
+PT_CUERPO = 12
+PT_TITULO = 14
+
+
+def fijar_fuente(estilo, tamano, negrita=None):
+    """Fija la fuente del estilo, incluida la referencia interna que Word usa
+    para los alfabetos no latinos: sin ella Word sustituye la tipografia."""
+    estilo.font.name = CUERPO
+    estilo.font.size = Pt(tamano)
+    estilo.font.color.rgb = RGBColor(0, 0, 0)
+    if negrita is not None:
+        estilo.font.bold = negrita
+    rpr = estilo.element.get_or_add_rPr()
+    rfonts = rpr.get_or_add_rFonts()
+    for attr in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
+        rfonts.set(qn(attr), CUERPO)
+
+
+def aplicar_formato(doc):
+    fijar_fuente(doc.styles["Normal"], PT_CUERPO)
+    for nombre in ("Heading 1", "Heading 2", "Heading 3"):
+        fijar_fuente(doc.styles[nombre], PT_TITULO, negrita=True)
+    for nombre in ("List Bullet", "List Number"):
+        try:
+            fijar_fuente(doc.styles[nombre], PT_CUERPO)
+        except KeyError:
+            pass
 
 SCRATCH = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else pathlib.Path(".")
 
@@ -148,6 +178,7 @@ def main():
     p9 = SCRATCH / "paso9b.md"
     pd = SCRATCH / "parteD.md"
     doc = Document()
+    aplicar_formato(doc)
 
     doc.add_heading("Bloques para pegar en el informe Fishin't", level=1)
     nota(doc, "Este archivo NO es parte del informe. Cada bloque empieza en una página "
