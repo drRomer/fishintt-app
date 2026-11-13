@@ -162,10 +162,12 @@ def bloque(doc, lineas):
                 cerrar_parrafo()
                 cerrar_lista()
                 continue
-            if t.startswith("⚠️"):
+            if t.startswith("⚠️") or t.startswith("ANCLA:"):
                 cerrar_parrafo()
                 cerrar_lista()
-                nota(doc, "NO PEGAR — nota para ti: " + t.replace("⚠️", "").strip())
+                etiqueta = ("DÓNDE VA — no pegar: " if t.startswith("ANCLA:")
+                            else "NO PEGAR — nota para ti: ")
+                nota(doc, etiqueta + t.replace("⚠️", "").replace("ANCLA:", "").strip())
                 continue
             if t.startswith("- ") or re.match(r"^\d+\.\s", t):
                 cerrar_parrafo()
@@ -211,6 +213,20 @@ def seccion(src, desde, hasta):
     except StopIteration:
         j = len(txt)
     return txt[i + 1:j]
+
+
+def main_d():
+    """Solo las correcciones puntuales, corregidas contra la version (6)."""
+    salida = sys.argv[1]
+    doc = Document()
+    aplicar_formato(doc)
+    doc.add_heading("Correcciones puntuales — versión corregida", level=1)
+    nota(doc, "Reemplaza al BLOQUE 4 del archivo anterior, que tenía mal la ubicación de cuatro "
+              "correcciones. Cada corrección trae primero un recuadro rojo que dice DÓNDE VA y con "
+              "qué palabras empieza el párrafo que hay que buscar. Ese recuadro NO se pega.")
+    bloque(doc, (SCRATCH / "parteD.md").read_text(encoding="utf-8").splitlines())
+    doc.save(salida)
+    print("escrito:", salida)
 
 
 def main_1011():
@@ -286,7 +302,10 @@ def main():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 3 and sys.argv[3] == "1011":
+    modo = sys.argv[3] if len(sys.argv) > 3 else ""
+    if modo == "1011":
         main_1011()
+    elif modo == "d":
+        main_d()
     else:
         main()
