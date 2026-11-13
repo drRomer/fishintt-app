@@ -1958,9 +1958,9 @@ no contempla. El material es el mismo; cambia dónde va.
 
 ## 9.C ➕ Capítulo 13 — CONCLUSIONES
 
-> La plantilla pide que las conclusiones interpreten los resultados **de acuerdo con el logro de los
-> objetivos específicos**, con redacción clara, concreta y directa. Por eso este capítulo es breve y
-> no repite las tablas de 12.3: las interpreta.
+**Nota, no se pega:** la plantilla pide que las conclusiones interpreten los resultados de acuerdo
+con el logro de los objetivos específicos, con redacción clara, concreta y directa. Por eso este
+capítulo es breve y no repite las tablas de 12.3: las interpreta.
 
 > El proyecto se propuso reducir la vulnerabilidad frente al phishing en usuarios chilenos con
 > competencias digitales básicas mediante un prototipo que integrara detección de enlaces,
