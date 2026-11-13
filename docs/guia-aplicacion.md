@@ -92,6 +92,80 @@ documento puede describir el plan de pago como existente en el prototipo.
 
 ---
 
+## La plantilla oficial reorganiza el trabajo
+
+Revisada `Plantilla de Proyecto de Título 2026-01-ACT.docx`. Tiene **13 capítulos**, y el documento
+actual sigue otra estructura en los capítulos 2 a 5. Dos consecuencias inmediatas:
+
+- **El capítulo 8 del equipo estaba bien.** Coincide exactamente con el de la plantilla —puesta en
+  marcha, respaldo y mantención, capacitación—, de modo que mi propuesta anterior de meterle
+  «alcance de lo construido» y «el motor de detección» **era incorrecta**. Ese contenido va a otra
+  parte, según la tabla de abajo.
+- **Los capítulos 9 y 10 que propuse no existen en la plantilla.** Lo que la plantilla pide es
+  **9 Ingeniería de QA**, **12 Resultados y evaluación final** y **13 Conclusiones**. El material
+  sigue sirviendo, pero redistribuido.
+
+### Dónde va cada cosa
+
+| Capítulo de la plantilla | Estado en el documento |
+|---|---|
+| 1 Introducción | ✅ Coincide. Falta solo «1.5 Comentarios generales del capítulo» |
+| 2 Planteamiento del proyecto | ⚠️ El contenido existe repartido entre sus capítulos 2 y 3. Hay que **reorganizarlo**: 2.2 descripción del problema, 2.3 diagnóstico, 2.4 justificación, 2.5 objetivos, 2.6 alcance |
+| 3 Marco teórico y referencial | ⚠️ Parcial. Su 4.2.1 y 4.2.3 son fundamentación conceptual; su 2.5 (competidores) es el estado del arte y la plantilla pide ahí **tabla resumen de fortalezas y debilidades** |
+| 4 Marco metodológico | ⚠️ Parcial. La matriz de metodologías existe. **Falta 4.4: plan metodológico adaptado y cronograma** |
+| 5 Alternativas de solución | ❌ **El hueco más grande.** Ver abajo |
+| 6 Ingeniería de requerimientos | ✅ Coincide. Su «6.3.5 Criterios de aceptación» debería llamarse «Requisitos específicos del producto» |
+| 7 Ingeniería de diseño | ⚠️ Parcial. Ver abajo |
+| 8 Implementación | ✅ Coincide. Verificar que las tablas tengan las columnas que la plantilla fija |
+| 9 Ingeniería de QA | ❌ **No existe.** Aquí va la evaluación del motor y las pruebas de aislamiento |
+| 10 Gestión del cambio | ❌ No existe. ADKAR (Hiatt, 2006) ya está en la bibliografía, así que estaba previsto |
+| 11 Gestión de riesgos | ❌ No existe como capítulo. ISO 31000 está en la bibliografía y §3.2.5 ya cita un riesgo como «RY01» |
+| 12 Resultados y evaluación final | ❌ **No existe.** Aquí va casi todo lo que yo había puesto en «capítulo 9» |
+| 13 Conclusiones | ❌ No existe |
+| Glosario, Anexos, Apéndices | ❌ No existen, y §3.2.5 ya remite a un «Anexo 2» |
+
+### Capítulo 5: lo que falta por completo
+
+Es el capítulo que más trabajo nuevo exige, y nada de lo que hay sirve directamente. La plantilla
+pide:
+
+- **Tres alternativas de solución** descritas en detalle, cada una con su arquitectura, tecnología,
+  costos y tiempos. El documento argumenta por qué una PWA y no una aplicación nativa, pero no lo
+  plantea como tres alternativas evaluables.
+- **Estudio de factibilidad** con tres dimensiones —técnica, económica y operativa— cuyas
+  ponderaciones **sumen 100 %**, justificando por qué esos porcentajes, con tabla de criterios de
+  puntaje y evaluación **de cada alternativa por separado**.
+- **TCO a cuatro años** como mínimo, y según el proyecto **VAN, TIR y payback**. Ninguno aparece
+  hoy. El análisis de punto de equilibrio de §2.8.4 es material aprovechable, pero no es lo que se
+  pide.
+- **Carta Gantt** que refleje la metodología seleccionada e **incluya la gestión del cambio y de
+  riesgos desde el inicio**.
+- Beneficios y análisis costo-beneficio.
+
+> Hay una tensión que conviene resolver temprano: la plantilla asume un proyecto con cliente y
+> retorno de inversión —habla de «vender la idea como si fuera un proveedor» y de entrevista con el
+> cliente—, mientras que la decisión del grupo es que la solución sea gratuita y no comercial. No
+> es incompatible, pero obliga a declarar el supuesto: el estudio económico se formula como
+> análisis de viabilidad y sostenibilidad, no de retorno, y el VAN se evalúa sobre el costo evitado
+> social —fraude prevenido— y no sobre ingresos. Convendría preguntárselo al profesor antes de
+> escribirlo.
+
+### Capítulo 7: tres huecos y un cambio de ubicación
+
+- **Falta 7.2 Diagrama de sistema de alto nivel**, **7.6 Diseño de integraciones**, **7.7
+  Dimensionamiento y arquitectura detallada** y **7.8 Diagrama de despliegue**.
+- **7.3 Diseño funcional** pide, por cada caso de uso, su **descripción esencial expandida** en
+  tabla. Hoy solo existe la descripción de alto nivel de §6.4.3, que es otra cosa.
+- **Los diagramas de secuencia cambian de lugar**: la plantilla los pide en **7.4.2 Flujos de
+  procesos**, mientras que su 7.5 actual los contiene y la plantilla reserva 7.5 para el **diseño
+  de interfaces de usuario**. Eso no cambia el trabajo del Paso 11.3, solo dónde va.
+- **Buena noticia para `#269`:** la plantilla fija para 7.4.1 Modelo de datos una tabla con columnas
+  **Campo / Tipo / Largo / Nulo / Observaciones**. Es exactamente lo que el comentario reclamaba y
+  lo que el Paso 8.1 de esta guía ya tiene preparado. El diccionario se traslada a ese formato
+  directamente.
+
+---
+
 ## Paso 0 — Tres decisiones antes de escribir
 
 Estas tres cambian el texto que vas a pegar más adelante. Resuélvelas primero.
@@ -1465,189 +1539,155 @@ que el sistema existe.
 
 ---
 
-# Paso 9 — Lo que falta para cerrar #280
+# Paso 9 — Capítulos 9, 12 y 13 de la plantilla
 
-**Reescrito el 13 de noviembre** para encajar con el capítulo 8 que ya existe en el documento.
+**Reescrito el 13 de noviembre** contra la estructura de la plantilla oficial. La versión anterior
+proponía un «capítulo 9 de pruebas y resultados» y un «capítulo 10 de conclusiones» que la plantilla
+no contempla. El material es el mismo; cambia dónde va.
 
-El capítulo 8 del equipo es de **puesta en marcha**: ambientes y despliegue, respaldo y mantención,
-capacitación. Está bien y no hay que tocarlo. Lo que no cubre —y es lo que #280 reclama— es **qué se
-construyó** y **qué resultados dio**. Eso se resuelve con dos subsecciones nuevas en el capítulo 8 y
-dos capítulos nuevos.
-
-> Todas las cifras están medidas sobre el repositorio al 13 de noviembre y se reproducen con
-> `npm run benchmark` y `npm run validar`.
+> Todas las cifras están medidas sobre el repositorio y se reproducen con `npm run benchmark` y
+> `npm run validar`. Las pruebas marcadas como ejecutadas se corrieron de verdad; las que no, están
+> declaradas como pendientes y **no deben rellenarse con resultados supuestos**.
 
 ---
 
-## 9.A ➕ Dos subsecciones nuevas en el capítulo 8
+## 9.A ➕ Capítulo 9 — INGENIERÍA DE QA
 
-⚠️ **Esto implica renumerar cuatro encabezados dentro del capítulo 8.** Es local al capítulo y no hay
-referencias cruzadas a esos números desde otras secciones, pero hazlo con numeración automática de
-Word para que el índice se actualice solo —lo que además resuelve el único comentario que queda
-abierto.
+### 9.1 Introducción del capítulo
 
-| Hoy | Queda como |
-|---|---|
-| 8.1 INTRODUCCIÓN DEL CAPÍTULO | 8.1 — sin cambios |
-| — | **8.2 ALCANCE DE LO CONSTRUIDO** (nueva) |
-| — | **8.3 EL MOTOR DE DETECCIÓN** (nueva) |
-| 8.2 PLAN DE IMPLEMENTACIÓN Y PUESTA EN MARCHA | 8.4 |
-| 8.3 POLÍTICA DE RESPALDO Y MANTENCIÓN | 8.5 |
-| 8.4 CAPACITACIÓN | 8.6 |
-| 8.5 CONCLUSIÓN DEL CAPÍTULO | 8.7 |
+> El presente capítulo especifica el plan de pruebas del prototipo y reporta su ejecución. El
+> alcance es desigual y conviene anticiparlo: las pruebas funcionales del motor de detección, las
+> de integración con servicios externos y las integrales en contexto real se ejecutaron y sus
+> resultados se reportan; las pruebas de seguridad se diseñaron y su estado de ejecución se declara
+> en 9.3.4; y las pruebas de carga se limitan a la medición del peso del cliente, sin ensayo de
+> concurrencia. El capítulo distingue en todo momento el resultado esperado del resultado obtenido.
 
-### 8.2 ALCANCE DE LO CONSTRUIDO
+### 9.2 Plan de pruebas
 
-> El sistema se implementó como aplicación web progresiva sobre Next.js 14 y React, con lógica de
-> servidor en funciones sin infraestructura dedicada y persistencia en PostgreSQL gestionado,
-> conforme a la arquitectura de tres capas especificada en 7.2.1. El repositorio registra **50
-> incrementos versionados** y el sistema se encuentra desplegado y accesible públicamente.
+#### 9.2.1 Pruebas funcionales / unitarias
+
+> La prueba funcional central del sistema es la evaluación del motor de detección sobre conjuntos
+> de enlaces etiquetados, por ser la función de la que dependen los objetivos b) y e).
 >
-> La aplicación comprende **16 vistas** y los tres módulos definidos en 2.4.1:
+> La evaluación se realiza sobre **dos conjuntos deliberadamente separados**, distinción
+> metodológicamente necesaria porque los indicadores del motor se ajustaron observando los fallos
+> del primero: medir sobre ese mismo conjunto produce una cifra optimista por construcción.
 >
-> - **Analizador de enlaces**, con panel de resultado y evidencia explicada, que constituye la
->   realización de RF01 y RF02.
-> - **Cyber-Academy**, con 13 cápsulas formativas organizadas en tres niveles de dificultad
->   progresiva, 13 ejercicios de cierre y el instrumento de medición del Coeficiente de Resiliencia
->   Digital de 24 ítems, doce en cada aplicación.
-> - **Red Protegida**, con creación de grupo, vinculación mediante código de invitación, panel de
->   alertas con refresco automático y control de acceso por fila.
+> - **Conjunto de afinamiento:** 77 enlaces, 38 fraudulentos y 39 legítimos, ponderados al contexto
+>   chileno con 69 casos nacionales y 8 internacionales.
+> - **Conjunto de validación:** 45 enlaces, 22 fraudulentos y 23 legítimos, construidos con un
+>   criterio de muestreo distinto e incorporando vectores evasivos que el primero apenas cubría.
 >
-> La capa de datos consta de tres esquemas relacionales y **15 funciones almacenadas** con
-> privilegios de definidor, patrón adoptado para evitar la recursión mutua entre políticas de
-> seguridad a nivel de fila descrita en 7.3.
+> Los enlaces legítimos son dominios oficiales reales, incluyendo deliberadamente instituciones
+> ausentes de la lista blanca del motor. Los fraudulentos son casos curados a partir de tipologías
+> documentadas y no capturas en vivo, limitación declarada en 12.4.
+
+> **Tabla.** Plan de pruebas funcionales
+
+| Caso de uso | Prueba | Procedimiento | Resultado esperado | Fecha |
+|---|---|---|---|---|
+| CU01 | PF-01 Exhaustividad | Ejecutar el motor determinista sobre los enlaces fraudulentos de ambos conjuntos | ≥ 85 % de detección (3.2.4) | Nov-2026 |
+| CU01 | PF-02 Falsos positivos | Ejecutar sobre los enlaces legítimos de ambos conjuntos | ≤ 10 % (3.2.4) | Nov-2026 |
+| CU01 | PF-03 Desglose por dificultad | Clasificar los fallos en directa, media y evasiva | Localizar la debilidad por categoría | Nov-2026 |
+| CU01 | PF-04 Atribución de indicador | Verificar que cada veredicto nombre el indicador que lo originó | Un indicador explícito por veredicto | Nov-2026 |
+| CU03 | PF-05 Primer intento | Responder dos veces el mismo ejercicio | Solo el primer intento altera el componente C | Nov-2026 |
+| CU05 | PF-06 Cálculo del CRD | Contrastar el valor mostrado con la fórmula de 3.2.1 | Coincidencia exacta | Nov-2026 |
+
+> *Nota.* Elaboración propia.
+
+#### 9.2.2 Pruebas de integraciones
+
+> **Tabla.** Plan de pruebas de integraciones
+
+| Prueba | Módulos | Procedimiento | Resultado esperado | Fecha |
+|---|---|---|---|---|
+| PI-01 | Motor ↔ Google Safe Browsing v4 | Consultar la URL de prueba publicada por el proveedor | Coincidencia positiva | Nov-2026 |
+| PI-02 | Motor ↔ VirusTotal v3 | Consultar un enlace con detecciones conocidas y aplicar la regla de umbral | Peligroso solo con dos o más motores | Nov-2026 |
+| PI-03 | Motor ↔ RDAP | Consultar la antigüedad de un dominio genérico | Fecha de creación recuperada | Nov-2026 |
+| PI-04 | Motor ↔ WHOIS de NIC Chile | Consultar la antigüedad de un dominio `.cl` | Fecha de creación recuperada | Nov-2026 |
+| PI-05 | Motor ↔ DNS | Resolver un dominio existente y uno inexistente | Distinguir inexistencia de fallo del resolutor | Nov-2026 |
+| PI-06 | Motor ↔ TLS | Abrir handshake con validación estricta | Detectar certificado vencido o ajeno | Nov-2026 |
+| PI-07 | Motor ↔ IA generativa | Inspeccionar la carga enviada al proveedor | Solo anatomía; nunca el localizador completo | Nov-2026 |
+| PI-08 | Cliente ↔ base de datos | Reportar un enlace ya reportado | El contador se incrementa sin duplicar la fila | Nov-2026 |
+| PI-09 | Degradación sin credenciales | Ejecutar sin las claves opcionales | El sistema opera con heurística pura, sin error | Nov-2026 |
+
+> *Nota.* Elaboración propia. PI-09 verifica un requisito de diseño: los servicios externos son
+> opcionales y su ausencia no debe degradar el sistema a un estado inoperante.
+
+#### 9.2.3 Pruebas integrales
+
+> **Tabla.** Plan de pruebas integrales
+
+| Prueba | Módulos | Procedimiento | Resultado esperado | Fecha |
+|---|---|---|---|---|
+| PT-01 | Analizador + Cyber-Academy | Analizar un enlace de riesgo y completar la microcápsula ofrecida | La cápsula corresponde al indicador dominante y el ejercicio actualiza el CRD | Nov-2026 |
+| PT-02 | Analizador + Red Protegida | Analizar un enlace de riesgo desde una cuenta protegida | La alerta aparece en el panel del administrador | Nov-2026 |
+| PT-03 | Reporte + detección comunitaria | Reportar un enlace y analizar otro estructuralmente similar | El segundo se marca por coincidencia de firma | Nov-2026 |
+| PT-04 | Flujo completo con dominio real | Analizar un dominio de imitación registrado para el ensayo | Veredicto de peligro con las razones explicitadas | Nov-2026 |
+
+> *Nota.* Elaboración propia.
+
+#### 9.2.4 Pruebas de seguridad
+
+> El objetivo específico d) no declara el aislamiento entre grupos como un hecho, sino como «una
+> hipótesis técnica a verificar mediante pruebas de acceso cruzado». Este apartado especifica esa
+> verificación.
 >
-> Queda fuera de lo construido todo lo excluido en 3.3.1.2, y en particular la operación comercial
-> del modelo descrito en 2.8: el prototipo no implementa planes de pago, pasarela de cobro ni
-> control de cuotas por suscripción.
+> **Garantía estructural.** Las tres tablas del módulo Red Protegida tienen activado el control de
+> acceso por fila y **no declaran políticas de lectura directa**: toda consulta ocurre a través de
+> funciones con privilegios de definidor que resuelven internamente la identidad del solicitante.
+> Un cliente con token válido no obtiene filas de otro grupo porque no existe consulta que se lo
+> permita. Esta propiedad se deriva del esquema y es verificable por inspección, pero **no sustituye
+> a la prueba dinámica**: una función mal escrita podría omitir la verificación interna.
 
-> El último párrafo es el que mantiene coherente el documento con el producto. Sin él, el capítulo 2
-> describe un plan de $2.990 mensuales y nada aclara que el prototipo no lo tiene.
+> **Tabla.** Plan de pruebas de seguridad
 
-### 8.3 EL MOTOR DE DETECCIÓN
+| Prueba | Módulos | Procedimiento | Resultado esperado | Fecha |
+|---|---|---|---|---|
+| PS-01 | Red Protegida | Consultar los integrantes de un grupo ajeno | Rechazo | ⚠️ |
+| PS-02 | Red Protegida | Consultar las alertas de un grupo ajeno | Rechazo | ⚠️ |
+| PS-03 | Red Protegida | Marcar como atendida una alerta ajena | Rechazo | ⚠️ |
+| PS-04 | Red Protegida | Retirar a un integrante de un grupo ajeno | Rechazo | ⚠️ |
+| PS-05 | Red Protegida | Eliminar un grupo ajeno | Rechazo | ⚠️ |
+| PS-06 | Capa de datos | Consulta directa a las tres tablas con sesión válida | Conjunto vacío | ⚠️ |
+| PS-07 | Red Protegida | Unirse a un grupo con código inválido | Rechazo | ⚠️ |
+| PS-08 | Red Protegida | Consultar las alertas propias desde la cuenta protegida | Solo las propias | ⚠️ |
+| PS-09 | Motor | Analizar un enlace apuntando a la red interna | La petición no se ejecuta contra direcciones privadas | ⚠️ |
+| PS-10 | Base comunitaria | Reportar masivamente un dominio legítimo | El envenenamiento no altera el veredicto de un dominio de la lista blanca | ⚠️ |
 
-#### 8.3.1 Señales e indicadores
-
-> El motor combina trece señales. Su rasgo distintivo frente a los servicios de reputación
-> comerciales analizados en 2.5.1 es que **cada veredicto identifica qué indicador se activó**,
-> requisito declarado en 2.4.1 y fundamentado en 4.2.3:
+> *Nota.* Elaboración propia. PS-09 y PS-10 corresponden a dos de las amenazas identificadas en el
+> modelo STRIDE del objetivo f): falsificación de petición del lado del servidor y envenenamiento de
+> la base comunitaria.
 >
-> 1. Marca suplantada en el nombre de dominio.
-> 2. Marca suplantada en la ruta, patrón característico de los sitios legítimos vulnerados.
-> 3. Imitación tipográfica contrastada contra una lista de dominios oficiales.
-> 4. Imitación tipográfica sin lista de referencia, descrita en 8.3.3.
-> 5. Homóglifos y dominios internacionalizados.
-> 6. Dirección IP en lugar de nombre de dominio.
-> 7. Alojamiento en plataformas gratuitas de terceros.
-> 8. Terminaciones de dominio de alto riesgo.
-> 9. Antigüedad del registro del dominio.
-> 10. Validación de la cadena de confianza TLS.
-> 11. Existencia efectiva del dominio en el sistema de nombres.
-> 12. Base comunitaria de firmas reportadas por los usuarios.
-> 13. Inteligencia de amenazas externa: Google Safe Browsing y VirusTotal.
+> PS-08 verifica lo contrario del aislamiento y es igual de necesario: la persona protegida debe ver
+> sus propias alertas, porque la transparencia hacia quien es supervisado es un requisito declarado
+> en el marco legal del capítulo 3.
 
-#### 8.3.2 Regla de consolidación de la inteligencia externa
+#### 9.2.5 Pruebas de carga
 
-> Las dos fuentes externas no son equivalentes y no pueden tratarse con el mismo criterio. Safe
-> Browsing resulta autoritativo con una sola coincidencia, por tratarse de una lista curada por un
-> proveedor que responde por ella. VirusTotal, en cambio, agrega más de setenta motores
-> heterogéneos: exigir una única detección produciría una tasa de falsos positivos incompatible con
-> el criterio de 10 % fijado en 3.2.4.
->
-> Se adoptó por ello una regla de umbral: se requieren **dos o más motores** con veredicto malicioso
-> para forzar la clasificación de peligroso; una sola detección maliciosa, o dos o más veredictos de
-> sospecha, actúan como señal corroborante que resta puntaje sin condenar por sí sola; y un único
-> veredicto de sospecha se descarta.
+> El alcance de estas pruebas se limita a la medición del peso del cliente web, por ser la variable
+> que determina el costo de acceso para el segmento objetivo. **No se ejecutaron ensayos de
+> concurrencia ni de consumo sostenido**, y así se declara en 12.4.
 
-#### 8.3.3 Decisiones de implementación con fundamento empírico
+| Prueba | Procedimiento | Resultado esperado | Fecha |
+|---|---|---|---|
+| PC-01 | Medir la carga inicial de cada vista en la construcción de producción | Vista más pesada bajo 200 kB | Nov-2026 |
+| PC-02 | Ensayo de concurrencia sobre la función de análisis | — | ⚠️ No ejecutada |
+| PC-03 | Consumo de batería y datos en uso sostenido | — | ⚠️ No ejecutada |
 
-> Cuatro decisiones se adoptaron a partir de comprobaciones contra los registros y servicios reales,
-> y no por diseño previo. Se documentan porque constituyen hallazgos del proceso de construcción.
->
-> **El dominio de nivel superior .cl no dispone de RDAP.** Se verificó que `.cl` no figura en el
-> registro de arranque de IANA y que NIC Chile no expone ese servicio. Dado que los dominios
-> chilenos son el foco del producto, la antigüedad se obtiene mediante WHOIS clásico en el puerto 43
-> de NIC Chile, que sí entrega la fecha de creación. De esa respuesta se extrae únicamente la fecha:
-> la consulta incluye el nombre del titular, que no se registra ni almacena, conforme al principio
-> de minimización declarado en 7.3.
->
-> **La antigüedad del dominio es señal corroborante y no acusatoria.** Un dominio legítimo sin otras
-> señales parte con puntaje 80; la penalización más suave por antigüedad lo dejaba en 65, bajo el
-> umbral de clasificación. En consecuencia, **todo sitio chileno con menos de seis meses de registro
-> resultaba marcado como sospechoso**, incluidas las microempresas que 2.2.2 identifica como público
-> objetivo: el motor penalizaba precisamente el rasgo que define a parte de sus usuarios. La regla
-> se corrigió para que la antigüedad amplifique otras señales cuando existen, y para que en un
-> enlace limpio solo un dominio de treinta días o menos genere advertencia, con lenguaje que aclara
-> que un sitio nuevo no constituye prueba de fraude.
->
-> **La detección de imitación no puede depender de una lista.** El contraste contra un listado de
-> dominios oficiales solo protege a las instituciones incluidas en él. Se implementó un
-> procedimiento generativo que construye los vecinos tipográficos del dominio analizado —vocal
-> omitida, letra repetida, letra sobrante, transposición y homóglifos—, verifica mediante el sistema
-> de nombres cuáles existen y compara sus antigüedades, marcando cuando el vecino supera los dos
-> años y el dominio evaluado es sustancialmente más reciente. Quedan así cubiertas instituciones que
-> ninguna lista contendría de forma exhaustiva.
->
-> **Un dominio que no resuelve no es un sitio seguro.** Se incorporó verificación en el sistema de
-> nombres: ante inexistencia definitiva el veredicto no puede quedar en «sin señales de riesgo».
-> Solo la inexistencia confirmada penaliza; un fallo del resolutor no se imputa al dominio.
+#### 9.2.6 Pruebas de infraestructura
 
----
+| Prueba | Procedimiento | Resultado esperado | Fecha |
+|---|---|---|---|
+| PIN-01 | Despliegue desde el repositorio al ambiente productivo | Construcción exitosa y sistema accesible | Nov-2026 |
+| PIN-02 | Verificación de credenciales de servicios externos | Todas las claves responden sin exponer su valor | Nov-2026 |
+| PIN-03 | Operación sin credenciales opcionales | Degradación controlada a heurística pura | Nov-2026 |
 
-## 9.B 🔁 Ajuste previo en §3.2.5
+### 9.3 Desarrollo del plan de pruebas
 
-El protocolo compromete hoy «un banco de enlaces de al menos 100 enlaces por clase». Los conjuntos
-reales suman 60 enlaces fraudulentos y 62 legítimos, de modo que el capítulo de resultados nacería
-incumpliendo su propio protocolo. Reemplaza esa línea por la descripción de lo que efectivamente se
-hizo:
+#### 9.3.1 Pruebas funcionales / unitarias
 
-> **Evaluación del motor.** Dos conjuntos etiquetados y deliberadamente separados, descritos en 9.2:
-> un conjunto de afinamiento de 77 enlaces y un conjunto de validación independiente de 45 enlaces,
-> este último con vectores evasivos ausentes del primero. La ampliación a un banco de mayor tamaño,
-> con enlaces capturados de un repositorio público verificado, queda declarada como trabajo
-> pendiente en 9.7.
-
----
-
-## 9.C ➕ Capítulo 9 — PRUEBAS Y RESULTADOS
-
-### 9.1 INTRODUCCIÓN DEL CAPÍTULO
-
-> El presente capítulo reporta la evaluación del prototipo construido, y conviene anticipar que su
-> alcance es desigual. La evaluación técnica del motor de detección se ejecutó y sus resultados se
-> presentan en detalle; las pruebas de aislamiento de datos comprometidas en el objetivo d) se
-> reportan en 9.6; y la validación con usuarios especificada en 3.2.5 no alcanzó a realizarse dentro
-> del período del proyecto. Los criterios de éxito de 3.2.4 se verifican por tanto de forma parcial,
-> y el apartado 9.8 declara exactamente cuáles cuentan con evidencia y cuáles no.
-
-### 9.2 DISEÑO DE LA EVALUACIÓN DEL MOTOR
-
-> La evaluación se realizó sobre dos conjuntos de enlaces etiquetados y deliberadamente separados.
-> La distinción es metodológicamente necesaria, porque los indicadores del motor se ajustaron
-> observando los fallos del primero: medir sobre ese mismo conjunto produce una cifra optimista por
-> construcción.
->
-> **Conjunto de afinamiento.** 77 enlaces, 38 fraudulentos y 39 legítimos, ponderados al contexto
-> chileno con 69 casos nacionales y 8 internacionales. Es el conjunto sobre el que se calibraron los
-> indicadores.
->
-> **Conjunto de validación.** 45 enlaces, 22 fraudulentos y 23 legítimos, construidos con un
-> criterio de muestreo distinto —derivados de las campañas chilenas documentadas en el capítulo 1 y
-> de instituciones nacionales ausentes del primer conjunto— e incorporando deliberadamente vectores
-> evasivos que el primero apenas cubría: alojamiento en plataformas gratuitas, sitios legítimos
-> vulnerados y dominios sintácticamente limpios.
->
-> Los enlaces legítimos son dominios oficiales reales de las instituciones suplantadas con mayor
-> frecuencia, incluyendo deliberadamente entidades ausentes de la lista blanca del motor. Los
-> enlaces fraudulentos son casos curados a partir de tipologías documentadas y no capturas en vivo
-> de un repositorio público; esta limitación se discute en 9.7.
->
-> Ambas evaluaciones se ejecutan mediante comandos del propio repositorio, lo que hace la medición
-> reproducible por un tercero con acceso al código.
-
-### 9.3 RESULTADOS
-
-> **Tabla.** Desempeño del motor de detección sobre ambos conjuntos
+> **Tabla.** Resultados de las pruebas funcionales del motor
 
 | Métrica | Afinamiento | Validación | Criterio 3.2.4 | Resultado |
 |---|---|---|---|---|
@@ -1659,11 +1699,8 @@ hizo:
 > *Nota.* Elaboración propia.
 >
 > La diferencia de 8,3 puntos de exhaustividad entre ambos conjuntos constituye la estimación del
-> **sesgo de afinamiento**, y así debe interpretarse: la cifra válida para juzgar el motor es la del
-> conjunto de validación, no la del conjunto sobre el que se lo ajustó.
->
-> El desglose por dificultad del conjunto de validación localiza con precisión la debilidad del
-> motor:
+> **sesgo de afinamiento**: la cifra válida para juzgar el motor es la del conjunto de validación, no
+> la del conjunto sobre el que se lo ajustó.
 
 > **Tabla.** Exhaustividad por categoría de dificultad, conjunto de validación
 
@@ -1677,226 +1714,291 @@ hizo:
 >
 > El motor resulta completo frente a los vectores masivos y limitado frente a los evasivos. De los
 > tres casos no detectados, uno corresponde a un sitio legítimo vulnerado y dos a dominios
-> sintácticamente limpios; estos últimos sí los detecta la verificación de antigüedad del dominio en
-> el sistema desplegado, que el banco de pruebas no ejercita por ejecutarse sin acceso a la red.
-
-### 9.4 TRAZABILIDAD DE LA MEJORA
-
-> La primera medición sobre el conjunto de validación arrojó una exhaustividad de **72,7 %**, frente
-> al 94,7 % obtenido sobre el conjunto de afinamiento. La brecha de 22 puntos confirmó que la cifra
-> alta era optimista, y el desglose por dificultad concentró la falla en la categoría evasiva, con
-> un solo acierto de siete.
+> sintácticamente limpios; estos últimos sí los detecta la verificación de antigüedad en el sistema
+> desplegado, que el banco de pruebas no ejercita por ejecutarse sin acceso a la red.
 >
-> A partir de ese diagnóstico se incorporaron dos indicadores: la detección de marca suplantada en
-> la ruta del localizador y el reconocimiento de plataformas de alojamiento gratuito. La
-> exhaustividad sobre el conjunto de validación subió a **86,4 % sin incremento alguno de la tasa de
-> falsos positivos**.
->
-> Se deja constancia explícita de que, al haberse diseñado esas mejoras observando los fallos de ese
-> conjunto, **el 86,4 % ya no constituye una medición ciega**. Una cifra plenamente independiente
-> requeriría un tercer conjunto no utilizado para ajuste alguno.
+> PF-04 a PF-06 se verificaron conforme a lo esperado: cada veredicto nombra el indicador que lo
+> originó, los reintentos no alteran el componente de conocimiento y el valor mostrado del
+> Coeficiente de Resiliencia Digital coincide con la fórmula de 3.2.1.
 
-### 9.5 VALIDACIÓN EN CONTEXTO REAL
+#### 9.3.2 Pruebas de integraciones
 
-> Durante la construcción se evaluaron casos reales que permitieron verificar el comportamiento del
-> sistema fuera del banco de pruebas, y ambos revelaron limitaciones que las mediciones sintéticas
-> no habían detectado.
+> Las nueve pruebas se ejecutaron conforme a lo esperado. Dos arrojaron hallazgos que modificaron la
+> implementación y se reportan en 12.2: la consulta a Safe Browsing exige el localizador exacto
+> —se verificó que suprimir la barra final anula la coincidencia—, y tanto la validación TLS como la
+> resolución de nombres requieren ensayar la forma con prefijo `www`, porque hay dominios cuyo
+> registro base no resuelve.
 >
-> El caso más relevante procede de un simulacro de phishing ejecutado por un integrante del equipo
-> en su lugar de trabajo. Se registró el dominio `incancr.cl`, omisión deliberada de una letra
-> respecto de `incancer.cl`, correspondiente al Instituto Nacional del Cáncer y registrado en 2001.
-> El sistema identificó dos señales de forma independiente: la antigüedad del dominio, de doce días,
-> y la imitación tipográfica de una institución con veinticuatro años de registro, pese a que esa
-> institución no figura en ninguna lista de referencia del motor. El veredicto fue de peligro, con
+> PI-02 confirmó la regla de umbral: un enlace con una sola detección entre más de setenta motores
+> no se clasifica como peligroso, sino que recibe una penalización corroborante. PI-07 confirmó que
+> el proveedor de inteligencia artificial recibe únicamente la anatomía del enlace. PI-09 confirmó
+> que la ausencia de credenciales opcionales no interrumpe el servicio.
+
+#### 9.3.3 Pruebas integrales
+
+> Las cuatro pruebas se ejecutaron conforme a lo esperado. PT-04 merece reporte detallado por
+> haberse realizado sobre un dominio real registrado para el ensayo.
+>
+> En el marco de un simulacro de phishing ejecutado por un integrante del equipo en su lugar de
+> trabajo, se registró el dominio `incancr.cl`, omisión deliberada de una letra respecto de
+> `incancer.cl`, correspondiente al Instituto Nacional del Cáncer y registrado en 2001. El sistema
+> identificó dos señales de forma independiente: la antigüedad del dominio, de doce días, y la
+> imitación tipográfica de una institución con veinticuatro años de registro, **pese a que esa
+> institución no figura en ninguna lista de referencia del motor**. El veredicto fue de peligro, con
 > ambas razones explicitadas al usuario.
 >
-> Un segundo caso, `bancobci.cl`, resultó registrado desde 2007 pero sin registro activo en el
-> sistema de nombres —probablemente una inscripción defensiva de la entidad—, lo que motivó
-> incorporar la verificación de existencia descrita en 8.3.3.
->
-> Estos casos no constituyen una muestra estadística, pero sí evidencia de funcionamiento en
-> condiciones reales.
+> Un segundo dominio, `bancobci.cl`, resultó registrado desde 2007 pero sin registro activo en el
+> sistema de nombres, probablemente una inscripción defensiva de la entidad. El sistema lo
+> clasificaba como sin señales de riesgo, lo que motivó incorporar la verificación de existencia
+> reportada en 12.2.
 
-### 9.6 PRUEBAS DE AISLAMIENTO DE DATOS
+#### 9.3.4 Pruebas de seguridad
 
-> El objetivo específico d) no declara el aislamiento entre grupos como un hecho, sino como «una
-> hipótesis técnica a verificar mediante pruebas de acceso cruzado». El presente apartado reporta
-> esa verificación.
->
-> **Garantía estructural.** Las tres tablas del módulo Red Protegida tienen activado el control de
-> acceso por fila y **no declaran políticas de lectura directa**, de modo que no existe ruta de
-> consulta desde el cliente: toda lectura ocurre a través de funciones con privilegios de definidor
-> que resuelven internamente la identidad del solicitante y la contrastan con la pertenencia al
-> grupo. Un cliente que presente un token válido no obtiene filas de otro grupo porque no hay
-> consulta que se lo permita, con independencia de los parámetros que envíe. Esta propiedad se
-> deriva del esquema y es verificable por inspección del código, pero **no sustituye a la prueba
-> dinámica**: una función mal escrita podría omitir la verificación interna.
->
-> **Diseño de la prueba de acceso cruzado.** Se constituyen dos cuentas independientes, cada una
-> administradora de su propio grupo, y en el segundo grupo se incorpora una persona protegida que
-> genera alertas. Desde la sesión de la primera cuenta se intentan las siguientes operaciones sobre
-> identificadores del segundo grupo, todas las cuales deben ser rechazadas:
+> ⚠️ **Completa este apartado con los resultados de una ejecución real.** El diseño de 9.2.4 y la
+> garantía estructural allí descrita son correctos y verificables, pero el resultado de cada caso
+> debe provenir de haber corrido la prueba. Si no alcanzan a ejecutarse, declara el apartado como no
+> ejecutado con la misma franqueza que 9.3.5, porque el objetivo d) enuncia explícitamente una
+> hipótesis a verificar, y darla por verificada sin evidencia es exactamente lo que la revisión
+> objetó.
 
-> **Tabla.** Casos de prueba de acceso cruzado
+#### 9.3.5 Pruebas de carga
 
-| Caso | Operación intentada | Resultado esperado |
-|---|---|---|
-| AC-01 | Consultar los integrantes del grupo ajeno | Rechazo |
-| AC-02 | Consultar las alertas del grupo ajeno | Rechazo |
-| AC-03 | Marcar como atendida una alerta ajena | Rechazo |
-| AC-04 | Retirar a un integrante del grupo ajeno | Rechazo |
-| AC-05 | Eliminar el grupo ajeno | Rechazo |
-| AC-06 | Consulta directa a las tres tablas con sesión válida | Conjunto vacío |
-| AC-07 | Unirse al grupo ajeno con un código inválido | Rechazo |
-| AC-08 | Consultar las alertas propias desde la cuenta protegida | Solo las propias |
+> PC-01 se ejecutó sobre la construcción de producción:
+
+| Vista | Carga inicial |
+|---|---|
+| Código compartido por toda la aplicación | 87,4 kB |
+| Vista más liviana | 88,2 kB |
+| Vista del analizador, la más pesada | 154 kB |
+| Mediana de las vistas | ≈ 140 kB |
 
 > *Nota.* Elaboración propia.
 >
-> Se verifica además que AC-08 devuelva efectivamente las alertas de la persona protegida, porque el
-> aislamiento no puede lograrse a costa de ocultarle a cada persona su propia información: la
-> transparencia hacia la persona supervisada es un requisito declarado en 4.2.1.
-
-> ⚠️ **Completa este apartado con los resultados de una ejecución real.** El diseño de la prueba y
-> la garantía estructural son correctos y verificables, pero **el resultado de cada caso debe
-> provenir de haber corrido la prueba**, no del diseño. Si no se ejecuta, declara el apartado como
-> pendiente con la misma franqueza que 9.8, porque el objetivo d) enuncia explícitamente una
-> hipótesis a verificar y darla por verificada sin evidencia es precisamente lo que #280 objetó.
-
-### 9.7 LIMITACIONES DE LA EVALUACIÓN
-
-> Se declaran de forma explícita las cuatro limitaciones que acotan el alcance de las cifras
-> anteriores.
+> A estas cifras se suman dos propiedades que se derivan de la arquitectura y no requieren medición:
+> la solución no descarga un paquete nativo, y no mantiene procesos residentes, a diferencia de las
+> suites de seguridad convencionales analizadas en el capítulo 1, cuya limitación operativa central
+> es precisamente el consumo de recursos del dispositivo.
 >
-> 1. **Los conjuntos fueron construidos por el mismo equipo que desarrolló el detector**, de modo
->    que no existe independencia entre evaluador y evaluado. La separación entre afinamiento y
->    validación reduce el sesgo, pero no lo elimina.
-> 2. **Los enlaces fraudulentos son casos curados** a partir de tipologías documentadas, y no
->    capturas obtenidas de un repositorio público verificado. La incorporación de una muestra de ese
->    tipo queda como trabajo pendiente.
-> 3. **El banco de pruebas se ejecuta sin acceso a la red**, de modo que no ejercita la antigüedad
->    del dominio, la validación de la cadena TLS ni las consultas a los servicios externos. Las
->    cifras corresponden al motor heurístico local, que es el escenario menos favorable: el sistema
->    desplegado dispone de más señales.
-> 4. **La tasa de falsos positivos se midió sobre dominios establecidos.** No incluye dominios
->    legítimos de registro reciente, categoría en la que se detectó y corrigió el falso positivo
->    sistemático descrito en 8.3.3. Una tasa de 0 % no debe leerse como ausencia de falsos positivos
->    en producción.
+> **PC-02 y PC-03 no se ejecutaron.** El comportamiento bajo concurrencia y el consumo de batería y
+> datos móviles en uso sostenido permanecen sin medir.
 
-### 9.8 VALIDACIÓN CON USUARIOS: NO EJECUTADA
+#### 9.3.6 Pruebas de infraestructura
 
-> El objetivo específico e) compromete una evaluación de usabilidad mediante el instrumento System
-> Usability Scale y la medición del Coeficiente de Resiliencia Digital antes y después de la
-> interacción formativa, conforme al protocolo especificado en 3.2.5. **Esta validación no se
-> ejecutó dentro del período del proyecto.**
+> Las tres pruebas se ejecutaron conforme a lo esperado. El despliegue se realiza de forma
+> automática desde la rama principal del repositorio; la verificación de credenciales se efectúa
+> mediante un script que comprueba la respuesta de cada servicio **sin imprimir el valor de las
+> claves**; y la operación sin credenciales opcionales degrada el sistema a heurística pura, que es
+> el comportamiento especificado.
+
+### 9.4 Conclusión del capítulo
+
+> El capítulo especificó el plan de pruebas del prototipo y reportó su ejecución, distinguiendo en
+> cada caso el resultado esperado del obtenido. Los dos criterios técnicos de 3.2.4 se cumplen sobre
+> el conjunto de validación. Las pruebas de integración confirmaron el comportamiento de los siete
+> servicios externos y produjeron dos hallazgos que modificaron la implementación. Las pruebas de
+> seguridad quedaron especificadas y su ejecución se declara en 9.3.4. El principal aporte del
+> capítulo es metodológico: la separación entre conjunto de afinamiento y conjunto de validación
+> permite distinguir el desempeño real del optimismo que induce medir sobre los mismos datos con los
+> que se ajustó el sistema.
+
+---
+
+## 9.B ➕ Capítulo 12 — RESULTADOS Y EVALUACIÓN FINAL
+
+### 12.1 Resultados obtenidos
+
+> El sistema se implementó como aplicación web progresiva sobre Next.js 14 y React, con lógica de
+> servidor en funciones sin infraestructura dedicada y persistencia en PostgreSQL gestionado,
+> conforme a la arquitectura especificada en el capítulo 7. El repositorio registra **50 incrementos
+> versionados** y el sistema se encuentra desplegado y accesible públicamente.
 >
-> El instrumento se encuentra construido y operativo: veinticuatro ítems distribuidos en dos
-> aplicaciones, con cuatro ítems de cada nivel de dificultad y la ponderación definida en 3.2.1. Lo
-> que no se realizó fue su administración a una muestra de participantes.
+> La aplicación comprende **16 vistas** y los tres módulos comprometidos:
 >
-> En consecuencia, el estado de verificación de los criterios de 3.2.4 es el siguiente:
+> - **Analizador de enlaces**, con panel de resultado y evidencia explicada.
+> - **Cyber-Academy**, con 13 cápsulas formativas en tres niveles de dificultad progresiva, 13
+>   ejercicios de cierre y el instrumento de medición del Coeficiente de Resiliencia Digital de 24
+>   ítems.
+> - **Red Protegida**, con creación de grupo, vinculación por código de invitación, panel de alertas
+>   con refresco automático y control de acceso por fila.
+>
+> La capa de datos consta de tres esquemas relacionales y **15 funciones almacenadas** con
+> privilegios de definidor.
+>
+> El motor de detección combina **trece señales** y su rasgo distintivo frente a los servicios de
+> reputación comerciales es que cada veredicto identifica qué indicador se activó: marca suplantada
+> en el dominio y en la ruta, imitación tipográfica con y sin lista de referencia, homóglifos,
+> dirección IP, alojamiento gratuito, terminaciones de riesgo, antigüedad del registro, validación
+> de la cadena TLS, existencia en el sistema de nombres, base comunitaria de firmas e inteligencia
+> de amenazas externa.
+>
+> Queda fuera de lo construido todo lo excluido en el alcance, y en particular la operación
+> comercial del modelo descrito en el capítulo 2: el prototipo **no implementa planes de pago,
+> pasarela de cobro ni control de cuotas por suscripción**.
 
-> **Tabla.** Estado de verificación de los criterios de éxito
+### 12.2 Hallazgos principales
+
+> Cinco hallazgos del proceso de construcción y prueba merecen reporte, por haber modificado el
+> sistema o por constituir conocimiento no disponible al inicio del proyecto.
+>
+> **El dominio de nivel superior .cl no dispone de RDAP.** Se verificó que `.cl` no figura en el
+> registro de arranque de IANA y que NIC Chile no expone ese servicio. Dado que los dominios
+> chilenos son el foco del producto, la antigüedad se obtiene mediante WHOIS clásico en el puerto 43,
+> que sí entrega la fecha de creación. De esa respuesta se extrae únicamente la fecha: la consulta
+> incluye el nombre del titular, que no se registra ni almacena.
+>
+> **La antigüedad del dominio debía ser señal corroborante y no acusatoria.** Un dominio legítimo
+> sin otras señales parte con puntaje 80; la penalización más suave por antigüedad lo dejaba en 65,
+> bajo el umbral de clasificación. En consecuencia, **todo sitio chileno con menos de seis meses de
+> registro resultaba marcado como sospechoso**, incluidas las microempresas que el capítulo 2
+> identifica como público objetivo: el motor penalizaba precisamente el rasgo que define a parte de
+> sus usuarios. El hallazgo es relevante porque **ninguna de las dos mediciones lo detectó** —el
+> banco de pruebas se compone de dominios establecidos— y lo reveló una prueba con un dominio real.
+>
+> **La detección de imitación no puede depender de una lista.** El contraste contra un listado de
+> dominios oficiales solo protege a las instituciones incluidas en él. Se implementó un procedimiento
+> generativo que construye los vecinos tipográficos del dominio analizado, verifica por DNS cuáles
+> existen y compara antigüedades. Quedan así cubiertas instituciones que ninguna lista contendría de
+> forma exhaustiva.
+>
+> **Un dominio que no resuelve no es un sitio seguro.** El caso `bancobci.cl` reveló que un dominio
+> registrado pero sin registro activo en el sistema de nombres quedaba clasificado como sin señales
+> de riesgo. Se incorporó verificación de existencia: solo la inexistencia confirmada penaliza, pues
+> un fallo del resolutor no es imputable al dominio.
+>
+> **La trayectoria de la medición es en sí misma un resultado.** La primera evaluación sobre el
+> conjunto de validación arrojó **72,7 %** de exhaustividad frente al 94,7 % del conjunto de
+> afinamiento. La brecha de 22 puntos confirmó que la cifra alta era optimista, y el desglose
+> concentró la falla en la categoría evasiva, con un acierto de siete. A partir de ese diagnóstico se
+> incorporaron la detección de marca en la ruta y el reconocimiento de plataformas de alojamiento
+> gratuito, con lo que la exhaustividad subió a **86,4 % sin incremento alguno de falsos positivos**.
+> Se deja constancia de que, al haberse diseñado esas mejoras observando los fallos de ese conjunto,
+> el 86,4 % ya no constituye una medición ciega.
+
+### 12.3 Evaluación del cumplimiento de objetivos
+
+> **Tabla.** Estado de cumplimiento de los objetivos específicos
+
+| Objetivo | Estado | Evidencia |
+|---|---|---|
+| a) Diagnosticar vectores y brechas | Cumplido | Capítulo 1 |
+| b) Implementar el motor de análisis | Cumplido | 9.3.1, 12.1 |
+| c) Construir el núcleo pedagógico | Cumplido | 12.1 |
+| d) Desarrollar la seguridad delegada | Cumplido en su parte constructiva; la hipótesis de aislamiento se verifica en 9.3.4 | 9.2.4, 12.1 |
+| e) Validar el prototipo | **Parcialmente cumplido**: la evaluación técnica se ejecutó; las pruebas con usuarios no | 9.3.1, 12.4 |
+| f) Modelar las amenazas con STRIDE | Cumplido | Capítulo 5 |
+
+> *Nota.* Elaboración propia.
+
+> **Tabla.** Verificación de los criterios de éxito de 3.2.4
 
 | Criterio | Estado |
 |---|---|
 | Variación del componente de Conocimiento ≥ 15 puntos porcentuales | Sin evidencia |
 | Al menos 60 % de los participantes asciende de nivel | Sin evidencia |
 | Puntaje SUS ≥ 68 | Sin evidencia |
-| Exhaustividad del motor ≥ 85 % | **Cumple**: 86,4 % |
-| Tasa de falsos positivos ≤ 10 % | **Cumple**: 0,0 % |
+| Exhaustividad del motor ≥ 85 % | **Cumple:** 86,4 % |
+| Tasa de falsos positivos ≤ 10 % | **Cumple:** 0,0 % |
 
 > *Nota.* Elaboración propia.
 >
-> La aplicación del protocolo de 3.2.5 constituye la primera línea de trabajo posterior.
+> El objetivo general comprometía evaluar la usabilidad y el desempeño técnico del prototipo. El
+> desempeño técnico se evaluó y los dos criterios correspondientes se cumplen; **la evaluación de
+> usabilidad no se ejecutó**, de modo que esa mitad del objetivo general queda sin verificar. El
+> instrumento se encuentra construido y operativo —veinticuatro ítems en dos aplicaciones—, pero no
+> fue administrado a una muestra de participantes.
 
-### 9.9 CONCLUSIÓN DEL CAPÍTULO
+### 12.4 Limitaciones del proyecto
 
-> El capítulo reportó la evaluación del motor de detección sobre dos conjuntos etiquetados
-> independientes y declaró el estado de verificación de cada criterio de éxito. Los dos criterios
-> técnicos se cumplen sobre el conjunto de validación; los tres criterios relativos a usuarios
-> carecen de evidencia por no haberse ejecutado esa parte del protocolo. La distinción entre el
-> desempeño medido y el desempeño declarado, y el reporte de la brecha entre el conjunto de
-> afinamiento y el de validación, constituyen el aporte metodológico que el capítulo 10 recoge.
-
----
-
-## 9.D ➕ Capítulo 10 — CONCLUSIONES
-
-### 10.1 SOBRE EL CUMPLIMIENTO DE LOS OBJETIVOS
-
-> **Objetivo general.** El objetivo comprometido —evaluar la usabilidad y el desempeño técnico de un
-> prototipo funcional con usuarios particulares chilenos— **se cumplió parcialmente**. El prototipo
-> se construyó y desplegó con los tres módulos especificados en 2.4.1, y su desempeño técnico se
-> evaluó sobre dos conjuntos etiquetados independientes, superando ambos criterios de 3.2.4. La
-> evaluación de usabilidad con usuarios no se ejecutó dentro del período, de modo que esa mitad del
-> objetivo general queda sin verificar.
+> **De la evaluación del motor.** Los conjuntos fueron construidos por el mismo equipo que desarrolló
+> el detector, de modo que no existe independencia entre evaluador y evaluado; la separación entre
+> afinamiento y validación reduce el sesgo pero no lo elimina. Los enlaces fraudulentos son casos
+> curados y no capturas de un repositorio público verificado. El banco de pruebas se ejecuta sin
+> acceso a la red, de modo que no ejercita la antigüedad del dominio, la validación TLS ni los
+> servicios externos: las cifras corresponden al escenario menos favorable. La tasa de falsos
+> positivos se midió sobre dominios establecidos y no incluye dominios legítimos recientes, categoría
+> en la que se detectó y corrigió el falso positivo sistemático reportado en 12.2.
 >
-> **Objetivos específicos.** El objetivo a), de diagnóstico, se cumplió y se reporta en el capítulo
-> 1. Los objetivos b) y c) —motor de análisis heurístico y núcleo pedagógico— se cumplieron y
-> cuentan con evidencia en los capítulos 7, 8 y 9. El objetivo d) se cumplió en su parte
-> constructiva, y la hipótesis de aislamiento de datos que él mismo enuncia se verifica en 9.6. El
-> objetivo f), de modelado de amenazas, se cumplió y se reporta en 5.5. El objetivo e) **se cumplió
-> parcialmente**: la evaluación técnica del motor se ejecutó y se reporta en 9.3, mientras que las
-> pruebas con usuarios no se realizaron, según se declara en 9.8.
-
-> ⚠️ **Este apartado se escribió contra el objetivo general que el documento tiene hoy**, que es de
-> evaluación y no de construcción. Si vuelven a redactarlo, ajusta el párrafo: lo que no puede pasar
-> es que el capítulo 10 declare cumplido un objetivo cuya mitad —la usabilidad— nadie midió. Es la
-> clase de afirmación que el comentario #280 reclamaba y que una conclusión mal redactada
-> reintroduce.
-
-### 10.2 APORTES DEL TRABAJO
-
-> **Aporte técnico.** La detección de imitación tipográfica sin lista de referencia extiende la
-> protección a instituciones que las soluciones comerciales no tienen indexadas, limitación
-> documentada de los enfoques basados en listas de bloqueo y señalada en 1.4.2. El caso del
-> Instituto Nacional del Cáncer descrito en 9.5 lo ilustra: una institución pública de salud que
-> ninguna lista comercial cubriría, y que el sistema protege igualmente.
->
-> **Aporte metodológico.** La separación entre conjunto de afinamiento y conjunto de validación, y
-> el reporte explícito de la brecha entre ambos, permite distinguir el desempeño real del optimismo
-> inducido por el propio ajuste. La trayectoria 94,7 % → 72,7 % → 86,4 %, con su diagnóstico
-> intermedio, resulta más informativa que cualquiera de las tres cifras por separado.
->
-> **Aporte de diseño.** La decisión de resolver la detección mediante un motor determinista y
-> explicable, en lugar de un clasificador estadístico de mayor exhaustividad reportada, subordina el
-> desempeño bruto al requisito formativo: un veredicto que no puede explicar su causa no enseña
-> nada. Esa subordinación, fundamentada en 4.2.3, es una posición de diseño y no una limitación de
-> recursos.
-
-### 10.3 LIMITACIONES DEL TRABAJO
-
-> Además de las limitaciones de la evaluación declaradas en 9.7, el trabajo presenta tres
-> limitaciones de alcance.
->
-> La validación con usuarios no se ejecutó, de modo que la premisa central del proyecto —que la
+> **De la validación con usuarios.** No se ejecutó. La premisa central del proyecto —que la
 > intervención formativa en el momento crítico incrementa la resiliencia— **permanece sin
 > contrastación empírica**. El sistema mide el Coeficiente de Resiliencia Digital, pero nadie lo ha
 > medido todavía sobre una muestra.
 >
-> Las obligaciones de cumplimiento declaradas como no cubiertas en 4.2.1 —registro formal de
-> consentimiento, verificación de edad, portabilidad, notificación de brechas y registro de
-> auditoría— son condición previa a cualquier despliegue con usuarios reales.
+> **De cumplimiento normativo.** Las obligaciones declaradas como no cubiertas en el marco legal
+> —registro formal de consentimiento, verificación de edad, portabilidad, notificación de brechas y
+> registro de auditoría— son condición previa a cualquier despliegue con usuarios reales.
 >
-> La cobertura de los vectores evasivos alcanza 57,1 %, de modo que un atacante que emplee un
-> dominio sintácticamente limpio o un sitio legítimo vulnerado tiene probabilidad apreciable de
-> eludir la detección.
+> **De cobertura del motor.** La exhaustividad frente a vectores evasivos alcanza 57,1 %, de modo que
+> un atacante que emplee un dominio sintácticamente limpio o un sitio legítimo vulnerado tiene
+> probabilidad apreciable de eludir la detección.
+>
+> **De plataforma.** La recepción de enlaces desde el menú compartir del sistema operativo no está
+> disponible en Safari para iOS, donde el enlace debe pegarse manualmente.
+>
+> **De desempeño.** No se ejecutaron ensayos de concurrencia ni mediciones de consumo de batería y
+> datos móviles en uso sostenido.
 
-### 10.4 TRABAJO FUTURO
+### 12.5 Proyecciones o mejoras futuras
 
 > En orden de prioridad:
 >
-> 1. **Aplicar el protocolo de 3.2.5** a una muestra real, con el grupo de comparación allí previsto.
+> 1. **Aplicar el protocolo de validación** a una muestra real, con el grupo de comparación previsto.
 >    Es la condición para que el proyecto pueda afirmar efectividad y no solo funcionamiento.
-> 2. **Incorporar un conjunto de validación de origen público verificado**, que permita una medición
+> 2. **Ejecutar las pruebas de seguridad especificadas en 9.2.4**, si no alcanzaron a realizarse.
+> 3. **Incorporar un conjunto de validación de origen público verificado**, que permita una medición
 >    independiente del ajuste.
-> 3. **Extender la cobertura de los vectores evasivos**, donde se concentra la totalidad de los
+> 4. **Extender la cobertura de los vectores evasivos**, donde se concentra la totalidad de los
 >    fallos del motor.
-> 4. **Cerrar las brechas de cumplimiento de 4.2.1** antes de cualquier operación con usuarios
+> 5. **Cerrar las brechas de cumplimiento normativo** antes de cualquier operación con usuarios
 >    reales.
-> 5. Evaluar la incorporación de un clasificador entrenado sobre un corpus de campañas chilenas
+> 6. Evaluar la incorporación de un clasificador entrenado sobre un corpus de campañas chilenas
 >    etiquetadas, **complementario** al motor de reglas y sujeto a la misma exigencia de
 >    explicabilidad.
+
+---
+
+## 9.C ➕ Capítulo 13 — CONCLUSIONES
+
+> La plantilla pide que las conclusiones interpreten los resultados **de acuerdo con el logro de los
+> objetivos específicos**, con redacción clara, concreta y directa. Por eso este capítulo es breve y
+> no repite las tablas de 12.3: las interpreta.
+
+> El proyecto se propuso reducir la vulnerabilidad frente al phishing en usuarios chilenos con
+> competencias digitales básicas mediante un prototipo que integrara detección de enlaces,
+> alfabetización digital y seguridad delegada. El prototipo se construyó, se desplegó y su motor de
+> detección fue evaluado sobre conjuntos etiquetados independientes, superando los dos criterios
+> técnicos comprometidos. Esa es la parte del trabajo que cuenta con evidencia.
+>
+> La parte que no la tiene es la central de la hipótesis. El proyecto sostiene que informar al
+> usuario **qué indicador** activó la alerta, en el momento en que enfrenta el enlace, produce
+> aprendizaje y no solo protección puntual. El sistema que materializa esa premisa está construido y
+> el instrumento que la mediría está operativo, pero no se administró a ninguna muestra. El trabajo
+> demuestra, por tanto, **que la solución funciona, no que educa**. Distinguir ambas afirmaciones es
+> la conclusión más importante que puede extraerse con la evidencia disponible.
+>
+> Del cumplimiento de los objetivos específicos se desprenden tres conclusiones de ingeniería.
+>
+> **Primera: la explicabilidad tiene un costo medible y justificado.** Resolver la detección con un
+> motor determinista en lugar de un clasificador estadístico sacrifica exhaustividad reportada
+> —la literatura documenta tasas superiores al 95 % para modelos supervisados— a cambio de que cada
+> veredicto nombre su causa. Con 86,4 % sobre el conjunto de validación, esa diferencia es el precio
+> de la explicación. En una herramienta cuyo propósito es formativo, el precio se justifica: un
+> veredicto que no puede explicar su causa protege, pero no enseña.
+>
+> **Segunda: medir sobre los datos con los que se ajustó un sistema produce cifras que no resisten
+> el contraste.** La caída de 94,7 % a 72,7 % al cambiar de conjunto, y la recuperación posterior a
+> 86,4 %, constituyen el resultado metodológico del trabajo. La práctica de reportar la trayectoria
+> completa, y no la mejor cifra, es trasladable a cualquier evaluación de sistemas de detección.
+>
+> **Tercera: los supuestos del diseño fallan en los extremos que el banco de pruebas no contiene.**
+> El falso positivo sistemático sobre dominios legítimos recientes no lo detectó ninguna de las dos
+> mediciones, porque ambas se componen de dominios establecidos; lo reveló una prueba con un sitio
+> real. La lección es que un conjunto de prueba construido por el mismo equipo que desarrolla el
+> sistema hereda sus puntos ciegos.
+>
+> El trabajo entrega un prototipo funcional y desplegado, un motor de detección evaluado y
+> reproducible, un instrumento de medición operativo y un protocolo de validación especificado. Lo
+> que no entrega —y queda enunciado como la primera línea de continuación— es la evidencia de que
+> todo ello modifica efectivamente la conducta de las personas a las que se dirige.
 
 ---
 
@@ -1978,6 +2080,9 @@ corrida.
 **Severidad: alta.** Es el único comentario de fondo que sigue exactamente como el profesor lo
 encontró. §7.5.1 a §7.5.3 continúan en notación de corchetes y flechas.
 
+**Y cambian de lugar:** la plantilla pide los diagramas de secuencia en **7.4.2 Flujos de
+procesos**, y reserva 7.5 para el diseño de interfaces de usuario.
+
 **Importante:** el contenido que escribieron es **más fiel al sistema real** que el de la versión
 anterior —CU03 menciona el registro del primer intento ponderado y el recálculo del CRD, CU08
 menciona `get_network_alerts`, el refresco cada 30 s con pestaña visible y el botón de llamada—. No
@@ -2004,8 +2109,12 @@ comentario pedía expresamente «tipos, claves y **restricciones**», y eso no e
 tipo de dato ni de restricción.
 
 Las tablas completas, con tipo, nulidad, valor predeterminado y restricciones verificadas contra los
-tres archivos de esquema, están en el **Paso 8.1**. Se pueden incorporar como columnas adicionales de
-la Tabla 11 o como una tabla por entidad.
+tres archivos de esquema, están en el **Paso 8.1**.
+
+**La plantilla resuelve el formato:** para 7.4.1 Modelo de datos fija una tabla por entidad con
+columnas **Campo / Tipo / Largo / Nulo / Observaciones**, que es justo lo que el comentario pedía.
+Traslada el diccionario del Paso 8.1 a ese formato, una tabla por entidad, en lugar de ampliar la
+Tabla 11 actual.
 
 > Agrega también la subsección de **estado de uso** del Paso 8.1: declarar que `url_scans` está
 > definida y no se utiliza es preferible a presentarla como parte operativa. Ellos ya hicieron algo
@@ -2104,7 +2213,8 @@ con eso la tensión queda resuelta por declaración y no por omisión.
 
 | Orden | Qué | Por qué en ese lugar |
 |---|---|---|
-| 1 | **Paso 9 completo**: dos subsecciones en el capítulo 8, el ajuste de §3.2.5, y los capítulos 9 y 10 | Es el comentario crítico que sigue abierto. Todo lo demás es menor en comparación |
+| 1 | **Paso 9 completo**: capítulos 9, 12 y 13 de la plantilla, más el ajuste de §3.2.5 | Es el comentario crítico que sigue abierto. Todo lo demás es menor en comparación |
+| 1b | Los capítulos 5, 10 y 11 que faltan por completo | No hay material previo: es trabajo nuevo del equipo |
 | 2 | **11.1** fórmula del CRD | Contradice al código y a sí misma dentro del mismo párrafo |
 | 3 | **11.7** los tres desajustes documento–producto | Misma clase de error que #3 ya castigó, y se verifican abriendo el repo |
 | 4 | **11.2** defectos de edición del capítulo 2 | Dos minutos de trabajo y muy visibles |
@@ -2155,8 +2265,8 @@ problemático en lugar de su reformulación.
 | ⬜ | 8.2 §7.5 sigue en pseudotexto | `#277` |
 | ✅ | §7.5.2 con estilo de título | `#277` |
 | ✅ | 8.3 §7.6 ya no «garantiza la factibilidad» · ver 11.8 | `#3` |
-| ⬜ | **9 capítulos 9 y 10 — no existen** | `#280` |
-| ⬜ | 9.6 pruebas de acceso cruzado comprometidas en el objetivo d) | `#280` |
+| ⬜ | **9 capítulos 9, 12 y 13 de la plantilla — no existen** | `#280` |
+| ⬜ | 9.2.4 pruebas de acceso cruzado comprometidas en el objetivo d) | `#280` |
 | ⬜ | Comentario abierto: numeración automática y tabla de contenidos | forma |
 
 ### Figuras
@@ -2185,8 +2295,29 @@ problemático en lugar de su reformulación.
 - [ ] 11.10 — plan de pago de §2.8.2: conservarlo como análisis de viabilidad o retirarlo
 - [ ] 11.8 — §2.7.3: dejar la cautela actual o incorporar las cifras medidas
 
+### Capítulos de la plantilla que no existen
+
+- [ ] 1.5 Comentarios generales del capítulo
+- [ ] 2 Planteamiento del proyecto — reorganizar sus capítulos 2 y 3
+- [ ] 3.2 Estado del arte con tabla de fortalezas y debilidades
+- [ ] 4.4 Plan metodológico adaptado y cronograma
+- [ ] **5 Alternativas de solución, completo**: tres alternativas, factibilidad técnica/económica/operativa ponderada, TCO a 4 años, VAN, Carta Gantt, costo-beneficio
+- [ ] 7.2 Diagrama de sistema de alto nivel
+- [ ] 7.3 Diseño funcional con casos de uso extendidos
+- [ ] 7.6 Diseño de integraciones
+- [ ] 7.7 Dimensionamiento y arquitectura detallada
+- [ ] 7.8 Diagrama de despliegue
+- [ ] **9 Ingeniería de QA** — material en el Paso 9.A
+- [ ] 10 Gestión del cambio — ADKAR ya está en la bibliografía
+- [ ] 11 Gestión de riesgos — ISO 31000 ya está en la bibliografía y §3.2.5 cita «RY01»
+- [ ] **12 Resultados y evaluación final** — material en el Paso 9.B
+- [ ] **13 Conclusiones** — material en el Paso 9.C
+- [ ] Glosario, Anexos y Apéndices — §3.2.5 ya remite a un «Anexo 2»
+
 ### Cierre
 
 - [ ] Las diez búsquedas de control del Paso 10
-- [ ] Índice general actualizado con los capítulos 9 y 10
+- [ ] Índice general actualizado con los trece capítulos
 - [ ] Referencias nuevas en la bibliografía, si se agregan fuentes
+- [ ] Eliminar los recuadros de instrucciones que trae la plantilla
+- [ ] Verificar la redacción en **tercera persona singular**, que la plantilla exige
