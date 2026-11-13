@@ -27,6 +27,71 @@ eliminación del componente D (#149) y el contrabalanceo de las formas del instr
 
 ---
 
+## Estado verificado al 13 de noviembre
+
+Auditoría del archivo `Fishint Plataforma Móvil Para Detección(6).docx` (13-nov 16:56), leyendo el
+texto vigente. **0 cambios controlados pendientes** y **1 comentario** sin resolver, contra 105
+cambios y 23 comentarios de la versión del 8 de noviembre. El equipo aceptó todo y creció el
+documento de 1.064 a 1.324 párrafos.
+
+### Resuelto, y en varios casos mejor que lo propuesto aquí
+
+| Tema | Cómo quedó |
+|---|---|
+| `#214` Matriz metodológica | Híbrido fuera. Tres columnas, totales 2,05 / 3,75 / 4,00 |
+| `#273` Web Share en iOS | **Mejor que la propuesta de esta guía**: RNF09 enumera RF01 y RF03–RF16 como equivalentes y acota RF02 a «los navegadores que lo admiten», con RF01 como alternativa en iOS; se agregó método de verificación por plataforma y la restricción se declara en §3.3.1.2 |
+| `#127` Punto de equilibrio | Resuelto con rigor: fórmula explícita, supuestos declarados (incluido «por verificar con el proveedor» y «v = 0 no estimado») y análisis de sensibilidad de conversión entre 1 % y 5 % |
+| `#125` Licencias | Investigado y citado: §2.8.2 declara que Safe Browsing es de uso no comercial, remite a Web Risk para fines comerciales y exige lenguaje calificado y atribución. Bibliografía con las dos fuentes |
+| `#203` Ley 21.719 | Incorporada, y el equipo encontró algo que esta guía no tenía: el proyecto de ley de octubre de 2026 que busca **postergar su entrada en vigencia** |
+| `#146` Protocolo | §3.2.5 creado. Muestra de ≥20 (10 por perfil), exclusión del equipo, no generalizabilidad declarada, cuentas con código anónimo, grupo de comparación condicional, resguardos éticos con Anexo 2, y menores excluidos de la validación |
+| `#259` Casos de uso | «Figura 3 Diagrama de casos de uso» insertada y numerada |
+| **ML en §4.2.3** | Resuelto exactamente por el lado fuerte: la cita de Random Forest / Gradient Boosting queda como estado del arte y §4.2.3 declara «Fishin't no incorpora un modelo de aprendizaje automático entrenado», con la justificación de explicabilidad |
+
+### ⚠️ Regresión: el componente D volvió
+
+§3.2.1 trae otra vez `U = mín(100; 40·mín(A,15)/15 + 30·mín(R,8)/8 + 30·mín(D,10)/10)` y la
+definición de D como «10 amenazas detectadas». La corrección de #149 estaba aplicada el 8 de
+noviembre y se perdió al reescribir el apartado. Queda además un **doble problema**:
+
+- **El documento contradice al código**, que no tiene D desde el commit `f702600`.
+- **El párrafo se contradice consigo mismo**: dice que los topes «fueron definidos empíricamente» y
+  tres líneas después que «no cuentan con respaldo empírico». Las dos frases están en el mismo
+  párrafo.
+
+El reemplazo está en el Paso 4.5 de esta guía.
+
+### Pendiente de verdad
+
+| Tema | Estado |
+|---|---|
+| `#280` Resultados | **El más grave.** El capítulo 8 existe, pero es de puesta en marcha, respaldo, mantención y capacitación, no de evidencia. **No hay capítulo 9 ni 10.** Las cifras del motor (94,7 / 72,7 / 86,4) **no aparecen ni una vez** en el documento, de modo que los criterios de §3.2.4 sobre exhaustividad y falsos positivos siguen sin resultados |
+| `#277` Secuencias | **Sin resolver.** §7.5.1 a §7.5.3 siguen en pseudotexto de corchetes y flechas. El contenido mejoró y es más fiel al sistema, pero la forma es exactamente la que el comentario rechazó. Lo que sí se corrigió es el estilo de título de §7.5.2 |
+| `#269` Diccionario | **Parcial.** Tabla 11 existe y numerada, con columnas Tabla / Clave foránea / Datos / Control de acceso, más dos observaciones de minimización. Faltan los **tipos de dato y las restricciones**, que el comentario pedía expresamente |
+| `#146` Contrabalanceo | **Sin resolver.** La palabra no aparece en el documento, y §3.2.3 conserva «ítems distintos pero equivalentes en estructura y dificultad» sin demostrarlo. Es la corrección más barata de todas |
+| `#3` Coherencia | §7.4.1 sigue prometiendo compartir «sin copiar ni pegar», sin la salvedad de iOS que sí está en RF02, RNF09 y §3.3.1.2 |
+| Comentario abierto | El único que queda es de **forma y severidad alta**: numeración inconsistente, subtítulos con jerarquía equivocada y tabla de contenidos descuadrada. Se resuelve con numeración automática de Word |
+
+### Defectos nuevos, introducidos en esta versión
+
+1. **Encabezado duplicado:** «2.8.5 CANALES» aparece dos veces, con «2.8.6 RIESGOS DEL MODELO» en
+   medio.
+2. **Número de tabla duplicado:** el punto de equilibrio se rotula «Tabla 3», pero Tabla 3 ya es la
+   matriz metodológica de §4.2.2.
+3. **§3.2.5 compromete más de lo que existe:** «Banco de enlaces de al menos 100 enlaces por clase».
+   Los conjuntos reales tienen 60 maliciosos y 62 legítimos entre ambos. O se baja la cifra, o el
+   capítulo de resultados nacerá incumpliendo su propio protocolo.
+
+### Y una decisión que ya no es mía señalarla sino tuya
+
+§2.8.2 mantiene el esquema **freemium** con un «Plan Protegido» de **$2.990 CLP mensuales**,
+mientras la aplicación no tiene ninguna función de pago y la decisión que me diste fue que nunca la
+tendría. El equipo lo encuadró como «análisis de viabilidad, no plan de ejecución», remitiendo a
+§3.3.1.2, y ese encuadre **es defendible** —el capítulo 2 es de modelo de negocio por estructura del
+curso—. Pero conviene que sea deliberado y no un residuo: si se conserva, ninguna parte del
+documento puede describir el plan de pago como existente en el prototipo.
+
+---
+
 ## Paso 0 — Tres decisiones antes de escribir
 
 Estas tres cambian el texto que vas a pegar más adelante. Resuélvelas primero.
