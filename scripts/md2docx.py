@@ -314,6 +314,18 @@ def main_anexo3():
     print("escrito:", salida)
 
 
+def main_refs():
+    salida = sys.argv[1]
+    doc = Document()
+    aplicar_formato(doc)
+    doc.add_heading("Bloque 13 — Referencias rotas", level=1)
+    nota(doc, "Cinco correcciones puntuales. Cada una trae un recuadro rojo con las "
+              "palabras exactas del párrafo que hay que buscar. Los recuadros no se pegan.")
+    bloque(doc, seccion(SCRATCH / "refs.md", "## REFS", "ZZZZZ"))
+    doc.save(salida)
+    print("escrito:", salida)
+
+
 def main_1011():
     """Segunda entrega: los capitulos 10 y 11."""
     salida = sys.argv[1]
@@ -404,5 +416,7 @@ if __name__ == "__main__":
         main_anexos()
     elif modo == "anexo3":
         main_anexo3()
+    elif modo == "refs":
+        main_refs()
     else:
         main()
