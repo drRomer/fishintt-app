@@ -264,6 +264,20 @@ def main_7():
     print("escrito:", salida)
 
 
+def main_234():
+    """Textos de enlace para la reorganizacion de los capitulos 1 a 4."""
+    salida = sys.argv[1]
+    doc = Document()
+    aplicar_formato(doc)
+    doc.add_heading("Bloque 9 — Textos de enlace", level=1)
+    nota(doc, "Este archivo NO es un capítulo. Son los párrafos cortos que faltan para cerrar los "
+              "capítulos 1 a 4 una vez que muevas tu texto. Cada uno dice dónde va en su recuadro "
+              "rojo. Los recuadros rojos no se pegan.")
+    bloque(doc, seccion(SCRATCH / "cap234.md", "## CAP234", "ZZZZZ"))
+    doc.save(salida)
+    print("escrito:", salida)
+
+
 def main_1011():
     """Segunda entrega: los capitulos 10 y 11."""
     salida = sys.argv[1]
@@ -346,5 +360,7 @@ if __name__ == "__main__":
         main_5()
     elif modo == "7":
         main_7()
+    elif modo == "234":
+        main_234()
     else:
         main()
