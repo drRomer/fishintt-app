@@ -229,6 +229,23 @@ def main_d():
     print("escrito:", salida)
 
 
+def main_5():
+    """Capitulo 5 de la plantilla."""
+    salida = sys.argv[1]
+    doc = Document()
+    aplicar_formato(doc)
+    doc.add_heading("Bloque 7 — Capítulo 5", level=1)
+    nota(doc, "Este archivo NO es parte del informe. Copia desde «5 ALTERNATIVAS DE SOLUCIÓN» "
+              "hasta el final. Borra los textos en rojo.")
+    separador(doc, "BLOQUE 7 — CAPÍTULO 5",
+              "Reemplaza al capítulo 5 actual («Diseño de la propuesta»). Antes de borrarlo, "
+              "rescata su 5.5 Modelo de amenazas: ese contenido va al capítulo 11, apartado 11.4.1.")
+    doc.add_heading("5 ALTERNATIVAS DE SOLUCIÓN", level=1)
+    bloque(doc, seccion(SCRATCH / "cap5.md", "## CAP5", "ZZZZZ"))
+    doc.save(salida)
+    print("escrito:", salida)
+
+
 def main_1011():
     """Segunda entrega: los capitulos 10 y 11."""
     salida = sys.argv[1]
@@ -307,5 +324,7 @@ if __name__ == "__main__":
         main_1011()
     elif modo == "d":
         main_d()
+    elif modo == "5":
+        main_5()
     else:
         main()
