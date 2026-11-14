@@ -303,6 +303,17 @@ def main_anexos():
     print("escrito:", salida)
 
 
+def main_anexo3():
+    salida = sys.argv[1]
+    doc = Document()
+    aplicar_formato(doc)
+    doc.add_heading("Bloque 12 — Anexo 3", level=1)
+    nota(doc, "Va después del Anexo N° 2. El título del anexo en estilo Título 2.")
+    bloque(doc, seccion(SCRATCH / "anexo3.md", "## ANEXO3", "ZZZZZ"))
+    doc.save(salida)
+    print("escrito:", salida)
+
+
 def main_1011():
     """Segunda entrega: los capitulos 10 y 11."""
     salida = sys.argv[1]
@@ -391,5 +402,7 @@ if __name__ == "__main__":
         main_rec()
     elif modo == "anexos":
         main_anexos()
+    elif modo == "anexo3":
+        main_anexo3()
     else:
         main()
