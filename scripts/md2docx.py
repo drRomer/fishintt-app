@@ -278,6 +278,18 @@ def main_234():
     print("escrito:", salida)
 
 
+def main_rec():
+    salida = sys.argv[1]
+    doc = Document()
+    aplicar_formato(doc)
+    doc.add_heading("Bloque 10 — Texto recuperado", level=1)
+    nota(doc, "Este archivo NO es un capítulo. Recupera dos bloques que se perdieron al reemplazar "
+              "el capítulo 5. Es texto tuyo, no mío. Los recuadros rojos no se pegan.")
+    bloque(doc, seccion(SCRATCH / "cap_rec.md", "## REC", "ZZZZZ"))
+    doc.save(salida)
+    print("escrito:", salida)
+
+
 def main_1011():
     """Segunda entrega: los capitulos 10 y 11."""
     salida = sys.argv[1]
@@ -362,5 +374,7 @@ if __name__ == "__main__":
         main_7()
     elif modo == "234":
         main_234()
+    elif modo == "rec":
+        main_rec()
     else:
         main()
