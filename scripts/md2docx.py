@@ -246,6 +246,24 @@ def main_5():
     print("escrito:", salida)
 
 
+def main_7():
+    """Capitulo 7 reordenado segun la plantilla."""
+    salida = sys.argv[1]
+    doc = Document()
+    aplicar_formato(doc)
+    doc.add_heading("Bloque 8 — Capítulo 7", level=1)
+    nota(doc, "Este archivo NO es parte del informe. Los recuadros rojos que dicen TU TEXTO "
+              "marcan apartados que no reescribí: son tuyos y solo cambian de lugar. "
+              "Ningún recuadro rojo se pega.")
+    separador(doc, "BLOQUE 8 — CAPÍTULO 7",
+              "Reemplaza a tu capítulo 7 actual. Antes de borrar nada, mueve los apartados que "
+              "los recuadros rojos indican: su texto no está en este archivo.")
+    doc.add_heading("7 INGENIERÍA DE DISEÑO", level=1)
+    bloque(doc, seccion(SCRATCH / "cap7.md", "## CAP7", "ZZZZZ"))
+    doc.save(salida)
+    print("escrito:", salida)
+
+
 def main_1011():
     """Segunda entrega: los capitulos 10 y 11."""
     salida = sys.argv[1]
@@ -326,5 +344,7 @@ if __name__ == "__main__":
         main_d()
     elif modo == "5":
         main_5()
+    elif modo == "7":
+        main_7()
     else:
         main()
